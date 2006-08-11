@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief ƒvƒƒZƒXŠÇ—ƒ‚ƒWƒ…[ƒ‹(ŽÀsŽžƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief ãƒ—ãƒ­ã‚»ã‚¹ç®¡ç†ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
  * @author Kenta HATTORI
  * @date   2006/04/18
@@ -12,10 +12,10 @@
 rdyq_t *__prc__rdyq;
 
 /**
- * ƒvƒƒZƒXˆ—‚Ì‰Šú‰»
+ * ãƒ—ãƒ­ã‚»ã‚¹å‡¦ç†ã®åˆæœŸåŒ–
  */
 void proc_init(void) {
-    /* ŽÀs‘Ò‚¿ƒLƒ…[‚Ì‰Šú‰» */
+    /* å®Ÿè¡Œå¾…ã¡ã‚­ãƒ¥ãƒ¼ã®åˆæœŸåŒ– */
     __prc__rdyq = (rdyq_t *)gc_record(GC_ALIGN(sizeof(*__prc__rdyq)));
     TAILQ_INIT(__prc__rdyq);
 }

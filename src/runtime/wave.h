@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief サウンド処理(実行時ライブラリ)
+ * @brief 繧ｵ繧ｦ繝ｳ繝牙�ｦ逅�(螳溯｡梧凾繝ｩ繧､繝悶Λ繝ｪ)
  *
  * @author Kenta HATTORI
  * @date   2006/08/06

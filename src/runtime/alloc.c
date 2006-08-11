@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief ƒƒ‚ƒŠŠÇ—ƒ‚ƒWƒ…[ƒ‹(Àsƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief ãƒ¡ãƒ¢ãƒªç®¡ç†ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
  * @author Kenta HATTORI
  * @date   2006/04/18
@@ -14,17 +14,17 @@
 #include "perr.h"
 
 /**
- * ƒŒƒR[ƒh¶¬‚Æ‰Šú‰»
+ * ãƒ¬ã‚³ãƒ¼ãƒ‰ç”Ÿæˆã¨åˆæœŸåŒ–
  */
 int __record__(int sz, ...) {
     int *rec;
     int i;
     va_list ap;
 
-    /* ƒŒƒR[ƒh‚ğŠm•Û */
+    /* ãƒ¬ã‚³ãƒ¼ãƒ‰ã‚’ç¢ºä¿ */
     rec = gc_record(sz);
 
-    /* ƒŒƒR[ƒh‚É’l‚ğİ’è */
+    /* ãƒ¬ã‚³ãƒ¼ãƒ‰ã«å€¤ã‚’è¨­å®š */
     va_start(ap, sz);
     for (i = 0; i < sz; i++) {
         rec[i] = (int)gc_forward((int*)va_arg(ap, int));
@@ -35,7 +35,7 @@ int __record__(int sz, ...) {
 }
 
 /**
- * ³‹K•\Œ»ƒŒƒR[ƒh‚Ìì»
+ * æ­£è¦è¡¨ç¾ãƒ¬ã‚³ãƒ¼ãƒ‰ã®ä½œè£½
  */
 #define GET_SIZE(p)    (p[-1]>>3)
 static void set_rcd(int s, int *rcd) {
@@ -59,7 +59,7 @@ int __rexrcd__(int s, int r) {
 }
 
 /**
- * •¶š—ñ‚ÌƒAƒƒP[ƒg
+ * æ–‡å­—åˆ—ã®ã‚¢ãƒ­ã‚±ãƒ¼ãƒˆ
  */
 int __string__(int len, char *buf) {
     char *str;
@@ -72,7 +72,7 @@ int __string__(int len, char *buf) {
 }
 
 /**
- * •¶š—ñ‚Ì˜AŒ‹
+ * æ–‡å­—åˆ—ã®é€£çµ
  */
 int __concat__(int s1, int s2) {
     int len1, len2;
@@ -91,7 +91,7 @@ int __concat__(int s1, int s2) {
     return __record__(4,0,(int)str,0,len1+len2);
 }
 /**
- * •¶š—ñ‚Ì’†g‚Ì”äŠr
+ * æ–‡å­—åˆ—ã®ä¸­èº«ã®æ¯”è¼ƒ
  */
 int __equals__(int s1, int s2) {
     int len = STRLEN(s1);

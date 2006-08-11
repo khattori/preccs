@@ -1,8 +1,8 @@
 /**
  * @file 
- * @brief DFAƒGƒ“ƒWƒ“(ŽÀsŽžƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief DFAã‚¨ãƒ³ã‚¸ãƒ³(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
- *  DFAƒpƒ^[ƒ“ƒ}ƒbƒ`ƒ“ƒO‚Ìˆ—‚ðs‚¤
+ *  DFAãƒ‘ã‚¿ãƒ¼ãƒ³ãƒžãƒƒãƒãƒ³ã‚°ã®å‡¦ç†ã‚’è¡Œã†
  *
  * @author Kenta HATTORI
  * @date   2006/06/07
@@ -20,12 +20,12 @@ static int con_field(char *con, int *val);
 if (cond) { act = (ce)->tact; idx = (ce)->tidx; } else { act = (ce)->fact; idx = (ce)->fidx; }
 
 /*
- * DFAƒpƒ^ƒ“ƒ}ƒbƒ`ŠÖ”
+ * DFAãƒ‘ã‚¿ãƒ³ãƒžãƒƒãƒé–¢æ•°
  *
- *   ˆø@”Fval --- “ü—Í•¶Žš—ñ
- *           n   --- DFA‰Šúó‘Ô
+ *   å¼•ã€€æ•°ï¼šval --- å…¥åŠ›æ–‡å­—åˆ—
+ *           n   --- DFAåˆæœŸçŠ¶æ…‹
  *
- *   –ß‚è’lF{Žó—”Ô†,Žó—ƒf[ƒ^}‚Ì‘g
+ *   æˆ»ã‚Šå€¤ï¼š{å—ç†ç•ªå·,å—ç†ãƒ‡ãƒ¼ã‚¿}ã®çµ„
  */
 int __dmatch__(int val, u_int st) {
     state_t *state = &__prc__state_table[TOCINT(st)];
@@ -33,15 +33,15 @@ int __dmatch__(int val, u_int st) {
     u_int idx = state->nidx;
     u_char *p, *ep;
 
-    p      = STRPTR(val);              /* ƒf[ƒ^   */
-    ep     = STRPTR(val)+STRLEN(val);  /* I—¹ˆÊ’u */
+    p      = STRPTR(val);              /* ãƒ‡ãƒ¼ã‚¿   */
+    ep     = STRPTR(val)+STRLEN(val);  /* çµ‚äº†ä½ç½® */
     if (p==ep) {
         act = ACT_FINAL;
         idx = state->fidx;
     }
 
     for (;;) switch (act) {
-    case ACT_MATCH: { /* •¶Žš—ñƒ}ƒbƒ` */
+    case ACT_MATCH: { /* æ–‡å­—åˆ—ãƒžãƒƒãƒ */
         int n = *p >> 5;
         u_int b = 0x1 << (*p % 32);
 
@@ -54,9 +54,9 @@ int __dmatch__(int val, u_int st) {
         
         break;
     }
-    case ACT_TRANS: { /* ‘JˆÚˆ— */
+    case ACT_TRANS: { /* é·ç§»å‡¦ç† */
         state = &__prc__state_table[idx];
-        p++;          /* •¶Žšƒ|ƒCƒ“ƒ^‚ÌˆÊ’u‚ði‚ß‚é */
+        p++;          /* æ–‡å­—ãƒã‚¤ãƒ³ã‚¿ã®ä½ç½®ã‚’é€²ã‚ã‚‹ */
         if (p==ep) {
             act = ACT_FINAL;
             idx = state->fidx;
@@ -67,7 +67,7 @@ int __dmatch__(int val, u_int st) {
         }
         break;
     }
-    case ACT_FINAL: { /* I—¹ˆ— */
+    case ACT_FINAL: { /* çµ‚äº†å‡¦ç† */
         fact_t *fact = &__prc__fact_table[idx];
         int *retval;
 
@@ -81,7 +81,7 @@ int __dmatch__(int val, u_int st) {
 
         return (int)retval;
     }
-    case ACT_RECORD: { /* ‹L˜^ˆ—iƒ‰ƒxƒ‹ƒŒƒWƒXƒ^‚ÉƒIƒtƒZƒbƒg’l‚ð‹L˜^‚·‚éj*/
+    case ACT_RECORD: { /* è¨˜éŒ²å‡¦ç†ï¼ˆãƒ©ãƒ™ãƒ«ãƒ¬ã‚¸ã‚¹ã‚¿ã«ã‚ªãƒ•ã‚»ãƒƒãƒˆå€¤ã‚’è¨˜éŒ²ã™ã‚‹ï¼‰*/
         ract_t *ract = &__prc__ract_table[idx];
         u_char lid = ract->lid;
         int i;
@@ -97,7 +97,7 @@ int __dmatch__(int val, u_int st) {
         idx = ract->nidx;
         break;
     } 
-    case ACT_COND_VALZERO: { /* ðŒƒ}ƒbƒ` */
+    case ACT_COND_VALZERO: { /* æ¡ä»¶ãƒžãƒƒãƒ */
         cond_t *cond = &__prc__cond_table[idx];
         u_char lid = cond->lid;
 
@@ -173,7 +173,7 @@ static int con_field(char *con, int *val) {
 
     top = 0;
     st = &stack[top];
-    /* •¶Žš—ñ\‘¢‚Ì’†g‚ð‘‚«Š·‚¦‚é‚Ì‚ÅCƒRƒs[‚ª•K—v */
+    /* æ–‡å­—åˆ—æ§‹é€ ã®ä¸­èº«ã‚’æ›¸ãæ›ãˆã‚‹ã®ã§ï¼Œã‚³ãƒ”ãƒ¼ãŒå¿…è¦ */
     st->field  = (int*)__record__(4,val[0],val[1],val[2],val[3]);
     val = gc_forward(val);
     
@@ -201,9 +201,9 @@ static int con_field(char *con, int *val) {
     case 'S':
         lid = ((u_char)*p++);
         st = &stack[top];
-        /* ƒtƒB[ƒ‹ƒh‚Ì––”ö‚Ü‚Å“ž’B‚µ‚½ê‡ */
+        /* ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã®æœ«å°¾ã¾ã§åˆ°é”ã—ãŸå ´åˆ */
         if (st->count==st->length) {
-            /* ƒGƒ“ƒhƒ|ƒCƒ“ƒg‚ÌÝ’è */
+            /* ã‚¨ãƒ³ãƒ‰ãƒã‚¤ãƒ³ãƒˆã®è¨­å®š */
             st->field[st->count*3] = (int)__prc__lbl_ptr[lid]-val[1];
             st = &stack[--top];
         }
@@ -212,7 +212,7 @@ static int con_field(char *con, int *val) {
         break;
     default: assert(0);
     }
-    /* ƒtƒB[ƒ‹ƒh‚Ì––”ö‚Ìˆ— */
+    /* ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã®æœ«å°¾ã®å‡¦ç† */
     while (top > 0) {
         st = &stack[top--];
         assert(st->count == st->length);

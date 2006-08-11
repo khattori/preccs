@@ -1,13 +1,13 @@
 (**
-   ˆÓ–¡‰ðÍƒ‚ƒWƒ…[ƒ‹
+   æ„å‘³è§£æžãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
    
-   ŠT—vFŒ^ŒŸ¸AŒ^Ž®‚Ì•ÏŠ·‚ðs‚¤
+   æ¦‚è¦ï¼šåž‹æ¤œæŸ»ã€åž‹å¼ã®å¤‰æ›ã‚’è¡Œã†
 
    @author Hattori Kenta
    @version $Id: semant.ml,v 1.6 2006/07/06 04:15:36 hattori Exp $
 *)
 
-(** ˆÓ–¡‰ðÍƒ‹[ƒ`ƒ“ *)
+(** æ„å‘³è§£æžãƒ«ãƒ¼ãƒãƒ³ *)
 let translate defs =
   Closure.convert
     (Cps.etaReduc

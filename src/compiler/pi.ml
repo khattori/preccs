@@ -1,7 +1,7 @@
 (**
-   ’†ŠÔ•\Œ»ƒ‚ƒWƒ…[ƒ‹
+   ä¸­é–“è¡¨ç¾ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
    
-   ŠT—vFƒÎŒvZŒ`®‚Ö‚Ì•ÏŠ·‚ğs‚¤
+   æ¦‚è¦ï¼šÏ€è¨ˆç®—å½¢å¼ã¸ã®å¤‰æ›ã‚’è¡Œã†
 
    @author Hattori Kenta
    @version $Id: pi.ml,v 1.6 2006/07/27 00:07:18 hattori Exp $
@@ -17,26 +17,26 @@ let rec make_list a = function
   | n when n < 0 -> assert false
   | n -> a::make_list a (n-1)
 
-(* ƒvƒƒZƒX®’è‹` *)
+(* ãƒ—ãƒ­ã‚»ã‚¹å¼å®šç¾© *)
 type proc =
     End
   | Guard of guard
-  | New   of var  * proc                   (* ƒ`ƒƒƒlƒ‹¶¬   *)
-  | Let   of var  * exp * proc             (* •Ï”‘©”›       *)
-  | Par   of proc * proc                   (* •Às‡¬       *)
-  | Case  of exp  * proc list              (* •ªŠòÀs       *)
-  | Call  of var  * exp list               (* ƒvƒƒZƒXŒÄo‚µ *)
-  | Cblk  of string list * exp list * proc (* CƒR[ƒh        *)
-  | Fix   of bind list * proc              (* ƒvƒƒZƒX’è‹`   *)
+  | New   of var  * proc                   (* ãƒãƒ£ãƒãƒ«ç”Ÿæˆ   *)
+  | Let   of var  * exp * proc             (* å¤‰æ•°æŸç¸›       *)
+  | Par   of proc * proc                   (* ä¸¦è¡Œåˆæˆ       *)
+  | Case  of exp  * proc list              (* åˆ†å²å®Ÿè¡Œ       *)
+  | Call  of var  * exp list               (* ãƒ—ãƒ­ã‚»ã‚¹å‘¼å‡ºã— *)
+  | Cblk  of string list * exp list * proc (* Cã‚³ãƒ¼ãƒ‰        *)
+  | Fix   of bind list * proc              (* ãƒ—ãƒ­ã‚»ã‚¹å®šç¾©   *)
 and bind = var * var list * proc
 
-(* ƒK[ƒh®’è‹` *)
+(* ã‚¬ãƒ¼ãƒ‰å¼å®šç¾© *)
 and guard =
-    Send of exp * exp * proc   (* ‘—M *)
-  | Recv of exp * var * proc   (* óM *)
-  | Alt  of guard * guard      (* ‘I‘ğÀs *)
+    Send of exp * exp * proc   (* é€ä¿¡ *)
+  | Recv of exp * var * proc   (* å—ä¿¡ *)
+  | Alt  of guard * guard      (* é¸æŠå®Ÿè¡Œ *)
 
-(* ®’è‹` *)
+(* å¼å®šç¾© *)
 and exp =
     Var    of var
   | Unit
@@ -45,10 +45,10 @@ and exp =
   | Cint   of int
   | String of string
   | If     of exp * exp * exp
-  | Record of exp list          (* ƒŒƒR[ƒh’l     *)
-  | Rexrcd of string * exp list (* ³‹K•\Œ»ƒŒƒR[ƒh *)
-  | Select of exp * exp         (* ƒtƒB[ƒ‹ƒh‘I‘ğ *)
-  | Offset of exp * exp         (* ƒŒƒR[ƒhƒIƒtƒZƒbƒg *)
+  | Record of exp list          (* ãƒ¬ã‚³ãƒ¼ãƒ‰å€¤     *)
+  | Rexrcd of string * exp list (* æ­£è¦è¡¨ç¾ãƒ¬ã‚³ãƒ¼ãƒ‰ *)
+  | Select of exp * exp         (* ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰é¸æŠ *)
+  | Offset of exp * exp         (* ãƒ¬ã‚³ãƒ¼ãƒ‰ã‚ªãƒ•ã‚»ãƒƒãƒˆ *)
   | Prim   of prim * exp list
 
 and prim =
@@ -56,7 +56,7 @@ and prim =
   | Eq  | Neq | Eqs | Lt  | Leq | Gt  | Geq
   | And | Or  | Cat
   | Neg | Not
-  | Match      (* ƒpƒ^[ƒ“ƒ}ƒbƒ` *)
+  | Match      (* ãƒ‘ã‚¿ãƒ¼ãƒ³ãƒãƒƒãƒ *)
 
 let v_next = Symbol.symbol("next")
 let v_junk = Symbol.symbol("junk")
@@ -79,7 +79,7 @@ let trans_bop = function
 let trans_mop = function A.MopNeg -> Neg | A.MopNot -> Not
 
 (*
- * ³‹K•\Œ»Œ^‚ÌƒfƒtƒHƒ‹ƒg•¶š—ñ‚ğæ“¾
+ * æ­£è¦è¡¨ç¾å‹ã®ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆæ–‡å­—åˆ—ã‚’å–å¾—
  *)
 let rec defstr_of_regex = function
     T.REXP re -> R.to_string re
@@ -107,11 +107,11 @@ let con_regex =
             Rexrcd(s, List.map (fun (_,r) -> trav r) fs)
 
 (*
- * ’l®‚Ì•ÏŠ·
+ * å€¤å¼ã®å¤‰æ›
  * 
- *   ˆø@”Fenv: Env.t --- –¼‘OŠÂ‹«
- *           ---: exp   --- ’l®
- *   –ß‚è’lF•ÏŠ·Œã‚Ì’l®
+ *   å¼•ã€€æ•°ï¼šenv: Env.t --- åå‰ç’°å¢ƒ
+ *           ---: exp   --- å€¤å¼
+ *   æˆ»ã‚Šå€¤ï¼šå¤‰æ›å¾Œã®å€¤å¼
  * 
  *)
 let rec trans_expr env = function
@@ -124,11 +124,11 @@ let rec trans_expr env = function
   | A.ExpMonop(_,mop,e) -> Prim(trans_mop mop,[trans_expr env e])
   
 (*
- * •Ï”QÆ®‚Ì•ÏŠ·
+ * å¤‰æ•°å‚ç…§å¼ã®å¤‰æ›
  * 
- *   ˆø@”Fenv: Env.t --- –¼‘OŠÂ‹«
- *           ---: var   --- •Ï”QÆ®
- *   –ß‚è’lF•ÏŠ·Œã‚Ì®
+ *   å¼•ã€€æ•°ï¼šenv: Env.t --- åå‰ç’°å¢ƒ
+ *           ---: var   --- å¤‰æ•°å‚ç…§å¼
+ *   æˆ»ã‚Šå€¤ï¼šå¤‰æ›å¾Œã®å¼
  * 
  *)
 and trans_var env = function
@@ -143,12 +143,12 @@ and trans_var env = function
   | A.VarSubscr(_,v,e) -> Select(trans_var env v,trans_expr env e)
 
 (*
- * ƒvƒƒZƒX®‚Ì•ÏŠ·
+ * ãƒ—ãƒ­ã‚»ã‚¹å¼ã®å¤‰æ›
  * 
- *   ˆø@”Fenv: Env.t --- –¼‘OŠÂ‹«
- *           nxt: proc  --- ’€ŸÀs‚ÌŒã‘±ƒvƒƒZƒX
- *           ---: proc  --- ƒvƒƒZƒX®i’ŠÛ\•¶j
- *   –ß‚è’lFƒvƒƒZƒX®iƒÎ®j
+ *   å¼•ã€€æ•°ï¼šenv: Env.t --- åå‰ç’°å¢ƒ
+ *           nxt: proc  --- é€æ¬¡å®Ÿè¡Œæ™‚ã®å¾Œç¶šãƒ—ãƒ­ã‚»ã‚¹
+ *           ---: proc  --- ãƒ—ãƒ­ã‚»ã‚¹å¼ï¼ˆæŠ½è±¡æ§‹æ–‡ï¼‰
+ *   æˆ»ã‚Šå€¤ï¼šãƒ—ãƒ­ã‚»ã‚¹å¼ï¼ˆÏ€å¼ï¼‰
  * 
  *)
 and trans_proc env nxt = function
@@ -180,21 +180,21 @@ and trans_proc env nxt = function
   | A.ProcAsign(_,v,e) -> assert false (* not yet implement *)
   | A.ProcCblock(_,cs,vs) -> Cblk(cs,List.map (trans_var env) vs,nxt)
 
-(* ƒK[ƒh®•ÏŠ· *)
+(* ã‚¬ãƒ¼ãƒ‰å¼å¤‰æ› *)
 and trans_gproc env nxt = function
     A.ProcInput(_,c,s)  -> Recv(trans_var env c,s,nxt)
   | A.ProcOutput(_,c,e) -> Send(trans_var env c,trans_expr env e,nxt)
   | _ -> assert false
           
 (*
- * ƒpƒ^ƒ“ƒ}ƒbƒ`®‚Ì•ÏŠ·
+ * ãƒ‘ã‚¿ãƒ³ãƒãƒƒãƒå¼ã®å¤‰æ›
  * 
- *   ˆø@”Fenv: Env.t     --- –¼‘OŠÂ‹«
- *           nxt: proc      --- ’€ŸÀs‚ÌŒã‘±ƒvƒƒZƒX
- *           ty : Types.t   --- ’l®‚ÌŒ^
- *           exp: exp       --- ’l®
- *           pts: pat list  --- ƒpƒ^ƒ“®‚ÌƒŠƒXƒg
- *   –ß‚è’lFƒvƒƒZƒX®iƒÎ®j
+ *   å¼•ã€€æ•°ï¼šenv: Env.t     --- åå‰ç’°å¢ƒ
+ *           nxt: proc      --- é€æ¬¡å®Ÿè¡Œæ™‚ã®å¾Œç¶šãƒ—ãƒ­ã‚»ã‚¹
+ *           ty : Types.t   --- å€¤å¼ã®å‹
+ *           exp: exp       --- å€¤å¼
+ *           pts: pat list  --- ãƒ‘ã‚¿ãƒ³å¼ã®ãƒªã‚¹ãƒˆ
+ *   æˆ»ã‚Šå€¤ï¼šãƒ—ãƒ­ã‚»ã‚¹å¼ï¼ˆÏ€å¼ï¼‰
  *)
 and trans_match env nxt ty exp pts =
   let pt_ls,pr_ls = List.split pts in match ty with 
@@ -215,9 +215,9 @@ and trans_match env nxt ty exp pts =
                 Case(Var v_temp,
                      List.map (fun p -> trans_proc env nxt p) pr_ls)))
 
-(* ƒpƒ^ƒ“®‚Æ‘©”›ƒŠƒXƒg‚ğ•Ô‚· *)
+(* ãƒ‘ã‚¿ãƒ³å¼ã¨æŸç¸›ãƒªã‚¹ãƒˆã‚’è¿”ã™ *)
 and trans_patns ty v patns =
-  (* Œ^‚ÌƒŠƒXƒg‚©‚çDFA‚ğì¬‚·‚éD *)
+  (* å‹ã®ãƒªã‚¹ãƒˆã‹ã‚‰DFAã‚’ä½œæˆã™ã‚‹ï¼ *)
   let binds,rs = List.split (
     List.map (
       function 
@@ -236,7 +236,7 @@ and trans_patns ty v patns =
       | _ -> assert false
 
 and trans_case v patns =
-  (* ƒP[ƒX•¶ˆ— *)
+  (* ã‚±ãƒ¼ã‚¹æ–‡å‡¦ç† *)
   let len = List.length patns in
     fst (
       List.fold_right (
@@ -251,11 +251,11 @@ and trans_case v patns =
     )
 
 (*
- * Œ^‚É‘Î‚·‚é‰Šú‰»®‚ğ¶¬‚·‚é
+ * å‹ã«å¯¾ã™ã‚‹åˆæœŸåŒ–å¼ã‚’ç”Ÿæˆã™ã‚‹
  * 
- *   ˆø@”Fenv: Env.t --- –¼‘OŠÂ‹«
- *           ---: typ   --- ’ŠÛ\•¶‚ÌŒ^®
- *   –ß‚è’lF‰Šú‰»®
+ *   å¼•ã€€æ•°ï¼šenv: Env.t --- åå‰ç’°å¢ƒ
+ *           ---: typ   --- æŠ½è±¡æ§‹æ–‡ã®å‹å¼
+ *   æˆ»ã‚Šå€¤ï¼šåˆæœŸåŒ–å¼
  * 
  *)
 and trans_type = function
@@ -268,15 +268,15 @@ and trans_type = function
   | _ -> assert false
 
 (*
- * ƒÎ®‚Ö•ÏŠ·‚·‚éŠÖ”
+ * Ï€å¼ã¸å¤‰æ›ã™ã‚‹é–¢æ•°
  *
- *   ˆø  ”Fdefs: toplevel --- ƒgƒbƒvƒŒƒxƒ‹’è‹`‚ÌƒŠƒXƒg
- *           env : Env.t    --- –¼‘OŠÂ‹«
- *   –ß‚è’lF•ÏŠ·Œã‚ÌƒÎ®
+ *   å¼•  æ•°ï¼šdefs: toplevel --- ãƒˆãƒƒãƒ—ãƒ¬ãƒ™ãƒ«å®šç¾©ã®ãƒªã‚¹ãƒˆ
+ *           env : Env.t    --- åå‰ç’°å¢ƒ
+ *   æˆ»ã‚Šå€¤ï¼šå¤‰æ›å¾Œã®Ï€å¼
  * 
  *)
 let trans env defs =
-  (* ƒgƒbƒvƒŒƒxƒ‹’è‹`‚Ì•ÏŠ·‚ğs‚¤ *)
+  (* ãƒˆãƒƒãƒ—ãƒ¬ãƒ™ãƒ«å®šç¾©ã®å¤‰æ›ã‚’è¡Œã† *)
   List.fold_right (
     fun def proc -> (
       match def with
@@ -293,10 +293,10 @@ let trans env defs =
   ) defs (Call(Symbol.symbol "Main",[]))
 
 (*
- * Å“K‰»ˆ—F©–¾‚È’ÊMˆ—‚ğíœ‚·‚é
+ * æœ€é©åŒ–å‡¦ç†ï¼šè‡ªæ˜ãªé€šä¿¡å‡¦ç†ã‚’å‰Šé™¤ã™ã‚‹
  * 
- *   ˆø@”F--- : pexp --- ƒÎ®
- *   –ß‚è’lFÅ“K‰»Œã‚ÌƒÎ®
+ *   å¼•ã€€æ•°ï¼š--- : pexp --- Ï€å¼
+ *   æˆ»ã‚Šå€¤ï¼šæœ€é©åŒ–å¾Œã®Ï€å¼
  * 
  *   (ch!E.$|ch?x.P) ===> let x=E.P
  * 
@@ -335,7 +335,7 @@ let rec unused v = function
         List.for_all (
           fun (v',vs,p') ->
             (* Symbol.equal v v' || *)
-            List.exists (Symbol.equal v) vs   (* •Ï”v‚ª‰B•Á‚³‚ê‚é *)
+            List.exists (Symbol.equal v) vs   (* å¤‰æ•°vãŒéš è”½ã•ã‚Œã‚‹ *)
             || unused v p'
         ) bs
   | End -> true
@@ -356,15 +356,15 @@ and unusedE v = function
 
 let isNoSideEffect e = true
 (*
- * Å“K‰»ˆ—F•s—v‚È•Ï”‚ğíœ
+ * æœ€é©åŒ–å‡¦ç†ï¼šä¸è¦ãªå¤‰æ•°ã‚’å‰Šé™¤
  * 
- *   ˆø@”F--- : pexp --- ƒÎ®
- *   –ß‚è’lFÅ“K‰»Œã‚ÌƒÎ®
+ *   å¼•ã€€æ•°ï¼š--- : pexp --- Ï€å¼
+ *   æˆ»ã‚Šå€¤ï¼šæœ€é©åŒ–å¾Œã®Ï€å¼
  * 
  *   new junk.P ===> P
  *   let junk=E.P ===> P
- *            ^^^•›ì—p‚ª–³‚¢‚±‚Æ
- *   ¦ •s—v‚Èˆø”‚Ìœ‹‚Ís‚í‚È‚¢
+ *            ^^^å‰¯ä½œç”¨ãŒç„¡ã„ã“ã¨
+ *   â€» ä¸è¦ãªå¼•æ•°ã®é™¤å»ã¯è¡Œã‚ãªã„
  * 
  *)
 let rec removeUnused = function
@@ -387,10 +387,10 @@ and removeUnusedG = function
 
 
 (*
- * Å“K‰»ˆ—F©–¾‚È•Àsˆ—‚ğíœ‚·‚é
+ * æœ€é©åŒ–å‡¦ç†ï¼šè‡ªæ˜ãªä¸¦è¡Œå‡¦ç†ã‚’å‰Šé™¤ã™ã‚‹
  * 
- *   ˆø@”F--- : pexp --- ƒÎ®
- *   –ß‚è’lFÅ“K‰»Œã‚ÌƒÎ®
+ *   å¼•ã€€æ•°ï¼š--- : pexp --- Ï€å¼
+ *   æˆ»ã‚Šå€¤ï¼šæœ€é©åŒ–å¾Œã®Ï€å¼
  * 
  *   ( P | $ ) ===> P
  * 
@@ -419,7 +419,7 @@ let string_of_prim = function
   | Lt  -> "Lt"  | Leq -> "Leq" | Gt  -> "Gt"  | Geq -> "Geq"
   | And -> "And" | Or  -> "Or"  | Cat -> "Cat"
   | Neg -> "Neg" | Not -> "Not"
-  | Match -> "Match"      (* ƒpƒ^[ƒ“ƒ}ƒbƒ` *)
+  | Match -> "Match"      (* ãƒ‘ã‚¿ãƒ¼ãƒ³ãƒãƒƒãƒ *)
 
 let rec show_proc = function
     End        -> Printf.printf "End"

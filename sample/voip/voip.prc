@@ -5,7 +5,7 @@ extern unsigned char linear2ulaw(short pcm_val);
 extern short ulaw2linear(unsigned char u_val);
 C}
 
-// ƒƒjƒ…ƒRƒ}ƒ“ƒh
+// ãƒ¡ãƒ‹ãƒ¥ã‚³ãƒãƒ³ãƒ‰
 type CMD_INVITE = {"I"|"i"}
 type CMD_CANCEL = {"C"|"c"}
 type CMD_TAKE   = {"T"|"t"}
@@ -24,7 +24,7 @@ type Host = { Unreserved* }
 type URI = { "sip:";Unreserved*;"@";Unreserved* }
 
 type SipVersion = { "SIP/2.0" }
-// SIPƒƒ\ƒbƒh’è‹`
+// SIPãƒ¡ã‚½ãƒƒãƒ‰å®šç¾©
 type SipMethod = {
 	  "INVITE"
 	| "ACK"
@@ -51,7 +51,7 @@ type SipReqCancel = SipRequest{start.method={"CANCEL"}}
 type SipReqBye    = SipRequest{start.method={"BYE"}}
 type SipReqAck    = SipRequest{start.method={"ACK"}}
 
-// SIP‰“š’è‹`
+// SIPå¿œç­”å®šç¾©
 /*
 "SIP/2.0 180 Ringing\r\n\r\n"
 "SIP/2.0 100 Tring\r\n\r\n"
@@ -77,7 +77,7 @@ type SipRespRinging = SipResponse{status.code={"180"}}
 type SipRespOK      = SipResponse{status.code={"200"}}
 
 //
-// RTPƒpƒPƒbƒg’è‹`
+// RTPãƒ‘ã‚±ãƒƒãƒˆå®šç¾©
 //
 type RtpHeader = {{
 	vpxcc	: octet;	// V(2),P(1),X(1),CC(4)
@@ -99,7 +99,7 @@ proc Main() =
     ( ret @ -1 -> stop
           | _  -> VoipReady(lsock) )
 
-// €”õŠ®—¹
+// æº–å‚™å®Œäº†
 proc VoipReady(ls:<SocketPair>) =
     stdout!"Menu:\n- (I)nvite\n- (Q)uit\n";
     ( stdin?msg   -> ( msg @ c:CMD_INVITE;octet* -> VoipInvite(ls)
@@ -107,7 +107,7 @@ proc VoipReady(ls:<SocketPair>) =
                            | _ -> stdout!"unknown command\n"; VoipReady(ls) )
     | ls?csock -> VoipRinging(ls,csock) )
 
-// ŒÄ‚Ño‚µ‚ğs‚¤
+// å‘¼ã³å‡ºã—ã‚’è¡Œã†
 proc VoipInvite(ls:<SocketPair>) =
     var ret:<{ok:bool;sp:SocketPair}>;
     var host:string;
@@ -122,7 +122,7 @@ proc VoipInvite(ls:<SocketPair>) =
                        VoipWaiting(ls, cs.sp)
             | false -> stdout!"failure to invite\n"; VoipReady(ls) )
 
-// ‰“š‘Ò‚¿
+// å¿œç­”å¾…ã¡
 proc VoipWaiting(ls:<SocketPair>,sp:SocketPair) =
     stdout!"Waiting...\n";
     stdout!"Menu:\n- (C)ancel\n";
@@ -138,7 +138,7 @@ proc VoipWaiting(ls:<SocketPair>,sp:SocketPair) =
                    stdout!msg; sp.out!""; VoipReady(ls) )
     )
 
-// ŒÄ‚Ño‚µ’†
+// å‘¼ã³å‡ºã—ä¸­
 proc VoipRinging(ls:<SocketPair>,sp:SocketPair) =
     sp.in?msg;
     ( msg @ r:SipReqInvite -> sp.out!"SIP/2.0 180 Ringing\r\n\r\n"
@@ -152,7 +152,7 @@ proc VoipRinging(ls:<SocketPair>,sp:SocketPair) =
             | _ -> stdout!"illegal request\n"; sp.out!""; VoipReady(ls) )
     )
 
-// ACK‘Ò‚¿
+// ACKå¾…ã¡
 proc VoipWaitAck(ls:<SocketPair>,sp:SocketPair) =
     sp.in?msg;
     ( msg @ r:SipReqAck -> VoipStartSession(ls,sp)
@@ -201,10 +201,10 @@ proc WaveIn(m:<string>, win:<string>, sout:<string>) =
                       buf[i] = linear2ulaw(*p++);
                   }
                   $ulaw$ = __string__(len, buf);
-		    *STRPTR($hd.vpxcc$) = 0x80;    // ƒo[ƒWƒ‡ƒ“”Ô†İ’è
-                  p = (short *)STRPTR($hd.seq$); // ƒV[ƒPƒ“ƒXİ’è
+		    *STRPTR($hd.vpxcc$) = 0x80;    // ãƒãƒ¼ã‚¸ãƒ§ãƒ³ç•ªå·è¨­å®š
+                  p = (short *)STRPTR($hd.seq$); // ã‚·ãƒ¼ã‚±ãƒ³ã‚¹è¨­å®š
                   *p = htons(seq++);
-                  tm = (DWORD *)STRPTR($hd.ts$); // ƒ^ƒCƒ€ƒXƒ^ƒ“ƒvİ’è
+                  tm = (DWORD *)STRPTR($hd.ts$); // ã‚¿ã‚¤ãƒ ã‚¹ã‚¿ãƒ³ãƒ—è¨­å®š
                   *tm = htonl(GetTickCount());
                   C};
                   sout!hd^ulaw; WaveIn(m,win,sout)

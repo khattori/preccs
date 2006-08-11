@@ -1,5 +1,5 @@
 (**
-   文字集合の位置モジュール
+   譁�蟄鈴寔蜷医�ｮ菴咲ｽｮ繝｢繧ｸ繝･繝ｼ繝ｫ
 
    @author Hattori Kenta
    @version $Id: pos.ml,v 1.2 2006/06/06 04:39:15 hattori Exp $

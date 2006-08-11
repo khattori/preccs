@@ -1,5 +1,5 @@
 (**
-   ƒNƒ[ƒWƒƒ•ÏŠ·ƒ‚ƒWƒ…[ƒ‹
+   ã‚¯ãƒ­ãƒ¼ã‚¸ãƒ£å¤‰æ›ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: closure.ml,v 1.3 2006/04/28 04:03:40 hattori Exp $
@@ -7,20 +7,20 @@
 
 module C = Cps
 module Ss = Set.Make(Symbol)
-(** ƒVƒ“ƒ{ƒ‹ƒŠƒXƒg‚©‚çƒVƒ“ƒ{ƒ‹W‡‚ðì¬ *)
+(** ã‚·ãƒ³ãƒœãƒ«ãƒªã‚¹ãƒˆã‹ã‚‰ã‚·ãƒ³ãƒœãƒ«é›†åˆã‚’ä½œæˆ *)
 let createSet = List.fold_left ( fun s v -> Ss.add v s ) Ss.empty
 
 
-(** FIX‚Å’è‹`‚³‚ê‚éŠÖ”–¼‚ÌW‡‚ðŽæ“¾ *)
+(** FIXã§å®šç¾©ã•ã‚Œã‚‹é–¢æ•°åã®é›†åˆã‚’å–å¾— *)
 let fixnames = List.fold_left (fun ss (f,_,_) -> Ss.add f ss) Ss.empty
-(** FIX‚Å’è‹`‚³‚ê‚éŠÖ”ƒ‰ƒxƒ‹‚ÌƒŠƒXƒg‚ð¶¬ *)
+(** FIXã§å®šç¾©ã•ã‚Œã‚‹é–¢æ•°ãƒ©ãƒ™ãƒ«ã®ãƒªã‚¹ãƒˆã‚’ç”Ÿæˆ *)
 let fixlabels = List.map (fun (f,_,_) -> (C.Label f))
-(** CPSƒIƒyƒ‰ƒ“ƒhƒŠƒXƒg‚Ì•Ï”W‡‚ðŽæ“¾ *)
+(** CPSã‚ªãƒšãƒ©ãƒ³ãƒ‰ãƒªã‚¹ãƒˆã®å¤‰æ•°é›†åˆã‚’å–å¾— *)
 let vars =
   List.fold_left
     ( fun ss v -> match v with C.Var s -> Ss.add s ss | _ -> ss ) Ss.empty
 
-(** Ž©—R•Ï”‚ðŽæ“¾ *)
+(** è‡ªç”±å¤‰æ•°ã‚’å–å¾— *)
 let rec freeVal = function
     C.Prim(p,ops,rs,cs),_ ->
       Ss.union
@@ -37,7 +37,7 @@ and freeValFbs bs =
     ( fun s b -> Ss.union (freeValFb b) s ) Ss.empty bs
 and freeValFb (f,ps,c) = Ss.diff (freeVal c) (createSet ps)
 
-(** Ž©—R•Ï”‚ðƒZƒbƒg *)
+(** è‡ªç”±å¤‰æ•°ã‚’ã‚»ãƒƒãƒˆ *)
 let rec attachFv (cexp,fv) =
   fv := Ss.elements (freeVal(cexp,fv));
   match cexp with
@@ -46,14 +46,14 @@ let rec attachFv (cexp,fv) =
     | C.Fix(bs,c)      -> List.iter (fun (_,_,c') -> attachFv c') bs; attachFv(c)
     | C.Cblk(_,_,c)    -> attachFv(c)
 
-(** ƒNƒ[ƒWƒƒƒŒƒR[ƒhŒ`Ž®‚Ì¶¬ *)
+(** ã‚¯ãƒ­ãƒ¼ã‚¸ãƒ£ãƒ¬ã‚³ãƒ¼ãƒ‰å½¢å¼ã®ç”Ÿæˆ *)
 let closFormat bs d =
   (fixlabels bs) @
     (List.map
         ( fun s -> C.Var s )
         (Ss.elements (Ss.inter (Ss.diff (freeValFbs bs) (fixnames bs)) d)))
 
-(** ƒNƒ[ƒWƒƒ•ÏŠ·ŠÖ” *)
+(** ã‚¯ãƒ­ãƒ¼ã‚¸ãƒ£å¤‰æ›é–¢æ•° *)
 let rec conv f bb dd ss ff = function
     C.Prim(p,ops,rs,cs),_ ->
       C.Prim(p,ops,rs,
@@ -101,7 +101,7 @@ and subst f ss ff v bb =
     else C.Prim(C.Select,[C.Label v;C.Int 0],[v],[bb]),ref []
 
 
-(** ‹ÇŠŠÖ”’è‹`‚ðƒgƒbƒvƒŒƒxƒ‹‚ÉˆÚ“® *)
+(** å±€æ‰€é–¢æ•°å®šç¾©ã‚’ãƒˆãƒƒãƒ—ãƒ¬ãƒ™ãƒ«ã«ç§»å‹• *)
 let liftUp cexp =
   let rec lift = function
       C.Prim(p,ops,rs,cs),_ ->
@@ -120,12 +120,12 @@ let liftUp cexp =
           (rbs@lbs@lbs'),rc
     | C.Cblk(cs,vs,c),_ ->
         let lbs,rc = lift c in lbs,(C.Cblk(cs,vs,rc), ref [])
-    | c -> [],c (* C.App‚Ìê‡ *)
+    | c -> [],c (* C.Appã®å ´åˆ *)
   in match lift cexp with
       [],c -> c
     | bs,c -> C.Fix(bs,c),ref []
 
-(** ƒNƒ[ƒWƒƒ•ÏŠ·¨‹ÇŠŠÖ”’è‹`‚ÌƒŠƒtƒgƒAƒbƒv *)
+(** ã‚¯ãƒ­ãƒ¼ã‚¸ãƒ£å¤‰æ›â†’å±€æ‰€é–¢æ•°å®šç¾©ã®ãƒªãƒ•ãƒˆã‚¢ãƒƒãƒ— *)
 let convert cexp =
   (liftUp
      (conv (Symbol.symbol "__main") Ss.empty Ss.empty [] [] cexp))

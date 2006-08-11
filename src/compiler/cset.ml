@@ -1,5 +1,5 @@
 (**
-   •¶ŽšW‡ƒ‚ƒWƒ…[ƒ‹
+   æ–‡å­—é›†åˆãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: cset.ml,v 1.6 2006/07/27 00:07:17 hattori Exp $
@@ -14,7 +14,7 @@ let isEmpty = function
     [] -> true
   | _  -> false
 
-(** ƒTƒuƒZƒbƒg‚Ì”»’è S1ºS2 *)
+(** ã‚µãƒ–ã‚»ãƒƒãƒˆã®åˆ¤å®š S1âŠ†S2 *)
 let rec subset s1 s2 =
   match s1,s2 with
       [],_ -> true
@@ -24,7 +24,7 @@ let rec subset s1 s2 =
         else if c1 < c2 || d1 > d2 then false
         else subset r1 s2
 
-(** ˜aW‡‚ÌŒvŽZS1¾S2 *)
+(** å’Œé›†åˆã®è¨ˆç®—S1âˆªS2 *)
 let rec union s1 s2 =
   match s1,s2 with
       [],_ -> s2
@@ -40,7 +40,7 @@ let rec union s1 s2 =
             union s1 r2
         )
 
-(** •¶ŽšW‡‚É•¶Žš‚ªŠÜ‚Ü‚ê‚Ä‚¢‚é‚© *)
+(** æ–‡å­—é›†åˆã«æ–‡å­—ãŒå«ã¾ã‚Œã¦ã„ã‚‹ã‹ *)
 let rec mem c = function
     []         -> false
   | (c1,c2)::r ->
@@ -48,23 +48,23 @@ let rec mem c = function
       else if c <= c2 then true
       else mem c r
 
-(** •¶Žš‚ð’Ç‰Á *)
+(** æ–‡å­—ã‚’è¿½åŠ  *)
 let add c s = union [c,c] s
 
   
-(** •¶ŽšW‡‚ÌŠe—v‘f‚É‘Î‚µ‚Äˆ—‚ðs‚¤ *)
+(** æ–‡å­—é›†åˆã®å„è¦ç´ ã«å¯¾ã—ã¦å‡¦ç†ã‚’è¡Œã† *)
 let rec iter f = function
     []       -> ()
   | (c,d)::r -> (f c); if c+1 <= d then iter f ((c+1,d)::r) else iter f r
 
-(** •¶ŽšW‡‚ÌŠe—v‘f‚Ìô‚Ýž‚Ý *)
+(** æ–‡å­—é›†åˆã®å„è¦ç´ ã®ç•³ã¿è¾¼ã¿ *)
 let rec fold f a = function
     [] -> a
   | (c,d)::r ->
       let a' = (f a c) in
         if c+1 <= d then fold f a' ((c+1,d)::r) else fold f a' r
 
-(** •âW‡‚ÌŒvŽZ ^S *)
+(** è£œé›†åˆã®è¨ˆç®— ^S *)
 let cmpl s =
   let s' = ref empty in
     for i = 0 to 255 do
@@ -72,7 +72,7 @@ let cmpl s =
     done;
     !s'
 
-(** •¶ŽšW‡‚ÌƒGƒ“ƒR[ƒh *)
+(** æ–‡å­—é›†åˆã®ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‰ *)
 let encode cs =
   let enc n =
     let num = ref Int32.zero in
@@ -87,7 +87,7 @@ let encode cs =
       (enc 0) (enc 1) (enc 2) (enc 3) (enc 4) (enc 5) (enc 6) (enc 7)
 
 
-(** ˆê‚Â•¶Žš‚ðŽæ“¾ *)
+(** ä¸€ã¤æ–‡å­—ã‚’å–å¾— *)
 let get_char = function
     [] -> assert false
   | (c,_)::_ -> char_of_int c

@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief ƒ\ƒPƒbƒgˆ—(ŽÀsŽžƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief ã‚½ã‚±ãƒƒãƒˆå‡¦ç†(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
  * @author Kenta HATTORI
  * @date   2006/04/26

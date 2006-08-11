@@ -1,5 +1,5 @@
 (**
-   ŠÂ‹«‘€ìƒ‚ƒWƒ…[ƒ‹
+   ç’°å¢ƒæ“ä½œãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: env.ml,v 1.5 2006/06/21 00:14:14 hattori Exp $
@@ -9,7 +9,7 @@ module S = Symbol
 module T = Types
 module Sm = Map.Make(Symbol)
 
-(* •Ï”EƒvƒƒZƒXEŒ^ŠÂ‹«‚Ì’è‹` *)
+(* å¤‰æ•°ãƒ»ãƒ—ãƒ­ã‚»ã‚¹ãƒ»å‹ç’°å¢ƒã®å®šç¾© *)
 type entry =
     VarEntry  of Types.t
   | ProcEntry of Types.t list
@@ -25,13 +25,13 @@ type t = entry Sm.t
 let base_env =
   List.fold_left (fun sm (s,t) -> Sm.add (S.symbol s) t sm) Sm.empty
     [
-      (* —\–ñÏ‚İ•Ï”iƒ`ƒƒƒlƒ‹j *)
+      (* äºˆç´„æ¸ˆã¿å¤‰æ•°ï¼ˆãƒãƒ£ãƒãƒ«ï¼‰ *)
       ("stdin",  VarEntry(T.CHAN T.STRING));
       ("stdout", VarEntry(T.CHAN T.STRING));
       ("timer",  VarEntry(T.CHAN T.INT));
       ("utimer", VarEntry(T.CHAN T.INT));
       ("cond",   VarEntry(T.CHAN T.BOOL));
-      (* —\–ñÏ‚İŒ^–¼ *)
+      (* äºˆç´„æ¸ˆã¿å‹å *)
       ("int",    TypeEntry(T.INT));
       ("bool",   TypeEntry(T.BOOL));
       ("string", TypeEntry(T.STRING));

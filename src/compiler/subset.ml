@@ -1,5 +1,5 @@
 (**
-   ³‹K•\Œ»‚Ì•ïŠÜ”»’èƒ‚ƒWƒ…[ƒ‹
+   æ­£è¦è¡¨ç¾ã®åŒ…å«åˆ¤å®šãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: subset.ml,v 1.3 2006/06/21 00:14:15 hattori Exp $
@@ -9,16 +9,16 @@ module R  = Regex
 module N  = Nfa
 module Ht = Hashtbl
 
-(** ˆÊ’uW‡ *)
+(** ä½ç½®é›†åˆ *)
 module Ps = Set.Make(Pos)
 
 (*
- * ³‹K•\Œ»‚Ì•ïŠÜŠÖŒW”»’è
+ * æ­£è¦è¡¨ç¾ã®åŒ…å«é–¢ä¿‚åˆ¤å®š
  * 
- *   ˆø@”Fr1 : Regex.t --- ³‹K•\Œ»1
- *           r2 : Regex.t --- ³‹K•\Œ»2
+ *   å¼•ã€€æ•°ï¼šr1 : Regex.t --- æ­£è¦è¡¨ç¾1
+ *           r2 : Regex.t --- æ­£è¦è¡¨ç¾2
  * 
- *   –ß‚è’lF”»’èŒ‹‰Ê‚ğ^‹U’l‚Å•Ô‚·
+ *   æˆ»ã‚Šå€¤ï¼šåˆ¤å®šçµæœã‚’çœŸå½å€¤ã§è¿”ã™
  * 
  *)
 let subset r1 r2 =
@@ -40,8 +40,8 @@ let subset r1 r2 =
           fun a ->
             let f flw p cp =
               if Cset.mem a (Pos.pos2cs p) then N.union cp (flw p) else cp in
-            let cp1 = Ps.fold (f follow1) s1 [] in (* R1‚ÌƒtƒHƒ[W‡ *)
-            let cp2 = Ps.fold (f follow2) s2 [] in (* R2‚ÌƒtƒHƒ[W‡ *)
+            let cp1 = Ps.fold (f follow1) s1 [] in (* R1ã®ãƒ•ã‚©ãƒ­ãƒ¼é›†åˆ *)
+            let cp2 = Ps.fold (f follow2) s2 [] in (* R2ã®ãƒ•ã‚©ãƒ­ãƒ¼é›†åˆ *)
               List.iter (
                 fun (ps1,ps2) ->
                   if List.mem (ps1,ps2) !marked then ()
@@ -58,7 +58,7 @@ let subset r1 r2 =
         Exit -> false
 
 
-(* ƒeƒXƒg—pƒf[ƒ^ *)
+(* ãƒ†ã‚¹ãƒˆç”¨ãƒ‡ãƒ¼ã‚¿ *)
 (*------------------------------------------------------------*)
 open Regex
 (* (a|b)*abb *)

@@ -1,5 +1,5 @@
 (**
-   PreccsƒRƒ“ƒpƒCƒ‰š‹å‰ğÍŠí
+   Preccsã‚³ãƒ³ãƒ‘ã‚¤ãƒ©å­—å¥è§£æå™¨
 
    @author Hattori Kenta
    @version $Id: lexer.mll,v 1.5 2006/07/27 00:07:17 hattori Exp $
@@ -7,13 +7,13 @@
 {
 open Error
 
-(** —\–ñŒê‚ÌŠÇ— *)
+(** äºˆç´„èªã®ç®¡ç† *)
 let rsvwords = Hashtbl.create 256
 let _ =
   List.iter
     (fun (str, f) -> Hashtbl.add rsvwords str f)
-    [ (* ƒL[ƒ[ƒh *)
-(* ID‚Æ‚µ‚Äˆ—‚³‚ê‚é
+    [ (* ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ *)
+(* IDã¨ã—ã¦å‡¦ç†ã•ã‚Œã‚‹
       ( "octet",  fun i -> Parser.OCTET i   );
       ( "int",    fun i -> Parser.INT i     );
       ( "bool",   fun i -> Parser.BOOL i    );
@@ -28,7 +28,7 @@ let _ =
       ( "skip",   fun i -> Parser.SKIP i    );
       ( "stop",   fun i -> Parser.STOP i    );
       ( "null",   fun i -> Parser.NULL i    );
-      (* “Áê‹L† *)
+      (* ç‰¹æ®Šè¨˜å· *)
       ( "@",      fun i -> Parser.AT i      );
       ( "#",      fun i -> Parser.SHARP i   );
       ( "!",      fun i -> Parser.EXCLM i   );
@@ -54,7 +54,7 @@ let _ =
       ( "}",      fun i -> Parser.RCURLY i  );
       ( "(",      fun i -> Parser.LPAREN i  );
       ( ")",      fun i -> Parser.RPAREN i  );
-      (* •¡‡‹L† *)
+      (* è¤‡åˆè¨˜å· *)
       ( "&&",     fun i -> Parser.ANDAND i  );
       ( "||",     fun i -> Parser.OROR i    );
       ( ":=",     fun i -> Parser.COLONEQ i );
@@ -70,9 +70,9 @@ let createToken i str =
   try (Hashtbl.find rsvwords str) i
   with _ -> Parser.IDENT { i = i; v = Symbol.symbol(str) }
 
-let lineno   = ref 1   (* s”Ô† *)
-and depth    = ref 0   (* ƒRƒƒ“ƒg‚Ì“ü‚êq[‚³ *)
-and start    = ref 0   (* sŠJnˆÊ’u *)
+let lineno   = ref 1   (* è¡Œç•ªå· *)
+and depth    = ref 0   (* ã‚³ãƒ¡ãƒ³ãƒˆã®å…¥ã‚Œå­æ·±ã• *)
+and start    = ref 0   (* è¡Œé–‹å§‹ä½ç½® *)
 
 and filename = ref ""
 and startLex = ref dummyinfo
@@ -81,33 +81,33 @@ let dummytoken lexbuf = Parser.EOF dummyinfo
 let lexentry = ref dummytoken
 let main lexbuf = !lexentry lexbuf
 
-(* ƒtƒ@ƒCƒ‹‚ğ€”õ *)
+(* ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æº–å‚™ *)
 let create file stream =
   filename := file;
   lineno   := 1;
   start    := 0;
   Lexing.from_channel stream
 
-(** ‰üsˆ— *)
+(** æ”¹è¡Œå‡¦ç† *)
 let newline lexbuf =
   incr lineno; start := (Lexing.lexeme_start lexbuf)
-(** ƒtƒ@ƒCƒ‹î•ñ¶¬ *)
+(** ãƒ•ã‚¡ã‚¤ãƒ«æƒ…å ±ç”Ÿæˆ *)
 let info lexbuf =
   createInfo (!filename) (!lineno) (Lexing.lexeme_start lexbuf - !start)
-(** •¶š—ñæo‚µ *)
+(** æ–‡å­—åˆ—å–å‡ºã— *)
 let text = Lexing.lexeme
 
-(** •¶š—ñƒŠƒeƒ‰ƒ‹‚Ìˆ— *)
+(** æ–‡å­—åˆ—ãƒªãƒ†ãƒ©ãƒ«ã®å‡¦ç† *)
 let strBuf = ref (String.create 2048)
 let strEnd = ref 0
-(** •¶š—ñ‚ÌI’[ˆ— *)
+(** æ–‡å­—åˆ—ã®çµ‚ç«¯å‡¦ç† *)
 let resetStr () = strEnd := 0
-(** •¶š—ñ‚Ì’Ç‰Á *)
+(** æ–‡å­—åˆ—ã®è¿½åŠ  *)
 let rec addStr ch =
   let buf = !strBuf in
     if !strEnd = String.length buf then
-      let newBuf = String.create (!strEnd*2) (* Sys.max_string_length‚ğ‰z‚¦‚é‚Æ *)
-      in                                     (* Invalid_argument‚ğ“Š‚°‚é        *)
+      let newBuf = String.create (!strEnd*2) (* Sys.max_string_lengthã‚’è¶Šãˆã‚‹ã¨ *)
+      in                                     (* Invalid_argumentã‚’æŠ•ã’ã‚‹        *)
 	String.blit buf 0 newBuf 0 !strEnd;
 	strBuf := newBuf;
 	addStr ch
@@ -115,10 +115,10 @@ let rec addStr ch =
       String.set buf !strEnd ch;
       incr strEnd
     )
-(** •¶š—ñ‚Ìæ“¾ *)
+(** æ–‡å­—åˆ—ã®å–å¾— *)
 let getStr () = String.sub (!strBuf) 0 (!strEnd)
 
-(** 16i•¶š—ñ‚©‚çƒoƒCƒg—ñ‚Ö•ÏŠ· *)
+(** 16é€²æ–‡å­—åˆ—ã‹ã‚‰ãƒã‚¤ãƒˆåˆ—ã¸å¤‰æ› *)
 let string_of_hex s = 
   let len = String.length s in
   let check = if (len mod 2) <> 0 then raise (Invalid_argument "s") else true in
@@ -140,11 +140,11 @@ let string_of_hex s =
 let nondigit	= ['a'-'z' 'A'-'Z' '_']
 let digit	= ['0'-'9']
 let hex_digit	= ['0'-'9' 'a'-'f' 'A'-'F']
-let separator = [' ' '\t' '\012']   (* ƒXƒy[ƒX, ƒ^ƒu, ‰üƒy[ƒW *)
+let separator = [' ' '\t' '\012']   (* ã‚¹ãƒšãƒ¼ã‚¹, ã‚¿ãƒ–, æ”¹ãƒšãƒ¼ã‚¸ *)
 let cr        = '\r'
 let lf        = '\n'
 
-(** š‹å‰ğÍƒ‹[ƒ‹‚Ì’è‹`•” *)
+(** å­—å¥è§£æãƒ«ãƒ¼ãƒ«ã®å®šç¾©éƒ¨ *)
 rule token = parse
     separator+
       { token lexbuf }
@@ -175,7 +175,7 @@ rule token = parse
   | eof	{ Parser.EOF (info lexbuf) }
   | _		{ errorAt (info lexbuf) (ERR_ILLEGAL_CHAR (text lexbuf)) }
 
-(* CƒCƒ“ƒ‰ƒCƒ“ƒuƒƒbƒN‚Ìˆ— *)
+(* Cã‚¤ãƒ³ãƒ©ã‚¤ãƒ³ãƒ–ãƒ­ãƒƒã‚¯ã®å‡¦ç† *)
 and cblock = parse
     "C}"	{ lexentry := ( fun lb -> lexentry := token;
                                         Parser.RCBLK (info lexbuf) );
@@ -185,7 +185,7 @@ and cblock = parse
   | eof	{ errorAt (!startLex) ERR_NONTERM_CBLOCK                      }
   | _		{ addStr (Lexing.lexeme_char lexbuf 0); cblock lexbuf         }
 
-(* ƒuƒƒbƒNƒRƒƒ“ƒg‚Ìˆ— *)
+(* ãƒ–ãƒ­ãƒƒã‚¯ã‚³ãƒ¡ãƒ³ãƒˆã®å‡¦ç† *)
 and comment = parse
     "/*"	{ depth := succ !depth; comment lexbuf                    }
   | "*/"	{ depth := pred !depth; if !depth > 0 then comment lexbuf }
@@ -193,7 +193,7 @@ and comment = parse
   | [^ '\n']	{ comment lexbuf                                          }
   | "\n"	{ newline lexbuf; comment lexbuf                          }
 
-(* •¶š—ñˆ— *)
+(* æ–‡å­—åˆ—å‡¦ç† *)
 and string = parse
     '"'	{ Parser.STRV { i = !startLex; v = getStr() }                 }
   | '"'('H'|'h')
@@ -203,7 +203,7 @@ and string = parse
   | eof	{ errorAt (!startLex) ERR_NONTERM_STRING                      }
   | _		{ addStr (Lexing.lexeme_char lexbuf 0); string lexbuf         }
 
-(* ƒGƒXƒP[ƒv•¶š‚Ìˆ— *)
+(* ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—æ–‡å­—ã®å‡¦ç† *)
 and escaped = parse
     'n'	{ '\n' }
   | 'r'	{ '\r' }

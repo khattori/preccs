@@ -1,5 +1,5 @@
 (**
-   ³‹K•\Œ»ƒ‚ƒWƒ…[ƒ‹
+   æ­£è¦è¡¨ç¾ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: regex.ml,v 1.8 2006/07/27 00:07:18 hattori Exp $
@@ -7,8 +7,8 @@
 
 module Ht = Hashtbl
 
-(** ³‹K•\Œ»‚Ì’è‹` *)
-(** NOTE: ƒAƒ‹ƒtƒ@ƒxƒbƒg‚ğŒ^’ŠÛ‚·‚é‚Æ‚¢‚¤è‚à‚ ‚é *)
+(** æ­£è¦è¡¨ç¾ã®å®šç¾© *)
+(** NOTE: ã‚¢ãƒ«ãƒ•ã‚¡ãƒ™ãƒƒãƒˆã‚’å‹æŠ½è±¡ã™ã‚‹ã¨ã„ã†æ‰‹ã‚‚ã‚ã‚‹ *)
 type 'a t =
     EPS
   | CHARS of 'a
@@ -16,9 +16,9 @@ type 'a t =
   | ALT   of 'a t * 'a t
   | CLOS  of 'a t
   | LBL   of 'a t * Label.t
-  | REP   of 'a t * Label.t (* QÆæƒCƒ“ƒfƒbƒNƒX *)
+  | REP   of 'a t * Label.t (* å‚ç…§å…ˆã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ *)
 
-(** ³‹K•\Œ»‚ÌƒTƒCƒY‚ğæ“¾ *)
+(** æ­£è¦è¡¨ç¾ã®ã‚µã‚¤ã‚ºã‚’å–å¾— *)
 let size re =
   let rec trav = function
       EPS      -> 0
@@ -34,7 +34,7 @@ let size re =
   in
     try trav re with Exit -> 0
 
-(** •¶š—ñ‚ğ³‹K•\Œ»Œ^‚É•ÏŠ· *)
+(** æ–‡å­—åˆ—ã‚’æ­£è¦è¡¨ç¾å‹ã«å¤‰æ› *)
 let of_string s =
   let result = ref EPS in
     for i = String.length s-1 downto 0 do
@@ -42,7 +42,7 @@ let of_string s =
     done;
     !result
 
-(** •¶šƒNƒ‰ƒX‚ğ³‹K•\Œ»Œ^‚É•ÏŠ· *)
+(** æ–‡å­—ã‚¯ãƒ©ã‚¹ã‚’æ­£è¦è¡¨ç¾å‹ã«å¤‰æ› *)
 let of_chrcls s =
   let l = String.length s in
     if l == 0 then EPS
@@ -51,7 +51,7 @@ let of_chrcls s =
       let cmpl = ref false in
       let prev = ref false in
       let cs = ref Cset.empty in
-        if (String.get s 0) == '^' then ( incr i; cmpl := true ); (* æ“ª‚ª^ *)
+        if (String.get s 0) == '^' then ( incr i; cmpl := true ); (* å…ˆé ­ãŒ^ *)
         while !i < l do
           let c = String.get s !i in
             if !prev && c=='-' && !i+1 < l then
@@ -79,7 +79,7 @@ let rec array r n =
   else if n==1 then r
   else              SEQ(r,array r (n-1))
 
-(** ˆÊ’uî•ñ‚ğ•t‰Á‚µ‚½‚à‚Ì‚ğæ“¾‚·‚é *)
+(** ä½ç½®æƒ…å ±ã‚’ä»˜åŠ ã—ãŸã‚‚ã®ã‚’å–å¾—ã™ã‚‹ *)
 let rec posify = function
     EPS        -> EPS
   | CHARS(c)   -> CHARS(Pos.create c)
@@ -91,7 +91,7 @@ let rec posify = function
 
 
 (*
-(** ˆÊ’u‚Æƒ‰ƒxƒ‹‚Ì‘Î‰•t‚¯‚ğs‚¤ *)
+(** ä½ç½®ã¨ãƒ©ãƒ™ãƒ«ã®å¯¾å¿œä»˜ã‘ã‚’è¡Œã† *)
 let labelify =
   let rec trav ls = function
       EPS        -> ()
@@ -103,7 +103,7 @@ let labelify =
     | REP(r,_)   -> REP(trav ls r,_)
 *)
 
-(** ³‹K•\Œ»‚©‚ç•¶š—ñ‚ğæ“¾ *)
+(** æ­£è¦è¡¨ç¾ã‹ã‚‰æ–‡å­—åˆ—ã‚’å–å¾— *)
 let rec to_string = function
     CHARS cs -> Printf.sprintf "%c" (Cset.get_char cs)
   | SEQ(r1,r2) -> to_string(r1) ^ to_string(r2)

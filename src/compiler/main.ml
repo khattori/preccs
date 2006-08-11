@@ -1,5 +1,5 @@
 (**
-   Mainƒ‚ƒWƒ…[ƒ‹
+   Mainãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: main.ml,v 1.9 2006/07/06 04:15:36 hattori Exp $
@@ -7,58 +7,58 @@
 
 open Error
 
-let inputFiles = ref []      (* “ü—Íƒtƒ@ƒCƒ‹–¼‚ÌƒŠƒXƒg *)
-let outputFile = ref None    (* o—Íƒtƒ@ƒCƒ‹–¼‚Ìw’è   *)
-let debugMode  = ref false   (* ƒfƒoƒbƒOo—Íƒtƒ‰ƒO     *)
-let poutMode   = ref false   (* ƒÎ®o—Íƒtƒ‰ƒO         *)
-let coutMode   = ref false   (* CPS®o—Íƒtƒ‰ƒO        *)
+let inputFiles = ref []      (* å…¥åŠ›ãƒ•ã‚¡ã‚¤ãƒ«åã®ãƒªã‚¹ãƒˆ *)
+let outputFile = ref None    (* å‡ºåŠ›ãƒ•ã‚¡ã‚¤ãƒ«åã®æŒ‡å®š   *)
+let debugMode  = ref false   (* ãƒ‡ãƒãƒƒã‚°å‡ºåŠ›ãƒ•ãƒ©ã‚°     *)
+let poutMode   = ref false   (* Ï€å¼å‡ºåŠ›ãƒ•ãƒ©ã‚°         *)
+let coutMode   = ref false   (* CPSå¼å‡ºåŠ›ãƒ•ãƒ©ã‚°        *)
 
 let error s =
   print_string (Sys.executable_name ^ ": " ^ s); raise (Exit 1)
 
-(* ƒo[ƒWƒ‡ƒ“î•ñ‚Ì’è‹` *)
+(* ãƒãƒ¼ã‚¸ãƒ§ãƒ³æƒ…å ±ã®å®šç¾© *)
 let version = "2.0.0"
 let verMsg  = "Preccs Compiler Ver." ^ version ^ ".\n" ^
   "Copyright (C) 2006 Kenta Hattori\n"
 
-(* g—p–@ *)
+(* ä½¿ç”¨æ³• *)
 let usageMsg = "Usage: prcc <options> <source-files>\n" ^
   "Options:"
 
-(* ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“ˆø”‚Ì’è‹` *)
+(* ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³å¼•æ•°ã®å®šç¾© *)
 let argDefs = [
-  ( (* ƒo[ƒWƒ‡ƒ“î•ñ‚ğ•\¦ *)
+  ( (* ãƒãƒ¼ã‚¸ãƒ§ãƒ³æƒ…å ±ã‚’è¡¨ç¤º *)
     "-v",
     Arg.Unit(fun () -> print_string verMsg; raise (Exit 0)),
     "Display version."
   );
-  ( (* ƒfƒoƒbƒOî•ñ‚ğ’Ç‰Á *)
+  ( (* ãƒ‡ãƒãƒƒã‚°æƒ…å ±ã‚’è¿½åŠ  *)
     "-d",
     Arg.Set(debugMode),
     "Add debug info."
   );
-  ( (* ƒÎ®o—Íƒ‚[ƒh *)
+  ( (* Ï€å¼å‡ºåŠ›ãƒ¢ãƒ¼ãƒ‰ *)
     "-p",
     Arg.Set(poutMode),
     "Pexp output."
   );
-  ( (* CPS®o—Íƒ‚[ƒh *)
+  ( (* CPSå¼å‡ºåŠ›ãƒ¢ãƒ¼ãƒ‰ *)
     "-c",
     Arg.Set(coutMode),
     "Cexp output."
   );
-  ( (* CPS®o—Íƒ‚[ƒh *)
+  ( (* CPSå¼å‡ºåŠ›ãƒ¢ãƒ¼ãƒ‰ *)
     "-s",
     Arg.Set(Dfa.skipMode),
     "Matching with skipping."
   );
-  ( (* o—Íƒtƒ@ƒCƒ‹‚ğw’è *)
+  ( (* å‡ºåŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æŒ‡å®š *)
     "-o",
     Arg.String(fun s -> outputFile := Some s),
     "Place the output file into <file>"
   );]
 
-(** ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“ˆø”‚Ì‰ğÍ *)
+(** ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³å¼•æ•°ã®è§£æ *)
 let parseArgs () =
   Arg.parse argDefs
     (fun s -> inputFiles := s::!inputFiles)
@@ -67,7 +67,7 @@ let parseArgs () =
       [] -> error "no input files"
     | _  -> inputFiles := List.rev !inputFiles
 
-(** “ü—Íƒtƒ@ƒCƒ‹‚Ì‰ğÍ *)
+(** å…¥åŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã®è§£æ *)
 let parseFiles () = 
   let parse file =
     let inp = open_in file in
@@ -108,7 +108,7 @@ let parseFiles () =
   in
     List.iter parse !inputFiles
 
-(** ˆ—–{‘Ì *)
+(** å‡¦ç†æœ¬ä½“ *)
 let () =
   try 
     parseArgs();

@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief プロセス管理モジュール(実行時ライブラリ)
+ * @brief 繝励Ο繧ｻ繧ｹ邂｡逅�繝｢繧ｸ繝･繝ｼ繝ｫ(螳溯｡梧凾繝ｩ繧､繝悶Λ繝ｪ)
  *
  * @author Kenta HATTORI
  * @date   2006/04/18
@@ -13,12 +13,12 @@
 #include "gc.h"
 
 /*
- * プロセスキューのエントリ構造体の定義
+ * 繝励Ο繧ｻ繧ｹ繧ｭ繝･繝ｼ縺ｮ繧ｨ繝ｳ繝医Μ讒矩菴薙�ｮ螳夂ｾｩ
  */
 typedef struct proc_ {
-    int clos;                /* クロージャ */
-    int val;                 /* 引数 */
-    TAILQ_ENTRY(proc_) link; /* リンク */
+    int clos;                /* 繧ｯ繝ｭ繝ｼ繧ｸ繝｣ */
+    int val;                 /* 蠑墓焚 */
+    TAILQ_ENTRY(proc_) link; /* 繝ｪ繝ｳ繧ｯ */
 } proc_t;
 typedef TAILQ_HEAD(rdyq_, proc_) rdyq_t;
 extern rdyq_t *__prc__rdyq;

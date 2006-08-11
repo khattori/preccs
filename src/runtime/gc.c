@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief GCƒ‚ƒWƒ…[ƒ‹(Àsƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief GCãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
  * @author Kenta HATTORI
  * @date   2006/04/18
@@ -53,7 +53,7 @@ static void flip(void);
 static int *copy(int *p);
 
 /**
- * GC‚Ì‰Šú‰»
+ * GCã®åˆæœŸåŒ–
  */
 void gc_init(void) {
     heap_bottom = malloc(sizeof(int)*heap_size);
@@ -67,7 +67,7 @@ void gc_init(void) {
 }
 
 void __hlimit__(int n) {
-    n++;      /* ƒZƒ‹ƒTƒCƒY‚ğ•Û‚·‚é—Ìˆæ */
+    n++;      /* ã‚»ãƒ«ã‚µã‚¤ã‚ºã‚’ä¿æŒã™ã‚‹é ˜åŸŸ */
     if (heap_free + n > heap_top)
         flip();
     if (heap_free + n > heap_top)
@@ -75,13 +75,13 @@ void __hlimit__(int n) {
 }
 
 /**
- * ƒq[ƒv‚©‚çƒŒƒR[ƒh—Ìˆæ‚ğŠm•Û
+ * ãƒ’ãƒ¼ãƒ—ã‹ã‚‰ãƒ¬ã‚³ãƒ¼ãƒ‰é ˜åŸŸã‚’ç¢ºä¿
  */
 int *gc_record(int n) {
     int *new_cell;
 
 //  assert(n > 0);
-    n++;      /* ƒZƒ‹ƒTƒCƒY‚ğ•Û‚·‚é—Ìˆæ */
+    n++;      /* ã‚»ãƒ«ã‚µã‚¤ã‚ºã‚’ä¿æŒã™ã‚‹é ˜åŸŸ */
     if (heap_free + n > heap_top)
         flip();
     if (heap_free + n > heap_top)
@@ -95,14 +95,14 @@ int *gc_record(int n) {
 }
 
 /**
- * ƒq[ƒv‚©‚ç”z—ñ—Ìˆæ‚ğŠm•Û
+ * ãƒ’ãƒ¼ãƒ—ã‹ã‚‰é…åˆ—é ˜åŸŸã‚’ç¢ºä¿
  */
 int *gc_array(int n) {
     int *new_cell;
 
     assert(n > 0);
 
-    n++;      /* ƒZƒ‹ƒTƒCƒY‚ğ•Û‚·‚é—Ìˆæ */
+    n++;      /* ã‚»ãƒ«ã‚µã‚¤ã‚ºã‚’ä¿æŒã™ã‚‹é ˜åŸŸ */
     if (heap_free + n > heap_top)
         flip();
     if (heap_free + n > heap_top)
@@ -125,7 +125,7 @@ int *gc_forward(int *p) {
     if (IS_NOPTR(p))
         return p;
 
-    /* ƒfƒXƒNƒŠƒvƒ^‚ğƒoƒbƒNƒXƒLƒƒƒ“ */
+    /* ãƒ‡ã‚¹ã‚¯ãƒªãƒ—ã‚¿ã‚’ãƒãƒƒã‚¯ã‚¹ã‚­ãƒ£ãƒ³ */
     for (q = p-1; !IS_DESC(q); q--);
     if (IS_FRWD(q))
         return (int *)FWADDR(q)+(p-q);
@@ -153,7 +153,7 @@ static void flip(void) {
     printf("GC started...\n");
     fflush(stdout);
 //    validate();
-    /* TO‚ÆFROM‚Ì“ü‚ê‘Ö‚¦ */
+    /* TOã¨FROMã®å…¥ã‚Œæ›¿ãˆ */
     t = from_space;
     from_space = to_space;
     to_space = t;
@@ -170,7 +170,7 @@ static void flip(void) {
     __prc__stdin  = (int)copy((int*)__prc__stdin);
     __prc__timer  = (int)copy((int*)__prc__timer);
 
-    /* ƒnƒ“ƒhƒ‹‚Ì‘–¸ */
+    /* ãƒãƒ³ãƒ‰ãƒ«ã®èµ°æŸ» */
     for (i = file_used; i >= 0; i = file_next[i]) {
         file_ch_array[i] = (int)copy((int*)file_ch_array[i]);
     }
@@ -207,11 +207,11 @@ static int *copy(int *p) {
     int *q;
     int i;
 
-    /* ’l‚È‚ç‚Î‚»‚Ì‚Ü‚Ü•Ô‚· */
+    /* å€¤ãªã‚‰ã°ãã®ã¾ã¾è¿”ã™ */
     if (IS_VALUE(p))
         return p;
 
-    /* ”ñƒ|ƒCƒ“ƒ^‚È‚ç‚»‚Ì‚Ü‚Ü•Ô‚·(ŠÖ”‚Ö‚Ìƒ|ƒCƒ“ƒ^‚È‚Ç) */
+    /* éãƒã‚¤ãƒ³ã‚¿ãªã‚‰ãã®ã¾ã¾è¿”ã™(é–¢æ•°ã¸ã®ãƒã‚¤ãƒ³ã‚¿ãªã©) */
     if (IS_NOPTR(p))
         return p;
 
@@ -219,7 +219,7 @@ static int *copy(int *p) {
         assert(0);
     }
 
-    /* ƒfƒXƒNƒŠƒvƒ^‚ğƒoƒbƒNƒXƒLƒƒƒ“ */
+    /* ãƒ‡ã‚¹ã‚¯ãƒªãƒ—ã‚¿ã‚’ãƒãƒƒã‚¯ã‚¹ã‚­ãƒ£ãƒ³ */
     for (q = p-1; !IS_DESC(q); q--);
 
     if (IS_FRWD(q))
@@ -242,7 +242,7 @@ static int *copy(int *p) {
     return addr + (p-q);
 }
 
-/* ‚·‚×‚Ä‚Ìƒ|ƒCƒ“ƒ^‚ªto_space‚Éû‚Ü‚Á‚Ä‚¢‚é‚±‚Æ‚ğŠm”F */
+/* ã™ã¹ã¦ã®ãƒã‚¤ãƒ³ã‚¿ãŒto_spaceã«åã¾ã£ã¦ã„ã‚‹ã“ã¨ã‚’ç¢ºèª */
 void validate(void) {
     static int num;
     int *scan = to_space;

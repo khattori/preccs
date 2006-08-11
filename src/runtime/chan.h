@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief チャネル管理モジュール(実行時ライブラリ)
+ * @brief 繝√Ε繝阪Ν邂｡逅�繝｢繧ｸ繝･繝ｼ繝ｫ(螳溯｡梧凾繝ｩ繧､繝悶Λ繝ｪ)
  *
  * @author Kenta HATTORI
  * @date   2006/04/18
@@ -14,11 +14,11 @@
 #include "event.h"
 
 /*
- * チャネル構造体の定義
+ * 繝√Ε繝阪Ν讒矩菴薙�ｮ螳夂ｾｩ
  */
 typedef struct chan_ {
-    TAILQ_HEAD(inq_,  event_) inq;    /* 入力イベントキュー */
-    TAILQ_HEAD(outq_, event_) outq;   /* 出力イベントキュー */
+    TAILQ_HEAD(inq_,  event_) inq;    /* 蜈･蜉帙う繝吶Φ繝医く繝･繝ｼ */
+    TAILQ_HEAD(outq_, event_) outq;   /* 蜃ｺ蜉帙う繝吶Φ繝医く繝･繝ｼ */
 } chan_t;
 
 chan_t *__chan__(void);

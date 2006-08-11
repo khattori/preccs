@@ -1,5 +1,5 @@
 (**
-   Œ^î•ñƒ‚ƒWƒ…[ƒ‹
+   å‹æƒ…å ±ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: types.ml,v 1.10 2006/07/27 00:07:18 hattori Exp $
@@ -12,21 +12,21 @@ exception Ill_proj
 exception Ill_index
 exception Ill_deriv
 
-(** Œ^î•ñ‚Ì’è‹` *)
+(** å‹æƒ…å ±ã®å®šç¾© *)
 type t =
-    BOOL | INT | STRING              (* Šî–{Œ^     *)
-  | CHAN   of t                      (* ƒ`ƒƒƒlƒ‹Œ^ *)
-  | ARRAY  of t * int                (* ”z—ñŒ^     *)
-  | RECORD of (Symbol.t * t) list    (* ƒŒƒR[ƒhŒ^ *)
-  | TUPLE  of t list                 (* ‘gŒ^       *)
-  | REGEX  of rgx                    (* ³‹K•\Œ»Œ^ *)
+    BOOL | INT | STRING              (* åŸºæœ¬å‹     *)
+  | CHAN   of t                      (* ãƒãƒ£ãƒãƒ«å‹ *)
+  | ARRAY  of t * int                (* é…åˆ—å‹     *)
+  | RECORD of (Symbol.t * t) list    (* ãƒ¬ã‚³ãƒ¼ãƒ‰å‹ *)
+  | TUPLE  of t list                 (* çµ„å‹       *)
+  | REGEX  of rgx                    (* æ­£è¦è¡¨ç¾å‹ *)
 and rgx = 
     REXP of Cset.t Regex.t
-  | RARR of rgx * int                (* R”z—ñ       *)
-  | RITR of rgx * Symbol.t           (* R‰Â•Ï’·”z—ñ *)
-  | RRCD of (Symbol.t * rgx) list    (* RƒŒƒR[ƒh   *)
+  | RARR of rgx * int                (* Ré…åˆ—       *)
+  | RITR of rgx * Symbol.t           (* Rå¯å¤‰é•·é…åˆ— *)
+  | RRCD of (Symbol.t * rgx) list    (* Rãƒ¬ã‚³ãƒ¼ãƒ‰   *)
 
-(** ƒtƒB[ƒ‹ƒhŒ^’è‹` *)
+(** ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰å‹å®šç¾© *)
 type field = {
   label : Label.t;
   child : field list;
@@ -53,23 +53,23 @@ let rec encode_field_list lmap = function
             ^ (encode_field_list lmap f.child)
         ) (Printf.sprintf "\\x43\\x%02x" n) fs
 
-(** ƒ‰ƒxƒ‹‚ğŒŸõ *)
+(** ãƒ©ãƒ™ãƒ«ã‚’æ¤œç´¢ *)
 let field typ sym = 
   match typ with 
       RECORD fs      -> snd (List.find (fun (s,_) -> Symbol.equal sym s) fs)
     | REGEX(RRCD fs) -> REGEX(snd (List.find (fun (s,r) -> Symbol.equal sym s) fs))
     | _ -> raise Ill_field
 
-(** ‘g‚Ì—v‘f‚ğæ“¾ *)
+(** çµ„ã®è¦ç´ ã‚’å–å¾— *)
 let proj typ i =
   match typ with
       TUPLE ts -> List.nth ts i
     | _ -> raise Ill_proj
 
-(** ƒ`ƒƒƒlƒ‹Œ^‚©”»’è‚·‚é *)
+(** ãƒãƒ£ãƒãƒ«å‹ã‹åˆ¤å®šã™ã‚‹ *)
 let is_chan = function CHAN _ -> true | _ -> false
 
-(** ƒIƒtƒZƒbƒg‚ğæ“¾ *)
+(** ã‚ªãƒ•ã‚»ãƒƒãƒˆã‚’å–å¾— *)
 let offset typ sym =
   (* ('a -> bool) -> 'a list -> int *)
   let off f ls =
@@ -84,14 +84,14 @@ let offset typ sym =
       | REGEX(RRCD fs) -> (off (fun (s,_) -> Symbol.equal sym s) fs) * 3
       | _ -> raise Ill_field
 
-(** ”z—ñ—v‘f‚ğŒŸõ *)
+(** é…åˆ—è¦ç´ ã‚’æ¤œç´¢ *)
 let index typ =
   match typ with
       ARRAY(t,_)                          -> t
     | REGEX(RARR(r,_)) | REGEX(RITR(r,_)) -> REGEX r
     | _ -> raise Ill_index
 
-(** •s—v‚Èƒ‰ƒxƒ‹‚Ìíœ *)
+(** ä¸è¦ãªãƒ©ãƒ™ãƒ«ã®å‰Šé™¤ *)
 let rec rmlabel =
   let ltbl = Ht.create(13) in
   let rec rm keep = function
@@ -109,7 +109,7 @@ let rec rmlabel =
   in
     rm true
 
-(* ³‹K•\Œ»Œ^‚É•ÏŠ· *)
+(* æ­£è¦è¡¨ç¾å‹ã«å¤‰æ› *)
 let regexify rt = 
   let rec trans tbl = function
     | REXP re   -> re
@@ -128,11 +128,11 @@ let regexify rt =
   in
     rmlabel (trans [] rt)
 
-(* ³‹K•\Œ»Œ^‚Ö‚Ì•ÏŠ·‚Æƒ‰ƒxƒ‹‚Ì•ÏŠ·‚ğ•Ô‚· *)
+(* æ­£è¦è¡¨ç¾å‹ã¸ã®å¤‰æ›ã¨ãƒ©ãƒ™ãƒ«ã®å¤‰æ›ã‚’è¿”ã™ *)
 let regexify2 rt = 
   let rec trans tbl = function
     | REXP re   -> re,[]
-    | RARR(r,n) -> R.array (fst (trans tbl r)) n,[] (* ”z—ñ‚ÍƒL[ƒv‚¹‚¸ *)
+    | RARR(r,n) -> R.array (fst (trans tbl r)) n,[] (* é…åˆ—ã¯ã‚­ãƒ¼ãƒ—ã›ãš *)
     | RITR(r,s) ->
         let l = List.assoc s tbl in R.REP(fst (trans tbl r),l),[]
     | RRCD rs   ->
@@ -149,8 +149,8 @@ let regexify2 rt =
   in
   let re,fs = trans [] rt in rmlabel re,fs
 
-(** •”•ªŒ^”»’è
-    t1 <: t2‚©‚Ç‚¤‚©‚ğ”»’è
+(** éƒ¨åˆ†å‹åˆ¤å®š
+    t1 <: t2ã‹ã©ã†ã‹ã‚’åˆ¤å®š
 *)
 let rec subtype ty1 ty2 =
   match ty1,ty2 with
@@ -160,12 +160,12 @@ let rec subtype ty1 ty2 =
         List.fold_left2
           (fun b (s1,t1) (s2,t2) -> b && (Symbol.equal s1 s2) && (subtype t1 t2))
           true fs1 fs2
-    | CHAN(t1),CHAN(t2)   -> eqtype t1 t2 (* invariant‚É‚·‚é•K—v‚ ‚è *)
+    | CHAN(t1),CHAN(t2)   -> eqtype t1 t2 (* invariantã«ã™ã‚‹å¿…è¦ã‚ã‚Š *)
     | REGEX(r1),REGEX(r2) -> rsubtype r1 r2
     | REGEX(_),STRING     -> true
     | _                   -> false
 
-(** ³‹K•\Œ»Œ^‚Ì•”•ªŒ^”»’è *)
+(** æ­£è¦è¡¨ç¾å‹ã®éƒ¨åˆ†å‹åˆ¤å®š *)
 and rsubtype r1 r2 =
   match r1,r2 with
       RARR(r1',n),RARR(r2',m) when n==m -> rsubtype r1' r2'
@@ -178,12 +178,12 @@ and rsubtype r1 r2 =
     | _,REXP(re)          -> Subset.subset (regexify r1) re
     | _                   -> false
 
-(** Œ^“™‰¿”»’è *)
+(** å‹ç­‰ä¾¡åˆ¤å®š *)
 and eqtype x y = (subtype x y) && (subtype y x)
 
 let get_rgx = function REGEX(re) -> re | _ -> assert false
 
-(** ”h¶Œ^‚Ì¶¬ *)
+(** æ´¾ç”Ÿå‹ã®ç”Ÿæˆ *)
 let deriv ty path ty2 =
   let rec trav ap t =
     if ap==[] then ty2

@@ -1,8 +1,8 @@
 /**
  * @file 
- * @brief DFAƒGƒ“ƒWƒ“(Àsƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief DFAã‚¨ãƒ³ã‚¸ãƒ³(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
- *  DFAƒpƒ^[ƒ“ƒ}ƒbƒ`ƒ“ƒO‚Ìˆ—‚ğs‚¤
+ *  DFAãƒ‘ã‚¿ãƒ¼ãƒ³ãƒãƒƒãƒãƒ³ã‚°ã®å‡¦ç†ã‚’è¡Œã†
  *
  * @author Kenta HATTORI
  * @date   2006/06/07
@@ -15,72 +15,72 @@ typedef unsigned int  u_int;
 typedef unsigned char u_char;
 
 /*
- * ƒAƒNƒVƒ‡ƒ“í•Ê
+ * ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ç¨®åˆ¥
  */
 typedef enum {
-    ACT_NULL,          /* –³ˆ— */
-    ACT_MATCH,         /* •¶šW‡ƒ}ƒbƒ`ˆ— */
-    ACT_TRANS,         /* ó‘Ô‘JˆÚ */
-    ACT_FINAL,         /* I—¹ˆ— */
-    ACT_RECORD,        /* ƒ‰ƒxƒ‹‹L˜^ˆ— */
-    ACT_COND_VALZERO,  /* ğŒ”»’è(V_l==0) */
-    ACT_COND_VALNONZ,  /* ğŒ”»’è(V_l!=0) */
-    ACT_COND_CNTZERO,  /* ğŒ”»’è(C_l==0) */
-    ACT_COND_CNTNONZ,  /* ğŒ”»’è(C_l!=0) */
-    ACT_COUNT_SET,     /* ƒJƒEƒ“ƒ^ˆ—(C_l=V_l-1) */
-    ACT_COUNT_DECR     /* ƒJƒEƒ“ƒ^ˆ—(C_l--) */
+    ACT_NULL,          /* ç„¡å‡¦ç† */
+    ACT_MATCH,         /* æ–‡å­—é›†åˆãƒãƒƒãƒå‡¦ç† */
+    ACT_TRANS,         /* çŠ¶æ…‹é·ç§» */
+    ACT_FINAL,         /* çµ‚äº†å‡¦ç† */
+    ACT_RECORD,        /* ãƒ©ãƒ™ãƒ«è¨˜éŒ²å‡¦ç† */
+    ACT_COND_VALZERO,  /* æ¡ä»¶åˆ¤å®š(V_l==0) */
+    ACT_COND_VALNONZ,  /* æ¡ä»¶åˆ¤å®š(V_l!=0) */
+    ACT_COND_CNTZERO,  /* æ¡ä»¶åˆ¤å®š(C_l==0) */
+    ACT_COND_CNTNONZ,  /* æ¡ä»¶åˆ¤å®š(C_l!=0) */
+    ACT_COUNT_SET,     /* ã‚«ã‚¦ãƒ³ã‚¿å‡¦ç†(C_l=V_l-1) */
+    ACT_COUNT_DECR     /* ã‚«ã‚¦ãƒ³ã‚¿å‡¦ç†(C_l--) */
 } act_t;
 
 /*
- * ó‘Ôƒe[ƒuƒ‹
+ * çŠ¶æ…‹ãƒ†ãƒ¼ãƒ–ãƒ«
  */
 typedef struct state_ {
-    act_t nact;     /* Ÿˆ—                 */
-    int   nidx;     /* ŸƒCƒ“ƒfƒbƒNƒX        */
-    int   fidx;     /* I—¹ˆ—ƒCƒ“ƒfƒbƒNƒX */
+    act_t nact;     /* æ¬¡å‡¦ç†                 */
+    int   nidx;     /* æ¬¡ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹        */
+    int   fidx;     /* çµ‚äº†å‡¦ç†ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ */
 } state_t;
 
 /*
- * I—¹ˆ—ƒe[ƒuƒ‹
+ * çµ‚äº†å‡¦ç†ãƒ†ãƒ¼ãƒ–ãƒ«
  */
 typedef struct fact_ {
-    int  sel;       /* I—¹ƒZƒŒƒNƒ^ */
-    char *cons;     /* ƒtƒB[ƒ‹ƒh‘g—§‚ÄƒR[ƒh */
+    int  sel;       /* çµ‚äº†æ™‚ã‚»ãƒ¬ã‚¯ã‚¿ */
+    char *cons;     /* ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰çµ„ç«‹ã¦ã‚³ãƒ¼ãƒ‰ */
 } fact_t;
 /*
- * •¶šW‡ƒ}ƒbƒ`ˆ—ƒe[ƒuƒ‹
+ * æ–‡å­—é›†åˆãƒãƒƒãƒå‡¦ç†ãƒ†ãƒ¼ãƒ–ãƒ«
  */
 typedef struct mact_ {
-    act_t nact;      /* Ÿˆ—         */
-    int   nidx;      /* ŸƒCƒ“ƒfƒbƒNƒX */
-    u_int cset[8];   /* •¶šW‡       */
+    act_t nact;      /* æ¬¡å‡¦ç†         */
+    int   nidx;      /* æ¬¡ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ */
+    u_int cset[8];   /* æ–‡å­—é›†åˆ       */
 } mact_t;
 /*
- * ƒ‰ƒxƒ‹‹L˜^ˆ—ƒe[ƒuƒ‹
+ * ãƒ©ãƒ™ãƒ«è¨˜éŒ²å‡¦ç†ãƒ†ãƒ¼ãƒ–ãƒ«
  */
 typedef struct ract_ {
-    act_t nact;      /* Ÿˆ—          */
-    int   nidx;      /* ŸƒCƒ“ƒfƒbƒNƒX */
-    u_char lid;      /* ƒ‰ƒxƒ‹¯•Êq   */
-    u_char lsiz;     /* ƒ‰ƒxƒ‹ƒTƒCƒY   */
+    act_t nact;      /* æ¬¡å‡¦ç†          */
+    int   nidx;      /* æ¬¡ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ */
+    u_char lid;      /* ãƒ©ãƒ™ãƒ«è­˜åˆ¥å­   */
+    u_char lsiz;     /* ãƒ©ãƒ™ãƒ«ã‚µã‚¤ã‚º   */
 } ract_t;
 /*
- * ğŒˆ—ƒe[ƒuƒ‹
+ * æ¡ä»¶å‡¦ç†ãƒ†ãƒ¼ãƒ–ãƒ«
  */
 typedef struct cond_ {
-    act_t  tact;     /* ¬—§ˆ—            */
-    int    tidx;     /* ¬—§ƒCƒ“ƒfƒbƒNƒX   */
-    act_t  fact;     /* •s¬—§ˆ—          */
-    int    fidx;     /* •s¬—§ƒCƒ“ƒfƒbƒNƒX */
-    u_char lid;      /* ƒ‰ƒxƒ‹¯•Êq         */
+    act_t  tact;     /* æˆç«‹æ™‚å‡¦ç†            */
+    int    tidx;     /* æˆç«‹æ™‚ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹   */
+    act_t  fact;     /* ä¸æˆç«‹æ™‚å‡¦ç†          */
+    int    fidx;     /* ä¸æˆç«‹æ™‚ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ */
+    u_char lid;      /* ãƒ©ãƒ™ãƒ«è­˜åˆ¥å­         */
 } cond_t;
 /*
- * ƒJƒEƒ“ƒ^ˆ—ƒe[ƒuƒ‹
+ * ã‚«ã‚¦ãƒ³ã‚¿å‡¦ç†ãƒ†ãƒ¼ãƒ–ãƒ«
  */
 typedef struct cact_ {
-    act_t  nact;      /* Ÿˆ—          */
-    int    nidx;      /* ŸƒCƒ“ƒfƒbƒNƒX */
-    u_char lid;       /* ƒ‰ƒxƒ‹¯•Êq   */
+    act_t  nact;      /* æ¬¡å‡¦ç†          */
+    int    nidx;      /* æ¬¡ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ */
+    u_char lid;       /* ãƒ©ãƒ™ãƒ«è­˜åˆ¥å­   */
 } cact_t;
 
 extern state_t __prc__state_table[];
@@ -90,7 +90,7 @@ extern ract_t __prc__ract_table[];
 extern cond_t __prc__cond_table[];
 extern cact_t __prc__cact_table[];
 
-/* ƒ‰ƒxƒ‹—pƒŒƒWƒXƒ^ */
+/* ãƒ©ãƒ™ãƒ«ç”¨ãƒ¬ã‚¸ã‚¹ã‚¿ */
 extern u_char *__prc__lbl_ptr[];
 extern u_int __prc__lbl_value[];
 extern u_int __prc__lbl_count[];

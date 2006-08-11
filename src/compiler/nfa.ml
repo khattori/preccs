@@ -1,5 +1,5 @@
 (**
-   NFAƒ‚ƒWƒ…[ƒ‹
+   NFAãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: nfa.ml,v 1.2 2006/06/21 00:14:15 hattori Exp $
@@ -11,17 +11,17 @@ module Ht = Hashtbl
 module Ps = Set.Make(Pos)
 
 (*
- * ğŒ•t‚«‘JˆÚ‚ÌŒ^’è‹`
+ * æ¡ä»¶ä»˜ãé·ç§»ã®å‹å®šç¾©
  *)
 type trans = Cond.t * Pos.t
 
 (*
- * ğŒ•t‚«‘JˆÚƒŠƒXƒg‚Ì³‹K‰»‚ğs‚¤F
- *     –µ‚iP‹Uj‚Æ‚È‚é–½‘è˜_—®‚ğŠÜ‚Ş—v‘f‚ğæ‚èœ‚­
+ * æ¡ä»¶ä»˜ãé·ç§»ãƒªã‚¹ãƒˆã®æ­£è¦åŒ–ã‚’è¡Œã†ï¼š
+ *     çŸ›ç›¾ï¼ˆæ’å½ï¼‰ã¨ãªã‚‹å‘½é¡Œè«–ç†å¼ã‚’å«ã‚€è¦ç´ ã‚’å–ã‚Šé™¤ã
  * 
- *   ˆø@”F ---: trans list --- ğŒ•t‚«‘JˆÚƒŠƒXƒg
+ *   å¼•ã€€æ•°ï¼š ---: trans list --- æ¡ä»¶ä»˜ãé·ç§»ãƒªã‚¹ãƒˆ
  * 
- *   –ß‚è’lF ³‹K‰»‚µ‚½ğŒ•t‚«‘JˆÚƒŠƒXƒg
+ *   æˆ»ã‚Šå€¤ï¼š æ­£è¦åŒ–ã—ãŸæ¡ä»¶ä»˜ãé·ç§»ãƒªã‚¹ãƒˆ
  * 
  *)
 let normalize tls =
@@ -34,23 +34,23 @@ let normalize tls =
   ) [] tls
 
 (*
- * ğŒ•t‘JˆÚƒŠƒXƒg‚ÉğŒ‚ğ’Ç‰Á‚·‚é
+ * æ¡ä»¶ä»˜é·ç§»ãƒªã‚¹ãƒˆã«æ¡ä»¶ã‚’è¿½åŠ ã™ã‚‹
  * 
- *   ˆø@”Fc  : Cond.t     --- ’Ç‰Á‚·‚éğŒ
- *           tr : trans list --- ğŒ•t‚«‘JˆÚƒŠƒXƒg
+ *   å¼•ã€€æ•°ï¼šc  : Cond.t     --- è¿½åŠ ã™ã‚‹æ¡ä»¶
+ *           tr : trans list --- æ¡ä»¶ä»˜ãé·ç§»ãƒªã‚¹ãƒˆ
  * 
- *   –ß‚è’lF’Ç‰ÁŒã‚ÌğŒ•t‚«‘JˆÚƒŠƒXƒg
+ *   æˆ»ã‚Šå€¤ï¼šè¿½åŠ å¾Œã®æ¡ä»¶ä»˜ãé·ç§»ãƒªã‚¹ãƒˆ
  * 
  *)
 let prod c tr = normalize (List.map (fun (c',p) -> C.conj(c,c'),p) tr)
 
 (*
- * “ñ‚Â‚ÌğŒ•t‚«‘JˆÚƒŠƒXƒg‚ğƒ}[ƒW‚·‚é
+ * äºŒã¤ã®æ¡ä»¶ä»˜ãé·ç§»ãƒªã‚¹ãƒˆã‚’ãƒãƒ¼ã‚¸ã™ã‚‹
  * 
- *   ˆø@”Ftr1 : trans list --- ğŒ•t‚«‘JˆÚƒŠƒXƒg1
- *           tr2 : trans list --- ğŒ•t‚«‘JˆÚƒŠƒXƒg2
+ *   å¼•ã€€æ•°ï¼štr1 : trans list --- æ¡ä»¶ä»˜ãé·ç§»ãƒªã‚¹ãƒˆ1
+ *           tr2 : trans list --- æ¡ä»¶ä»˜ãé·ç§»ãƒªã‚¹ãƒˆ2
  * 
- *   –ß‚è’lFƒ}[ƒW‚µ‚½Œ‹‰Ê‚ÌğŒ•t‚«‘JˆÚƒŠƒXƒg
+ *   æˆ»ã‚Šå€¤ï¼šãƒãƒ¼ã‚¸ã—ãŸçµæœã®æ¡ä»¶ä»˜ãé·ç§»ãƒªã‚¹ãƒˆ
  * 
  *)
 let rec union tr1 tr2 = normalize (
@@ -80,7 +80,7 @@ let rec firstpos = function
   | R.LBL (r,_)   -> firstpos r
   | R.REP (r,lbl) -> prod (C.neg(C.Prop(Prop.Atom(C.Value lbl)))) (firstpos r)
 
-(** ƒtƒHƒ[ˆÊ’u‚ÌW‡‚ğ•Ô‚·ŠÖ”‚ğ•Ô‚·
+(** ãƒ•ã‚©ãƒ­ãƒ¼ä½ç½®ã®é›†åˆã‚’è¿”ã™é–¢æ•°ã‚’è¿”ã™
     Regex.t -> Pos.t -> CPs.t *)
 let followpos (re:Pos.t Regex.t) =
   let tbl = Ht.create 17 in
@@ -95,21 +95,21 @@ let followpos (re:Pos.t Regex.t) =
     | R.CLOS r      -> fill (union (firstpos r) s) r
     | R.LBL (r,_)   -> fill s r
     | R.REP (r,lbl) -> fill (union
-                               (* ŒJ•Ô‚µğŒ *)
+                               (* ç¹°è¿”ã—æ¡ä»¶ *)
                                (prod (C.neg(C.Prop(Prop.Atom(C.Counter lbl))))
                                   (firstpos r))
-                               (* ’EoğŒ *)
+                               (* è„±å‡ºæ¡ä»¶ *)
                                (prod (C.Prop(Prop.Atom(C.Counter lbl))) s)) r
   in fill [] re; follow
 
 (*
- * ğŒ•t‚«‘JˆÚ‚Ì”»’èF
- *     tr1‚Ì‘JˆÚ‚Ì‚È‚©‚Å‘Î‰‚·‚étr2‚Å‚à‰Â”\‚È‘JˆÚ‚ğæ“¾‚·‚é
+ * æ¡ä»¶ä»˜ãé·ç§»ã®åˆ¤å®šï¼š
+ *     tr1ã®é·ç§»ã®ãªã‹ã§å¯¾å¿œã™ã‚‹tr2ã§ã‚‚å¯èƒ½ãªé·ç§»ã‚’å–å¾—ã™ã‚‹
  * 
- *   ˆø@”Ftr1 : trans list --- ğŒ•t‚«‘JˆÚ1
- *           tr2 : trans list --- ğŒ•t‚«‘JˆÚ2
+ *   å¼•ã€€æ•°ï¼štr1 : trans list --- æ¡ä»¶ä»˜ãé·ç§»1
+ *           tr2 : trans list --- æ¡ä»¶ä»˜ãé·ç§»2
  * 
- *   –ß‚è’lF‘Î‰‚·‚é‘JˆÚæ‚Ì‘g
+ *   æˆ»ã‚Šå€¤ï¼šå¯¾å¿œã™ã‚‹é·ç§»å…ˆã®çµ„
  *)
 let transable tr1 tr2 =
   let cndflt cp cnd =

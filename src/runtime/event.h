@@ -1,8 +1,8 @@
 /**
  * @file 
- * @brief ƒCƒxƒ“ƒg\‘¢‘Ì’è‹`(Àsƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief ã‚¤ãƒ™ãƒ³ãƒˆæ§‹é€ ä½“å®šç¾©(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
- *  ƒCƒxƒ“ƒg\‘¢‘Ì‚Íƒ`ƒƒƒlƒ‹‚Ì“üo—ÍƒLƒ…[‚ÌƒGƒ“ƒgƒŠ‚Æ‚È‚é
+ *  ã‚¤ãƒ™ãƒ³ãƒˆæ§‹é€ ä½“ã¯ãƒãƒ£ãƒãƒ«ã®å…¥å‡ºåŠ›ã‚­ãƒ¥ãƒ¼ã®ã‚¨ãƒ³ãƒˆãƒªã¨ãªã‚‹
  *
  * @author Kenta HATTORI
  * @date   2006/04/18
@@ -15,13 +15,13 @@
 #include "queue.h"
 
 /*
- * ƒCƒxƒ“ƒg\‘¢‘Ì’è‹`
+ * ã‚¤ãƒ™ãƒ³ãƒˆæ§‹é€ ä½“å®šç¾©
  */
 typedef struct event_ {
-    TAILQ_ENTRY(event_) link; /* ƒ`ƒƒƒlƒ‹ƒŠƒ“ƒN */
-    int val;                  /* ‘—M’l          */
-    int clos;                 /* Œp‘±ƒNƒ[ƒWƒƒ */
-    int trans;                /* ƒgƒ‰ƒ“ƒUƒNƒVƒ‡ƒ“ */
+    TAILQ_ENTRY(event_) link; /* ãƒãƒ£ãƒãƒ«ãƒªãƒ³ã‚¯ */
+    int val;                  /* é€ä¿¡å€¤          */
+    int clos;                 /* ç¶™ç¶šã‚¯ãƒ­ãƒ¼ã‚¸ãƒ£ */
+    int trans;                /* ãƒˆãƒ©ãƒ³ã‚¶ã‚¯ã‚·ãƒ§ãƒ³ */
 } event_t;
 
 event_t *event(int val, int clos, int trans);

@@ -4,14 +4,14 @@ type BOOT_BROADCAST = {"8000"h}
 type MAGIC_CODE     = {"63825363"h}
 type PAD = {"00"h}
 type END = {"FF"h}
-// BOOTPƒIƒvƒVƒ‡ƒ“
+// BOOTPã‚ªãƒ—ã‚·ãƒ§ãƒ³
 type BootpOption = {{
     tag	: octet;
     len	: octet;
     data	: octet[len]
 }}
 
-// DHCPƒIƒvƒVƒ‡ƒ“
+// DHCPã‚ªãƒ—ã‚·ãƒ§ãƒ³
 type DhcpOption = {{
     magic	: MAGIC_CODE;
     opts	: BootpOption+;
@@ -19,22 +19,22 @@ type DhcpOption = {{
     pad	: PAD*
 }}
 
-// Šî–{DHCPƒpƒPƒbƒg
+// åŸºæœ¬DHCPãƒ‘ã‚±ãƒƒãƒˆ
 type DhcpPacket = {{
     op	: ( BOOT_REQUEST | BOOT_REPLY );
-    htype	: octet;	// ƒn[ƒhƒEƒFƒA”Ô†
-    hlen	: octet;	// ƒn[ƒhƒEƒFƒAƒAƒhƒŒƒX’·
-    hops	: octet;	// ƒzƒbƒv”
-    xid	: octet[4];	// ƒgƒ‰ƒ“ƒUƒNƒVƒ‡ƒ“ID
-    secs	: octet[2];	// Œo‰ßŠÔ
-    flags	: octet[2];	// ƒtƒ‰ƒO
-    ciaddr	: octet[4];	// ƒNƒ‰ƒCƒAƒ“ƒgIP
-    yiaddr	: octet[4];	// Š„“–‚ÄIPƒAƒhƒŒƒX
-    siaddr	: octet[4];	// ƒT[ƒoIPƒAƒhƒŒƒX
-    giaddr	: octet[4];	// ƒŠƒŒ[ƒG[ƒWƒFƒ“ƒg
-    chaddr	: octet[16];	// ƒn[ƒhƒEƒFƒAƒAƒhƒŒƒX
-    sname	: octet[64];	// ƒT[ƒo–¼
-    file	: octet[128];	// ƒu[ƒgƒtƒ@ƒCƒ‹–¼
+    htype	: octet;	// ãƒãƒ¼ãƒ‰ã‚¦ã‚§ã‚¢ç•ªå·
+    hlen	: octet;	// ãƒãƒ¼ãƒ‰ã‚¦ã‚§ã‚¢ã‚¢ãƒ‰ãƒ¬ã‚¹é•·
+    hops	: octet;	// ãƒ›ãƒƒãƒ—æ•°
+    xid	: octet[4];	// ãƒˆãƒ©ãƒ³ã‚¶ã‚¯ã‚·ãƒ§ãƒ³ID
+    secs	: octet[2];	// çµŒéæ™‚é–“
+    flags	: octet[2];	// ãƒ•ãƒ©ã‚°
+    ciaddr	: octet[4];	// ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆIP
+    yiaddr	: octet[4];	// å‰²å½“ã¦IPã‚¢ãƒ‰ãƒ¬ã‚¹
+    siaddr	: octet[4];	// ã‚µãƒ¼ãƒIPã‚¢ãƒ‰ãƒ¬ã‚¹
+    giaddr	: octet[4];	// ãƒªãƒ¬ãƒ¼ã‚¨ãƒ¼ã‚¸ã‚§ãƒ³ãƒˆ
+    chaddr	: octet[16];	// ãƒãƒ¼ãƒ‰ã‚¦ã‚§ã‚¢ã‚¢ãƒ‰ãƒ¬ã‚¹
+    sname	: octet[64];	// ã‚µãƒ¼ãƒå
+    file	: octet[128];	// ãƒ–ãƒ¼ãƒˆãƒ•ã‚¡ã‚¤ãƒ«å
     option	: DhcpOption
 }}
 /*
@@ -46,7 +46,7 @@ type BoptMsgType   = BootpOption{tag={"35"h},len={"01"h}}
 type CliAddr       = {{t:"01"h;addr:octet[6]}}
 type BoptClientID  = BootpOption{tag={"3D"h},len={"07"h},data=CliAddr}
 */
-// ƒƒCƒ“ƒvƒƒZƒX
+// ãƒ¡ã‚¤ãƒ³ãƒ—ãƒ­ã‚»ã‚¹
 proc Main() =
     var msg =
 	"01010600"h^

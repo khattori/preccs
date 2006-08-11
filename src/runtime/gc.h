@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief GCモジュール(実行時ライブラリ)
+ * @brief GC繝｢繧ｸ繝･繝ｼ繝ｫ(螳溯｡梧凾繝ｩ繧､繝悶Λ繝ｪ)
  *
  * @author Kenta HATTORI
  * @date   2006/04/18

@@ -1,5 +1,5 @@
 /**
-   PreccsƒRƒ“ƒpƒCƒ‰\•¶‰ğÍŠí
+   Preccsã‚³ãƒ³ãƒ‘ã‚¤ãƒ©æ§‹æ–‡è§£æå™¨
 
    @author Hattori Kenta
    @version $Id: parser.mly,v 1.11 2006/07/27 00:07:17 hattori Exp $
@@ -11,7 +11,7 @@ module T = Types
 module R = Regex
 %}
 
-/* ƒL[ƒ[ƒh‚Ìƒg[ƒNƒ“ */
+/* ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ã®ãƒˆãƒ¼ã‚¯ãƒ³ */
 %token <Error.info> TRUE
 %token <Error.info> FALSE
 %token <Error.info> VAR
@@ -22,15 +22,15 @@ module R = Regex
 %token <Error.info> RUN
 %token <Error.info> NULL
 
-/* ¯•Êq‚Æ’è”’l‚Ìƒg[ƒNƒ“ */
+/* è­˜åˆ¥å­ã¨å®šæ•°å€¤ã®ãƒˆãƒ¼ã‚¯ãƒ³ */
 %token <Symbol.t Error.withinfo> IDENT
 %token <int      Error.withinfo> INTV
 %token <string   Error.withinfo> STRV
 
-/* CƒR[ƒhƒtƒ‰ƒOƒƒ“ƒg */
+/* Cã‚³ãƒ¼ãƒ‰ãƒ•ãƒ©ã‚°ãƒ¡ãƒ³ãƒˆ */
 %token <string>     CFRAG
 
-/* ‹L†ƒg[ƒNƒ“ */
+/* è¨˜å·ãƒˆãƒ¼ã‚¯ãƒ³ */
 %token <Error.info> ARROW
 %token <Error.info> AS
 %token <Error.info> EXCLM
@@ -71,7 +71,7 @@ module R = Regex
 %token <Error.info> EOF
 
 
-/* —Dæ‡ˆÊ‚ÆŒ‹‡“x‚Ì’è‹` */
+/* å„ªå…ˆé †ä½ã¨çµåˆåº¦ã®å®šç¾© */
 %right VBAR
 %right SEMI
 
@@ -89,7 +89,7 @@ module R = Regex
 
 %%
 
-/* ŠJnƒ‹[ƒ‹ */
+/* é–‹å§‹ãƒ«ãƒ¼ãƒ« */
 toplevel
   : cblockPart definitionList cblockPart EOF { 
     let vars,types,procs = $2 in
@@ -112,21 +112,21 @@ definitionList
     }
 ;
 
-/* ƒwƒbƒ_/ƒtƒbƒ^•” */
+/* ãƒ˜ãƒƒãƒ€/ãƒ•ãƒƒã‚¿éƒ¨ */
 cblockPart
   : /* empty */       { "" }
   | LCBLK CFRAG RCBLK { $2 }
 ;
 
 /*****************************************************************
- * Šeí’è‹`
+ * å„ç¨®å®šç¾©
  */
 definition
   : varDefinition     { DefVar $1   }
   | typeDefinition    { DefType[$1] }
   | procDefinition    { DefProc[$1] }
 ;
-/* •Ï”’è‹` */
+/* å¤‰æ•°å®šç¾© */
 varDefinition
   : VAR IDENT declarator { $1,$2.v,$3 }
 ;
@@ -135,12 +135,12 @@ declarator
   | EQ expression        { DeclExpr($2)              }
 ;
 
-/* Œ^’è‹` */
+/* å‹å®šç¾© */
 typeDefinition
   : TYPE IDENT EQ typeExpression { $1,$2.v,$4 }
   | TYPE IDENT EQ IDENT LCURLY derivList RCURLY { $1,$2.v,TypDeriv($4.i,$4.v,$6) }
 ;
-/* ”h¶Œ^‚Ì’è‹` */
+/* æ´¾ç”Ÿå‹ã®å®šç¾© */
 derivList
   : derivPattern { [$1] }
   | derivList COMMA derivPattern { $1 @ [$3] }
@@ -149,7 +149,7 @@ derivPattern
   : varExpression EQ typeAtomicExpression { ($1,$3) }
 ;
 
-/* ƒvƒƒZƒX’è‹` */
+/* ãƒ—ãƒ­ã‚»ã‚¹å®šç¾© */
 procDefinition
   : PROC IDENT LPAREN RPAREN EQ procExpression               { $1,$2.v,[],$6 }
   | PROC IDENT LPAREN parameterList RPAREN EQ procExpression { $1,$2.v,$4,$7 }
@@ -162,7 +162,7 @@ parameter
   : IDENT COLON typeAtomicExpression { ($1.v,$3) }
 
 /*****************************************************************
- * Zp®‚ÉŠÖ‚·‚é‹K‘¥
+ * ç®—è¡“å¼ã«é–¢ã™ã‚‹è¦å‰‡
  */
 expression
   : arithExpression { $1 }
@@ -223,7 +223,7 @@ recField
 ;
 
 /*****************************************************************
- * Œ^®‚ÉŠÖ‚·‚é\•¶‹K‘¥
+ * å‹å¼ã«é–¢ã™ã‚‹æ§‹æ–‡è¦å‰‡
  */
 typeExpression
   : typeTupleExpression { $1 }
@@ -240,13 +240,13 @@ typeTupleExpression
 
 typeAtomicExpression
   : IDENT                           { TypName($1.i,$1.v) }
-  | LT typeExpression GT            { TypChan($1,$2)     } /* ƒ`ƒƒƒlƒ‹Œ^ */
-  | LCURLY rgxExpression RCURLY     { TypRegex($1,$2)    } /* ³‹K•\Œ»Œ^ */
-  | LCURLY fieldList RCURLY         { TypRecord($2)      } /* ƒŒƒR[ƒhŒ^ */
+  | LT typeExpression GT            { TypChan($1,$2)     } /* ãƒãƒ£ãƒãƒ«å‹ */
+  | LCURLY rgxExpression RCURLY     { TypRegex($1,$2)    } /* æ­£è¦è¡¨ç¾å‹ */
+  | LCURLY fieldList RCURLY         { TypRecord($2)      } /* ãƒ¬ã‚³ãƒ¼ãƒ‰å‹ */
 
 ;
 
-/* ƒŒƒR[ƒhŒ^‚ÌƒtƒB[ƒ‹ƒhƒŠƒXƒg */
+/* ãƒ¬ã‚³ãƒ¼ãƒ‰å‹ã®ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ãƒªã‚¹ãƒˆ */
 fieldList
   : field { [$1] }
   | fieldList SEMI field { $1 @ [$3] }
@@ -255,7 +255,7 @@ field
   : IDENT COLON typeExpression  { ($1.i,$1.v,$3) }
 ;
 
-/* ³‹K•\Œ»® */
+/* æ­£è¦è¡¨ç¾å¼ */
 rgxExpression
   : rgxPostfixExpression { $1 }
   | rgxExpression SEMI rgxExpression { RgxCat($2,$1,$3) }
@@ -277,7 +277,7 @@ rgxAtomicExpression
   | LPAREN rgxExpression RPAREN { $2 }
 ;
 
-/* ³‹K•\Œ»ƒŒƒR[ƒhŒ^‚ÌƒtƒB[ƒ‹ƒhƒŠƒXƒg */
+/* æ­£è¦è¡¨ç¾ãƒ¬ã‚³ãƒ¼ãƒ‰å‹ã®ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ãƒªã‚¹ãƒˆ */
 rgxFieldList
   : rgxField { [$1] }
   | rgxFieldList SEMI rgxField { $1 @ [$3] }
@@ -288,7 +288,7 @@ rgxField
 
 
 /*****************************************************************
- * ƒpƒ^[ƒ“®‚ÉŠÖ‚·‚é\•¶‹K‘¥
+ * ãƒ‘ã‚¿ãƒ¼ãƒ³å¼ã«é–¢ã™ã‚‹æ§‹æ–‡è¦å‰‡
  */
 patExpression
   : USCORE { PatAny($1)                  }
@@ -301,14 +301,14 @@ patExpression
 ;
 
 /*****************************************************************
- * ƒvƒƒZƒX®‚ÉŠÖ‚·‚é\•¶‹K‘¥
+ * ãƒ—ãƒ­ã‚»ã‚¹å¼ã«é–¢ã™ã‚‹æ§‹æ–‡è¦å‰‡
  */
 procExpression
   : procMatchExpression  { $1 }
   | procChoiceExpression { $1 }
 ;
 
-/* ‘I‘ğÀsƒvƒƒZƒX */
+/* é¸æŠå®Ÿè¡Œãƒ—ãƒ­ã‚»ã‚¹ */
 procChoiceExpression
   : procGuardAction VBAR procGuardAction { ProcChoice($2, [$1;$3]) }
   | procChoiceExpression VBAR procGuardAction 
@@ -317,12 +317,12 @@ procChoiceExpression
 	  | _                -> errorAt $2 ERR_INTERNAL
       }
 ;
-/* ƒK[ƒh•t‚«“®ì */
+/* ã‚¬ãƒ¼ãƒ‰ä»˜ãå‹•ä½œ */
 procGuardAction
   : procGuardExpression ARROW procSeqExpression { $1,$3 }
 ;
 
-/* ƒpƒ^ƒ“ƒ}ƒbƒ`ƒvƒƒZƒX */
+/* ãƒ‘ã‚¿ãƒ³ãƒãƒƒãƒãƒ—ãƒ­ã‚»ã‚¹ */
 procMatchExpression
   : procSeqExpression { $1 }
   | expression AT procMatchActionList { ProcMatch($2,$1,$3,ref T.STRING) }
@@ -335,7 +335,7 @@ procMatchAction
   : patExpression ARROW procSeqExpression { ($1, $3) }
 ;
 
-/* ’€ŸÀsƒvƒƒZƒX */
+/* é€æ¬¡å®Ÿè¡Œãƒ—ãƒ­ã‚»ã‚¹ */
 procSeqExpression
   : procAtomExpression { $1 }
   | procSeqExpression SEMI procAtomExpression
@@ -345,7 +345,7 @@ procSeqExpression
       }
 ;
 
-/* Šî–{ƒvƒƒZƒX® */
+/* åŸºæœ¬ãƒ—ãƒ­ã‚»ã‚¹å¼ */
 procAtomExpression
   : LPAREN procExpression RPAREN     { $2 }
   | procGuardExpression              { $1 }
@@ -358,26 +358,26 @@ procAtomExpression
 ;
 
 /*
- * [ƒCƒ“ƒ‰ƒCƒ“ƒuƒƒbƒN]
- * CƒR[ƒh•¶š—ñ,$•Ï”QÆ®$,CƒR[ƒh•¶š—ñ, ...‚Æ‚¢‚¤Œ`®‚Å“n‚³‚ê‚é
+ * [ã‚¤ãƒ³ãƒ©ã‚¤ãƒ³ãƒ–ãƒ­ãƒƒã‚¯]
+ * Cã‚³ãƒ¼ãƒ‰æ–‡å­—åˆ—,$å¤‰æ•°å‚ç…§å¼$,Cã‚³ãƒ¼ãƒ‰æ–‡å­—åˆ—, ...ã¨ã„ã†å½¢å¼ã§æ¸¡ã•ã‚Œã‚‹
  */
 codeFragList
   : CFRAG                            { [$1],[] }
   | codeFragList varExpression CFRAG { (fst $1)@[$3],(snd $1)@[$2] }
 ;
 
-/* ƒK[ƒhƒvƒƒZƒX */
+/* ã‚¬ãƒ¼ãƒ‰ãƒ—ãƒ­ã‚»ã‚¹ */
 procGuardExpression
-  : varExpression EXCLM expression { ProcOutput($2,$1,$3)  } /* o—Í */
-  | varExpression QUEST IDENT      { ProcInput($2,$1,$3.v) } /* “ü—Í */
+  : varExpression EXCLM expression { ProcOutput($2,$1,$3)  } /* å‡ºåŠ› */
+  | varExpression QUEST IDENT      { ProcInput($2,$1,$3.v) } /* å…¥åŠ› */
 ;
 
-/* ƒvƒƒZƒXŒÄo‚µ® */
+/* ãƒ—ãƒ­ã‚»ã‚¹å‘¼å‡ºã—å¼ */
 procInvocation
   : LPAREN RPAREN { [] }
   | LPAREN argumentList RPAREN { $2 }
 ;
-/* ˆø”ƒŠƒXƒg */
+/* å¼•æ•°ãƒªã‚¹ãƒˆ */
 argumentList
   : arithExpression { [$1] }
   | argumentList COMMA arithExpression { $1 @ [$3] }

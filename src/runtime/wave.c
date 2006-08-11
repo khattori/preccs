@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief ƒTƒEƒ“ƒhˆ—(Àsƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief ã‚µã‚¦ãƒ³ãƒ‰å‡¦ç†(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
  * @author Kenta HATTORI
  * @date   2006/08/06
@@ -21,13 +21,13 @@ static HWAVEIN  hWaveIn  = NULL;
 static HANDLE hEvtWout = NULL;
 static HANDLE hEvtWin  = NULL;
 
-int wave_och; /* GC‚Ì‘ÎÛ */
-int wave_ich; /* GC‚Ì‘ÎÛ */
-static int woq_len; /* o—ÍƒLƒ…[‚Ì’·‚³ */
+int wave_och; /* GCã®å¯¾è±¡ */
+int wave_ich; /* GCã®å¯¾è±¡ */
+static int woq_len; /* å‡ºåŠ›ã‚­ãƒ¥ãƒ¼ã®é•·ã• */
 static int woq_hd;
 static int woq_tl;
 
-static int wiq_len; /* “ü—ÍƒLƒ…[‚Ì’·‚³ */
+static int wiq_len; /* å…¥åŠ›ã‚­ãƒ¥ãƒ¼ã®é•·ã• */
 static int wiq_hd;
 static int wiq_tl;
 
@@ -35,13 +35,13 @@ static WAVEHDR wo_whdr[RBUF_NUM];
 static WAVEHDR wi_whdr[RBUF_NUM];
 static char rec_bufs[RBUF_NUM][RBUF_SIZ];
 
-/* IOˆ—ƒ‹[ƒv‚©‚çŒÄ‚Ño‚³‚ê‚é */
+/* IOå‡¦ç†ãƒ«ãƒ¼ãƒ—ã‹ã‚‰å‘¼ã³å‡ºã•ã‚Œã‚‹ */
 int wave_io(HANDLE handles[], ioent_t io_table[], int *io_count) {
     event_t *evt;
     int len;
     MMRESULT ret;
 
-    /* waveOutWriteˆ— */
+    /* waveOutWriteå‡¦ç† */
     if (wave_och) {
         if ((evt = chout_next((chan_t *)wave_och)) != NULL
             && woq_len < RBUF_NUM) {
@@ -94,7 +94,7 @@ int wave_io(HANDLE handles[], ioent_t io_table[], int *io_count) {
             io->type = IOT_WAVE;
             (*io_count)++;
         }
-        /* waveOutCloseˆ— */
+        /* waveOutCloseå‡¦ç† */
         if ((evt = chin_next((chan_t *)wave_och)) != NULL) {
             int i;
             printf("wave out close\n");
@@ -127,10 +127,10 @@ int wave_io(HANDLE handles[], ioent_t io_table[], int *io_count) {
             return chan_send(__prc__regs[1], __prc__regs[0]);
         }
     }
-    /* ƒTƒEƒ“ƒh“ü—Íˆ— */
+    /* ã‚µã‚¦ãƒ³ãƒ‰å…¥åŠ›å‡¦ç† */
     if (wave_ich) {
         if (chin_next((chan_t *)wave_ich) != NULL) {
-            if (wiq_len > 0) { // –¢ˆ—˜^‰¹ƒf[ƒ^‚ª‚ ‚éê‡
+            if (wiq_len > 0) { // æœªå‡¦ç†éŒ²éŸ³ãƒ‡ãƒ¼ã‚¿ãŒã‚ã‚‹å ´åˆ
                 int i = wiq_hd++;
 
                 wiq_hd %= RBUF_NUM;
@@ -142,7 +142,7 @@ int wave_io(HANDLE handles[], ioent_t io_table[], int *io_count) {
                 }
 
                 return chan_send(wave_ich, __prc__regs[0]);
-            } else {           // –¢ˆ—˜^‰¹ƒf[ƒ^‚ª‚È‚¢ê‡
+            } else {           // æœªå‡¦ç†éŒ²éŸ³ãƒ‡ãƒ¼ã‚¿ãŒãªã„å ´åˆ
                 ioent_t *io = &io_table[*io_count];
                 ResetEvent(hEvtWin);
                 handles[*io_count] = hEvtWin;
@@ -150,7 +150,7 @@ int wave_io(HANDLE handles[], ioent_t io_table[], int *io_count) {
                 (*io_count)++;
             }
         }
-        /* waveInCloseˆ— */
+        /* waveInCloseå‡¦ç† */
         if (chout_next((chan_t *)wave_ich) != NULL) {
             int i;
             printf("wave in close\n");
@@ -208,7 +208,7 @@ static void CALLBACK waveOutProc(
     }
 }
 
-/* ƒTƒEƒ“ƒho—Í—pƒfƒoƒCƒX‚ğƒI[ƒvƒ“ */
+/* ã‚µã‚¦ãƒ³ãƒ‰å‡ºåŠ›ç”¨ãƒ‡ãƒã‚¤ã‚¹ã‚’ã‚ªãƒ¼ãƒ—ãƒ³ */
 int prc_WaveOutOpen(int ch, int srate) {
     WAVEFORMATEX wfe;
     MMRESULT ret;
@@ -260,7 +260,7 @@ static void CALLBACK waveInProc(
     }
 }
 
-/* ƒTƒEƒ“ƒh“ü—Í—pƒfƒoƒCƒX‚ğƒI[ƒvƒ“ */
+/* ã‚µã‚¦ãƒ³ãƒ‰å…¥åŠ›ç”¨ãƒ‡ãƒã‚¤ã‚¹ã‚’ã‚ªãƒ¼ãƒ—ãƒ³ */
 int prc_WaveInOpen(int ch, int srate) {
     WAVEFORMATEX wfe;
     MMRESULT ret;

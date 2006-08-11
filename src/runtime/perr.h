@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief ���顼��������(�¹Ի��饤�֥��)
+ * @brief エラー処理機構(実行時ライブラリ)
  *
  * @author Kenta HATTORI
  * @date   2005/07/05

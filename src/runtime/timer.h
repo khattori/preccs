@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief $B%?%$%^!<=hM}%b%8%e!<%k(B($B<B9T;~%i%$%V%i%j(B)
+ * @brief タイマー処理モジュール(実行時ライブラリ)
  *
  * @author Kenta HATTORI
  * @date   2006/04/24
@@ -17,7 +17,7 @@ void timer_add(event_t *evt);
 DWORD timer_next(void);
 event_t *timer_take(void);
 
-/* $B%?%$%^!<%-%e!<$NDj5A(B */
+/* タイマーキューの定義 */
 typedef TAILQ_HEAD(tmrq_, event_) tmrq_t;
 extern tmrq_t *__prc__tmrq;
 

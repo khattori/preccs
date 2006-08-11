@@ -1,5 +1,5 @@
 (**
-   CPSƒ‚ƒWƒ…[ƒ‹
+   CPSãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: cps.ml,v 1.7 2006/07/27 00:07:17 hattori Exp $
@@ -7,24 +7,24 @@
 
 module S = Symbol
 
-(** Šg’£CPSŽ® *)
+(** æ‹¡å¼µCPSå¼ *)
 type cexp' = cexp * Symbol.t list ref
 
-(** CPSŽ®‚Ì’è‹` *)
+(** CPSå¼ã®å®šç¾© *)
 and cexp =
     Prim of prim * value list * lvar list * cexp' list
   | App  of value * value list
   | Fix  of bind list * cexp'
   | Cblk of string list * value list * cexp'
 
-(* ƒvƒŠƒ~ƒeƒBƒu‰‰ŽZŽq *)
+(* ãƒ—ãƒªãƒŸãƒ†ã‚£ãƒ–æ¼”ç®—å­ *)
 and prim =
-    Disp          (* ƒfƒBƒXƒpƒbƒ`: ()->() *)
-  | If            (* ðŒ•ªŠò *)
-  | Switch        (* ’l•ªŠò   *)
-  | Match         (* ƒpƒ^[ƒ“ƒ}ƒbƒ`: (DFA ID, String val)->lvar list*)
-  | Set           (* ’lƒZƒbƒg: (lvar, value) *)
-  | New           (* ƒ`ƒƒƒlƒ‹¶¬ *)
+    Disp          (* ãƒ‡ã‚£ã‚¹ãƒ‘ãƒƒãƒ: ()->() *)
+  | If            (* æ¡ä»¶åˆ†å² *)
+  | Switch        (* å€¤åˆ†å²   *)
+  | Match         (* ãƒ‘ã‚¿ãƒ¼ãƒ³ãƒžãƒƒãƒ: (DFA ID, String val)->lvar list*)
+  | Set           (* å€¤ã‚»ãƒƒãƒˆ: (lvar, value) *)
+  | New           (* ãƒãƒ£ãƒãƒ«ç”Ÿæˆ *)
   | Alloc
   | Record | Rexrcd | Select | Offset
   | Add | Sub | Mul | Div | Mod
@@ -38,13 +38,13 @@ and value =
   | Bool   of bool
   | Int    of int
   | String of string
-  | Cint   of int       (* C‚Ì®” *)
+  | Cint   of int       (* Cã®æ•´æ•° *)
 
 and bind = lvar * lvar list * cexp'
 
 and lvar = Symbol.t
 
-(** Ž¯•ÊŽq¶¬ *)
+(** è­˜åˆ¥å­ç”Ÿæˆ *)
 let counter = ref 0
 let genid s =
   incr counter;
@@ -53,7 +53,7 @@ let genid s =
 (* let disp:cexp' = Prim(Disp,[],[],[]),ref [] *)
 let disp:cexp' = App(Label(S.symbol "disp"),[]),ref []
 
-(** CPSŽ®¨•¶Žš—ñFƒfƒoƒbƒO•\Ž¦—p *)
+(** CPSå¼â†’æ–‡å­—åˆ—ï¼šãƒ‡ãƒãƒƒã‚°è¡¨ç¤ºç”¨ *)
 let shows f = function
     [] -> "[]"
   | [l] -> "["^ f l ^"]"
@@ -102,7 +102,7 @@ and showLvar (s,_) = "\"" ^ s ^ "\""
 and showBind (lv,lvs,c) =
   "(" ^ showLvar lv ^","^ shows showLvar lvs ^","^ showCexp c ^ ")"
 
-(** ƒÅŠÈ–ñ *)
+(** Î·ç°¡ç´„ *)
 let rec etaReduc = function
     Fix(bs,c),_          -> etaReducFbs [] (etaReduc c) bs
   | Prim(p,ops,rs,cs),_  -> Prim(p,ops,rs,List.map etaReduc cs),ref []
@@ -115,7 +115,7 @@ and etaReducFbs bsr c = function
   | (f,xs,c')::r -> etaReducFbs ((f,xs,etaReduc c')::bsr) c r
   | [] -> if bsr=[] then c else Fix(List.rev bsr,c),ref []
 
-(** ƒÅŠÈ–ñ‚Ì‚½‚ß‚Ì’uŠ·ŠÖ” *)
+(** Î·ç°¡ç´„ã®ãŸã‚ã®ç½®æ›é–¢æ•° *)
 and subst a b = function
     Prim(p,ops,rs,cs),_ 
       -> Prim(p,(List.map (substOp a b) ops),rs,List.map (subst a b) cs), ref []

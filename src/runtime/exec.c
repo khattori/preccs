@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief ƒvƒƒZƒXÀsƒGƒ“ƒWƒ“(Àsƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief ãƒ—ãƒ­ã‚»ã‚¹å®Ÿè¡Œã‚¨ãƒ³ã‚¸ãƒ³(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
  * @author Kenta HATTORI
  * @date   2006/04/18
@@ -20,22 +20,22 @@
 #include "exec.h"
 
 /*
- * ƒvƒƒZƒXƒfƒBƒXƒpƒbƒ`ƒƒ
+ * ãƒ—ãƒ­ã‚»ã‚¹ãƒ‡ã‚£ã‚¹ãƒ‘ãƒƒãƒãƒ£
  */
 int __disp__(void) {
     proc_t *np;
 
-    /* Às‘Ò‚¿ƒvƒƒZƒX‚ª–³‚¯‚ê‚ÎI/Oˆ— */
+    /* å®Ÿè¡Œå¾…ã¡ãƒ—ãƒ­ã‚»ã‚¹ãŒç„¡ã‘ã‚Œã°I/Oå‡¦ç† */
     if ((np = __prc__rdyq->tqh_first) == NULL) {
         return (int)io_exec;
     }
 
-    /* Às‘Ò‚¿ƒLƒ…[‚©‚çíœ */
+    /* å®Ÿè¡Œå¾…ã¡ã‚­ãƒ¥ãƒ¼ã‹ã‚‰å‰Šé™¤ */
     TAILQ_REMOVE(__prc__rdyq, np, link);
 
-    /* ƒNƒ[ƒWƒƒ“K—p */
+    /* ã‚¯ãƒ­ãƒ¼ã‚¸ãƒ£é©ç”¨ */
     __prc__regs[0] = np->clos;
-    __prc__regs[1] = np->val;   /* ˆø”‚Íˆê‚Â */
+    __prc__regs[1] = np->val;   /* å¼•æ•°ã¯ä¸€ã¤ */
 
     return ((int *)__prc__regs[0])[0];
 }
@@ -48,7 +48,7 @@ int __prc__recv = (int)recv_clos;
 int __prc__run  = (int)run_clos;
 
 /*
- * ƒ`ƒƒƒlƒ‹‘—MFƒCƒxƒ“ƒg‚ÆƒAƒNƒVƒ‡ƒ“‚ğƒ`ƒƒƒlƒ‹‚É“o˜^
+ * ãƒãƒ£ãƒãƒ«é€ä¿¡ï¼šã‚¤ãƒ™ãƒ³ãƒˆã¨ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã‚’ãƒãƒ£ãƒãƒ«ã«ç™»éŒ²
  */
 /*
   r0 : send_clos
@@ -65,10 +65,10 @@ int __send__(void) {
     } else {
         proc_t *prc;
 
-        /* óMƒvƒƒZƒX‚ğæ‚èo‚µ‚ÄÀs‘Ò‚¿ƒLƒ…[‚É“ü‚ê‚é */
+        /* å—ä¿¡ãƒ—ãƒ­ã‚»ã‚¹ã‚’å–ã‚Šå‡ºã—ã¦å®Ÿè¡Œå¾…ã¡ã‚­ãƒ¥ãƒ¼ã«å…¥ã‚Œã‚‹ */
         prc = proc();
         prc->clos = ((event_t *)__prc__regs[0])->clos;
-        prc->val  = __prc__regs[3];       /* ’l‚Ìó‚¯“n‚µ */
+        prc->val  = __prc__regs[3];       /* å€¤ã®å—ã‘æ¸¡ã— */
         TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
 
         prc = proc();
@@ -78,7 +78,7 @@ int __send__(void) {
 
         TAILQ_REMOVE(&((chan_t *)__prc__regs[2])->inq, (event_t *)__prc__regs[0], link);
         EV_SET_CANCEL((event_t *)__prc__regs[0]);
-        /* trans‚ğƒLƒƒƒ“ƒZƒ‹‚·‚é(__prc__regs[5]) */
+        /* transã‚’ã‚­ãƒ£ãƒ³ã‚»ãƒ«ã™ã‚‹(__prc__regs[5]) */
         TR_SET_CANCEL(__prc__regs[5]);
     }
     __prc__regs[0] = __prc__regs[1];
@@ -86,7 +86,7 @@ int __send__(void) {
 }
 
 /*
- * ƒ`ƒƒƒlƒ‹óMFƒCƒxƒ“ƒg‚ÆƒAƒNƒVƒ‡ƒ“‚ğƒ`ƒƒƒlƒ‹‚É“o˜^
+ * ãƒãƒ£ãƒãƒ«å—ä¿¡ï¼šã‚¤ãƒ™ãƒ³ãƒˆã¨ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã‚’ãƒãƒ£ãƒãƒ«ã«ç™»éŒ²
  */
 /*
   r0 : recv_clos
@@ -99,11 +99,11 @@ int __recv__(void) {
     proc_t *prc;
 
     if ((__prc__regs[0] = (int)chout_next((chan_t *)__prc__regs[2])) == (int)NULL) {
-        /* ‘—MƒvƒƒZƒX‚ª–³‚¢ê‡‚ÍƒuƒƒbƒNƒLƒ…[‚É“ü‚ê‚é */
+        /* é€ä¿¡ãƒ—ãƒ­ã‚»ã‚¹ãŒç„¡ã„å ´åˆã¯ãƒ–ãƒ­ãƒƒã‚¯ã‚­ãƒ¥ãƒ¼ã«å…¥ã‚Œã‚‹ */
         __prc__regs[0] = (int)event(0, __prc__regs[3], __prc__regs[4]);
         TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[2])->inq, (event_t *)__prc__regs[0], link);
     } else {
-        /* ‘—MƒvƒƒZƒX‚ğæ‚èo‚µ‚ÄÀs‘Ò‚¿ƒLƒ…[‚É“ü‚ê‚é */
+        /* é€ä¿¡ãƒ—ãƒ­ã‚»ã‚¹ã‚’å–ã‚Šå‡ºã—ã¦å®Ÿè¡Œå¾…ã¡ã‚­ãƒ¥ãƒ¼ã«å…¥ã‚Œã‚‹ */
         prc = proc();
         prc->clos = ((event_t *)__prc__regs[0])->clos;
         prc->val  = 0;
@@ -111,12 +111,12 @@ int __recv__(void) {
 
         prc = proc();
         prc->clos = __prc__regs[3];
-        prc->val  = ((event_t *)__prc__regs[0])->val;    /* ’l‚Ìó‚¯“n‚µ */
+        prc->val  = ((event_t *)__prc__regs[0])->val;    /* å€¤ã®å—ã‘æ¸¡ã— */
         TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
 
         TAILQ_REMOVE(&((chan_t *)__prc__regs[2])->outq, (event_t *)__prc__regs[0], link);
         EV_SET_CANCEL((event_t *)__prc__regs[0]);
-        /* trans‚ğƒLƒƒƒ“ƒZƒ‹‚·‚é(__prc__regs[4]) */
+        /* transã‚’ã‚­ãƒ£ãƒ³ã‚»ãƒ«ã™ã‚‹(__prc__regs[4]) */
         TR_SET_CANCEL(__prc__regs[4]);
     }
     __prc__regs[0] = __prc__regs[1];
@@ -126,7 +126,7 @@ int __recv__(void) {
 /*
   r0 : run_clos
   r1 : continuation
-  r2 : ¶¬‚·‚éƒvƒƒZƒXƒNƒ[ƒWƒƒ
+  r2 : ç”Ÿæˆã™ã‚‹ãƒ—ãƒ­ã‚»ã‚¹ã‚¯ãƒ­ãƒ¼ã‚¸ãƒ£
 */
 int __run__(void) {
     proc_t *prc;
@@ -141,7 +141,7 @@ int __run__(void) {
 }
 
 /*
- * ƒvƒƒZƒX¶¬
+ * ãƒ—ãƒ­ã‚»ã‚¹ç”Ÿæˆ
  */
 #if 0
 void __run__(int clos) {

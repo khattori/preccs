@@ -1,7 +1,7 @@
 type Sockets = {in:<string>;out:<string>}
 
 //
-// EchoƒNƒ‰ƒCƒAƒ“ƒg
+// Echoã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆ
 //
 proc Main() =
     var so1:<string>;

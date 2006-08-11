@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief I/Oˆ—(Àsƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief I/Oå‡¦ç†(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
  * @author Kenta HATTORI
  * @date   2006/04/26
@@ -54,7 +54,7 @@ static int func_stdin(void) {
     __prc__regs[3] = __string__(dwInbLen, achInbuf);
     __prc__regs[4] = __prc__disp;
     __prc__regs[5] = __record__(1,0);
-    /* ƒoƒbƒtƒ@‹óó‘Ô‚ğ’Ê’m */
+    /* ãƒãƒƒãƒ•ã‚¡ç©ºçŠ¶æ…‹ã‚’é€šçŸ¥ */
     if (!SetEvent(hEvtInbEmpty)) {
         perr(PERR_SYSTEM, "SetEvent", GetLastError(), __FILE__, __LINE__);
     }
@@ -64,10 +64,10 @@ static int func_stdin(void) {
 static int clos_stdin[1] = { (int)func_stdin };
 
 /**
- * I/Oˆ—‚Ì‰Šú‰»
+ * I/Oå‡¦ç†ã®åˆæœŸåŒ–
  */
 void io_init(void) {
-    /* ƒnƒ“ƒhƒ‹‚Ì‰Šú‰» */
+    /* ãƒãƒ³ãƒ‰ãƒ«ã®åˆæœŸåŒ– */
     if ((hStdOut = GetStdHandle(STD_OUTPUT_HANDLE)) == INVALID_HANDLE_VALUE) {
         perr(PERR_SYSTEM, "GetStdHandle", GetLastError(), __FILE__, __LINE__);
     }
@@ -80,12 +80,12 @@ void io_init(void) {
     if ((hEvtInbFull  = CreateEvent(NULL, FALSE, FALSE, NULL)) == NULL) {
         perr(PERR_SYSTEM, "CreateEvent", GetLastError(), __FILE__, __LINE__);
     }
-    /* ƒXƒŒƒbƒh¶¬ */
+    /* ã‚¹ãƒ¬ãƒƒãƒ‰ç”Ÿæˆ */
     hStdinThread = CreateThread(NULL, 0, StdinThread, NULL, 0, &dwStdinThreadID);
     if (hStdinThread == NULL) {
         perr(PERR_SYSTEM, "CreateThread", GetLastError(), __FILE__, __LINE__);
     }
-    /* ƒtƒ@ƒCƒ‹IO‰Šú‰» */
+    /* ãƒ•ã‚¡ã‚¤ãƒ«IOåˆæœŸåŒ– */
     file_init();
 }
 static HANDLE handles[MAXIMUM_WAIT_OBJECTS];
@@ -93,7 +93,7 @@ ioent_t io_table[MAXIMUM_WAIT_OBJECTS];
 static int io_count;
 
 /**
- * I/O“üo—Íˆ— 
+ * I/Oå…¥å‡ºåŠ›å‡¦ç† 
  */
 int io_exec(void) {
     event_t *evt;
@@ -103,42 +103,42 @@ int io_exec(void) {
     DWORD ret;
 
     io_count = 0;
-    /* •W€o—Í‘Ò‚¿ */
+    /* æ¨™æº–å‡ºåŠ›å¾…ã¡ */
     if (chout_next((chan_t *)__prc__stdout) != NULL) {
         return (int)func_stdout;
     }
-    /* •W€“ü—Í‘Ò‚¿ */
+    /* æ¨™æº–å…¥åŠ›å¾…ã¡ */
     if (chin_next((chan_t *)__prc__stdin) != NULL) {
-        /* ƒCƒxƒ“ƒgó‘Ô‚ğ’²‚×‚é */
+        /* ã‚¤ãƒ™ãƒ³ãƒˆçŠ¶æ…‹ã‚’èª¿ã¹ã‚‹ */
         ret = WaitForSingleObject(hEvtInbFull,0);
         if (ret == WAIT_OBJECT_0) {
             return (int)func_stdin;
         } else if (ret == WAIT_TIMEOUT) {
             io = &io_table[io_count];
-            handles[io_count] = hEvtInbFull; /* ƒf[ƒ^‚ª‚ ‚ê‚ÎƒCƒxƒ“ƒgó‘Ô */
+            handles[io_count] = hEvtInbFull; /* ãƒ‡ãƒ¼ã‚¿ãŒã‚ã‚Œã°ã‚¤ãƒ™ãƒ³ãƒˆçŠ¶æ…‹ */
             io->type = IOT_STDIN;
             io_count++;
         } else {
             assert(0);
         }
     }
-    /* ƒtƒ@ƒCƒ‹IOˆ— */
+    /* ãƒ•ã‚¡ã‚¤ãƒ«IOå‡¦ç† */
     if ((cont = file_io(handles, io_table, &io_count)) != 0) {
         return cont;
     }
-    /* ƒ\ƒPƒbƒgIOˆ— */
+    /* ã‚½ã‚±ãƒƒãƒˆIOå‡¦ç† */
     if ((cont = sock_io(handles, io_table, &io_count)) != 0) {
         return cont;
     }
-    /* ƒTƒEƒ“ƒhIOˆ— */
+    /* ã‚µã‚¦ãƒ³ãƒ‰IOå‡¦ç† */
     if ((cont = wave_io(handles, io_table, &io_count)) != 0) {
         return cont;
     }
 
-    /* ƒ^ƒCƒ}[ˆ— */
+    /* ã‚¿ã‚¤ãƒãƒ¼å‡¦ç† */
     if ((evt = chout_next((chan_t *)__prc__timer)) != NULL) {
-        /* ƒ^ƒCƒ}[ƒLƒ…[‚ÉˆÚ“®‚·‚é */
-        /* ƒCƒxƒ“ƒg‚Í‚Ü‚¾ƒLƒƒƒ“ƒZƒ‹‚³‚ê‚È‚¢ */
+        /* ã‚¿ã‚¤ãƒãƒ¼ã‚­ãƒ¥ãƒ¼ã«ç§»å‹•ã™ã‚‹ */
+        /* ã‚¤ãƒ™ãƒ³ãƒˆã¯ã¾ã ã‚­ãƒ£ãƒ³ã‚»ãƒ«ã•ã‚Œãªã„ */
         TAILQ_REMOVE(&((chan_t *)__prc__timer)->outq, evt, link);
         timer_add(evt);
     }
@@ -182,12 +182,12 @@ int io_exec(void) {
     return ((int *)__prc__regs[0])[0];
 }
 
-/* •W€“ü—Í‚ÌŠÄ‹ƒXƒŒƒbƒh */
+/* æ¨™æº–å…¥åŠ›ã®ç›£è¦–ã‚¹ãƒ¬ãƒƒãƒ‰ */
 static DWORD WINAPI StdinThread(LPVOID param) {
-    /* ƒoƒbƒtƒ@‚ª‹ó‚É‚È‚é‚Ü‚Å‘Ò‚Â */
+    /* ãƒãƒƒãƒ•ã‚¡ãŒç©ºã«ãªã‚‹ã¾ã§å¾…ã¤ */
     while (WaitForSingleObject(hEvtInbEmpty, INFINITE) == WAIT_OBJECT_0) {
         ReadFile(hStdIn, achInbuf, BUFSIZ, &dwInbLen, NULL);
-        /* ƒoƒbƒtƒ@‚ğƒZƒbƒg‚·‚é */
+        /* ãƒãƒƒãƒ•ã‚¡ã‚’ã‚»ãƒƒãƒˆã™ã‚‹ */
         if (!SetEvent(hEvtInbFull)) {
             perr(PERR_SYSTEM, "SetEvent", GetLastError(), __FILE__, __LINE__);
         }

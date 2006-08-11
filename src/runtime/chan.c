@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief ƒ`ƒƒƒlƒ‹ŠÇ—ƒ‚ƒWƒ…[ƒ‹(Àsƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief ãƒãƒ£ãƒãƒ«ç®¡ç†ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
  * @author Kenta HATTORI
  * @date   2006/04/18
@@ -15,13 +15,13 @@
 #include "gc.h"
 
 /**
- * ƒ`ƒƒƒlƒ‹¶¬
+ * ãƒãƒ£ãƒãƒ«ç”Ÿæˆ
  */
 chan_t *__chan__(void) {
     chan_t *ch;
 
     ch = (chan_t *)gc_record(GC_ALIGN(sizeof(chan_t)));
-    /* ƒCƒxƒ“ƒgƒLƒ…[‰Šú‰» */
+    /* ã‚¤ãƒ™ãƒ³ãƒˆã‚­ãƒ¥ãƒ¼åˆæœŸåŒ– */
     TAILQ_INIT(&ch->inq);
     TAILQ_INIT(&ch->outq);
 
@@ -29,7 +29,7 @@ chan_t *__chan__(void) {
 }
 
 /**
- * ƒ`ƒƒƒlƒ‹‚Ì“ü—Í‘Ò‚¿ƒLƒ…[‚©‚çŸ‚ÌƒCƒxƒ“ƒg‚ğæ“¾
+ * ãƒãƒ£ãƒãƒ«ã®å…¥åŠ›å¾…ã¡ã‚­ãƒ¥ãƒ¼ã‹ã‚‰æ¬¡ã®ã‚¤ãƒ™ãƒ³ãƒˆã‚’å–å¾—
  */
 event_t *chin_next(chan_t *ch) {
     event_t *evt;
@@ -38,7 +38,7 @@ event_t *chin_next(chan_t *ch) {
         if (!EV_IS_CANCELLED(evt)) {
             break;
         }
-        /* ƒLƒƒƒ“ƒZƒ‹Ï‚İ‚ÌƒCƒxƒ“ƒg */
+        /* ã‚­ãƒ£ãƒ³ã‚»ãƒ«æ¸ˆã¿ã®ã‚¤ãƒ™ãƒ³ãƒˆ */
         TAILQ_REMOVE(&ch->inq, evt, link);
     }
 
@@ -46,7 +46,7 @@ event_t *chin_next(chan_t *ch) {
 }
 
 /**
- * ƒ`ƒƒƒlƒ‹‚Ìo—Í‘Ò‚¿ƒLƒ…[‚©‚çŸ‚ÌƒCƒxƒ“ƒg‚ğæ“¾
+ * ãƒãƒ£ãƒãƒ«ã®å‡ºåŠ›å¾…ã¡ã‚­ãƒ¥ãƒ¼ã‹ã‚‰æ¬¡ã®ã‚¤ãƒ™ãƒ³ãƒˆã‚’å–å¾—
  */
 event_t *chout_next(chan_t *ch) {
     event_t *evt;
@@ -55,7 +55,7 @@ event_t *chout_next(chan_t *ch) {
         if (!EV_IS_CANCELLED(evt)) {
             break;
         }
-        /* ƒLƒƒƒ“ƒZƒ‹Ï‚İ‚ÌƒCƒxƒ“ƒg */
+        /* ã‚­ãƒ£ãƒ³ã‚»ãƒ«æ¸ˆã¿ã®ã‚¤ãƒ™ãƒ³ãƒˆ */
         TAILQ_REMOVE(&ch->outq, evt, link);
     }
 
@@ -63,7 +63,7 @@ event_t *chout_next(chan_t *ch) {
 }
 
 /**
- * ƒ`ƒƒƒlƒ‹‚Ì‘—Mˆ—(óM‘Ò‚¿ƒvƒƒZƒX‚ÌƒLƒƒƒ“ƒZƒ‹)
+ * ãƒãƒ£ãƒãƒ«ã®é€ä¿¡å‡¦ç†(å—ä¿¡å¾…ã¡ãƒ—ãƒ­ã‚»ã‚¹ã®ã‚­ãƒ£ãƒ³ã‚»ãƒ«)
  */
 //int chan_send(int ch, char *buf, int len) {
 int chan_send(int ch, int val) {
@@ -78,7 +78,7 @@ int chan_send(int ch, int val) {
 }
 
 /**
- * ƒ`ƒƒƒlƒ‹‚ÌóMˆ—(‘—M‘Ò‚¿ƒvƒƒZƒX‚ÌƒLƒƒƒ“ƒZƒ‹)
+ * ãƒãƒ£ãƒãƒ«ã®å—ä¿¡å‡¦ç†(é€ä¿¡å¾…ã¡ãƒ—ãƒ­ã‚»ã‚¹ã®ã‚­ãƒ£ãƒ³ã‚»ãƒ«)
  */
 int chan_recv(int ch) {
     __prc__regs[0] = __prc__recv;

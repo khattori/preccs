@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief I/Oˆ—(Àsƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief I/Oå‡¦ç†(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
  * @author Kenta HATTORI
  * @date   2006/04/26
@@ -16,7 +16,7 @@ int io_exec(void);
 
 typedef enum { IOT_STDIN, IOT_SOCK, IOT_FILE, IOT_WAVE } io_t;
 typedef struct ioent_ {
-    io_t type;      /* IOí•Ê */
+    io_t type;      /* IOç¨®åˆ¥ */
     int  handle;
 } ioent_t;
 

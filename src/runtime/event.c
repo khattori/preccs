@@ -1,8 +1,8 @@
 /**
  * @file 
- * @brief ƒCƒxƒ“ƒg\‘¢‘Ì’è‹`(Àsƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief ã‚¤ãƒ™ãƒ³ãƒˆæ§‹é€ ä½“å®šç¾©(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
- *  ƒCƒxƒ“ƒg\‘¢‘Ì‚Íƒ`ƒƒƒlƒ‹‚Ì“üo—ÍƒLƒ…[‚ÌƒGƒ“ƒgƒŠ‚Æ‚È‚é
+ *  ã‚¤ãƒ™ãƒ³ãƒˆæ§‹é€ ä½“ã¯ãƒãƒ£ãƒãƒ«ã®å…¥å‡ºåŠ›ã‚­ãƒ¥ãƒ¼ã®ã‚¨ãƒ³ãƒˆãƒªã¨ãªã‚‹
  *
  * @author Kenta HATTORI
  * @date   2006/04/18
@@ -14,7 +14,7 @@
 #include "gc.h"
 
 /**
- * ƒCƒxƒ“ƒgƒIƒuƒWƒFƒNƒg¶¬
+ * ã‚¤ãƒ™ãƒ³ãƒˆã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆç”Ÿæˆ
  */
 event_t *event(int val, int clos, int trans) {
     event_t *evt;
@@ -28,7 +28,7 @@ event_t *event(int val, int clos, int trans) {
 }
 
 /**
- * ƒCƒxƒ“ƒgƒIƒuƒWƒFƒNƒg‰ğ•ú
+ * ã‚¤ãƒ™ãƒ³ãƒˆã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆè§£æ”¾
  */
 /*
 void evt_free(event_t *evt) {
@@ -37,7 +37,7 @@ void evt_free(event_t *evt) {
 */
 
 /**
- * ƒCƒxƒ“ƒg‚ÌƒLƒƒƒ“ƒZƒ‹ˆ—
+ * ã‚¤ãƒ™ãƒ³ãƒˆã®ã‚­ãƒ£ãƒ³ã‚»ãƒ«å‡¦ç†
  */
 /*
 void evt_cancel(event_t *evt) {

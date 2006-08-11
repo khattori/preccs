@@ -1,5 +1,5 @@
 (**
-   ƒŒƒWƒXƒ^ƒ}ƒbƒvŠÖ˜Aƒ‚ƒWƒ…[ƒ‹
+   ãƒ¬ã‚¸ã‚¹ã‚¿ãƒžãƒƒãƒ—é–¢é€£ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: rmap.ml,v 1.5 2006/07/06 04:15:36 hattori Exp $
@@ -8,36 +8,36 @@
 module L = List
 
 (* 
- * ƒŒƒWƒXƒ^ƒ}ƒbƒv‚ÌŒ^
+ * ãƒ¬ã‚¸ã‚¹ã‚¿ãƒžãƒƒãƒ—ã®åž‹
  * 
- * - ŽŸ‚ÉŠ„“–‚Ä‰Â”\‚È‹ó‚«”Ô†
- * - Š„“–‚ÄÏ‚ÝƒŠƒXƒg (ƒŒƒWƒXƒ^”Ô† ~ ƒVƒ“ƒ{ƒ‹)
- * @       ¦ ƒŒƒWƒXƒ^”Ô†‚Å¸‡‚É‚È‚Á‚Ä‚¢‚é
+ * - æ¬¡ã«å‰²å½“ã¦å¯èƒ½ãªç©ºãç•ªå·
+ * - å‰²å½“ã¦æ¸ˆã¿ãƒªã‚¹ãƒˆ (ãƒ¬ã‚¸ã‚¹ã‚¿ç•ªå· Ã— ã‚·ãƒ³ãƒœãƒ«)
+ * ã€€       â€» ãƒ¬ã‚¸ã‚¹ã‚¿ç•ªå·ã§æ˜‡é †ã«ãªã£ã¦ã„ã‚‹
  * 
  *)
 type t = int * (int * Symbol.t) list
 
-let treg = -1     (* ˆêŽžƒŒƒWƒXƒ^”Ô† *)
-let mreg = ref 0  (* Å‘åƒŒƒWƒXƒ^”Ô† *)
+let treg = -1     (* ä¸€æ™‚ãƒ¬ã‚¸ã‚¹ã‚¿ç•ªå· *)
+let mreg = ref 0  (* æœ€å¤§ãƒ¬ã‚¸ã‚¹ã‚¿ç•ªå· *)
 let maxreg () = 1+(!mreg)
 
 let empty:t = 0,[]
 
-(* ‰ŠúƒŒƒWƒXƒ^ƒ}ƒbƒv‚Ìì¬ *)
+(* åˆæœŸãƒ¬ã‚¸ã‚¹ã‚¿ãƒžãƒƒãƒ—ã®ä½œæˆ *)
 let make vs = L.fold_left (fun (i,rm) s -> i+1,rm@[i,s]) empty vs
 
-(* ŽŸ‚Ì‹ó‚«ƒŒƒWƒXƒ^‚ð’T‚· *)
+(* æ¬¡ã®ç©ºããƒ¬ã‚¸ã‚¹ã‚¿ã‚’æŽ¢ã™ *)
 let next s (_,ls) = L.fold_left (fun i (j,_) -> if i=j then i+1 else i) s ls
 
-(** ƒŒƒWƒXƒ^–¼Žæ“¾ *)
+(** ãƒ¬ã‚¸ã‚¹ã‚¿åå–å¾— *)
 let regname = function
     i when i=treg -> "__prc__treg"
   | i             -> (if i>(!mreg) then mreg:=i else ());Printf.sprintf "__prc__regs[%d]" i
 
-(** ‘Î‰ž‚·‚éƒVƒ“ƒ{ƒ‹‚ðŽæ“¾ *)
+(** å¯¾å¿œã™ã‚‹ã‚·ãƒ³ãƒœãƒ«ã‚’å–å¾— *)
 let get (_,ls) i = try L.assoc i ls with _ -> assert false
 
-(** ƒVƒ“ƒ{ƒ‹‚Ì•ÛŽ‚·‚éƒŒƒWƒXƒ^”Ô†‚ðŒŸõ *)
+(** ã‚·ãƒ³ãƒœãƒ«ã®ä¿æŒã™ã‚‹ãƒ¬ã‚¸ã‚¹ã‚¿ç•ªå·ã‚’æ¤œç´¢ *)
 let find (_,ls) s = let i,_ = L.find (fun (i,s') -> s=s') ls in i
 
 let add (n,ls) i s =
@@ -47,19 +47,19 @@ let delete (n,ls) i =
   let nl = L.remove_assoc i ls in
     next 0 (n,nl),nl
 
-(** ƒŒƒWƒXƒ^ŠÔ‚ÌˆÚ“® i -> j *)
+(** ãƒ¬ã‚¸ã‚¹ã‚¿é–“ã®ç§»å‹• i -> j *)
 let move rmap i j =
   delete (add (delete rmap j) j (get rmap i)) i
 
-(** ƒŒƒWƒXƒ^ƒ}ƒbƒv‚Ì‰ð•ú(vsˆÈŠO‚ð‰ð•ú‚·‚é) *)
+(** ãƒ¬ã‚¸ã‚¹ã‚¿ãƒžãƒƒãƒ—ã®è§£æ”¾(vsä»¥å¤–ã‚’è§£æ”¾ã™ã‚‹) *)
 let release (n,ls) vs =
   L.fold_left (fun rm (i,s) -> if L.mem s vs then add rm i s else rm) empty ls
 
-(** ƒŒƒWƒXƒ^‚ÌŠ„“–‚Ä *)
+(** ãƒ¬ã‚¸ã‚¹ã‚¿ã®å‰²å½“ã¦ *)
 let assign (n,ls) s = add (n,ls) n s
 
 let isFree (_,ls) i = not (L.mem_assoc i ls)
 
-(** •\Ž¦ *)
+(** è¡¨ç¤º *)
 let show (_,rs) =
   List.iter (fun (i,s) -> Printf.printf "__prc__regs[%d]=%s\n" i (Symbol.name s)) rs

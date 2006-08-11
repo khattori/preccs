@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief ƒ\ƒPƒbƒgˆ—(Àsƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief ã‚½ã‚±ãƒƒãƒˆå‡¦ç†(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
  * @author Kenta HATTORI
  * @date   2006/04/26
@@ -22,14 +22,14 @@ int ich_array[MAX_SOCKNO];
 int och_array[MAX_SOCKNO];
 int sock_next[MAX_SOCKNO];
 
-static BOOL serv_array[MAX_SOCKNO];     // ƒT[ƒoƒ\ƒPƒbƒg‚©‚Ç‚¤‚©‚Ìƒ`ƒFƒbƒN
+static BOOL serv_array[MAX_SOCKNO];     // ã‚µãƒ¼ãƒã‚½ã‚±ãƒƒãƒˆã‹ã©ã†ã‹ã®ãƒã‚§ãƒƒã‚¯
 static SOCKET sock_array[MAX_SOCKNO];
 static WSAEVENT evt_array[MAX_SOCKNO];
 
 int sock_inited;
 
 /*
- * ƒ\ƒPƒbƒg‚Æƒ`ƒƒƒlƒ‹‚Ì‘g‚ğ“o˜^‚·‚é
+ * ã‚½ã‚±ãƒƒãƒˆã¨ãƒãƒ£ãƒãƒ«ã®çµ„ã‚’ç™»éŒ²ã™ã‚‹
  */
 static int sock_register(int ich, int och, SOCKET so) {
     WSAEVENT evt;
@@ -69,7 +69,7 @@ void prc_SockStart(void) {
         perr(PERR_SYSTEM, "WSAStartup", status, __FILE__, __LINE__);
     }
 
-    /* ƒ\ƒPƒbƒg”z—ñ‚Ì‰Šú‰» */
+    /* ã‚½ã‚±ãƒƒãƒˆé…åˆ—ã®åˆæœŸåŒ– */
     for (i = 0; i < MAX_SOCKNO-1; i++) {
         sock_next[i] = i+1;
     }
@@ -86,7 +86,7 @@ void prc_SockFinish(void) {
 }
 
 /*
- * UdpƒNƒ‰ƒCƒAƒ“ƒgƒ\ƒPƒbƒg‚Ìƒnƒ“ƒhƒ‹‚ğ•Ô‚·
+ * Udpã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã‚½ã‚±ãƒƒãƒˆã®ãƒãƒ³ãƒ‰ãƒ«ã‚’è¿”ã™
  */
 int prc_SockUdpClient(int ich, int och, char *host, int port) {
     struct hostent *serverHostent;
@@ -95,7 +95,7 @@ int prc_SockUdpClient(int ich, int och, char *host, int port) {
     int status;
     int h;
 
-    /* ƒnƒ“ƒhƒ‹‚Ìƒ`ƒFƒbƒN */
+    /* ãƒãƒ³ãƒ‰ãƒ«ã®ãƒã‚§ãƒƒã‚¯ */
     if ((h = sock_free) < 0) {
         assert(0);
         return -1;
@@ -126,7 +126,7 @@ int prc_SockUdpClient(int ich, int och, char *host, int port) {
 }
 
 /*
- * UdpƒNƒ‰ƒCƒAƒ“ƒgƒ\ƒPƒbƒg‚Ìƒnƒ“ƒhƒ‹‚ğ•Ô‚·
+ * Udpã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã‚½ã‚±ãƒƒãƒˆã®ãƒãƒ³ãƒ‰ãƒ«ã‚’è¿”ã™
  */
 int prc_SockUdpOpen(int ich, int och, char *host, int cport, int bport) {
     struct hostent *serverHostent;
@@ -135,7 +135,7 @@ int prc_SockUdpOpen(int ich, int och, char *host, int cport, int bport) {
     int status;
     int h;
 
-    /* ƒnƒ“ƒhƒ‹‚Ìƒ`ƒFƒbƒN */
+    /* ãƒãƒ³ãƒ‰ãƒ«ã®ãƒã‚§ãƒƒã‚¯ */
     if ((h = sock_free) < 0) {
         assert(0);
         return -1;
@@ -176,7 +176,7 @@ int prc_SockUdpOpen(int ich, int och, char *host, int cport, int bport) {
 
 
 /*
- * ƒNƒ‰ƒCƒAƒ“ƒgƒ\ƒPƒbƒg‚Ìƒnƒ“ƒhƒ‹‚ğ•Ô‚·
+ * ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã‚½ã‚±ãƒƒãƒˆã®ãƒãƒ³ãƒ‰ãƒ«ã‚’è¿”ã™
  */
 int prc_SockTcpClient(int ich, int och, char *host, int port) {
     struct hostent *serverHostent;
@@ -185,7 +185,7 @@ int prc_SockTcpClient(int ich, int och, char *host, int port) {
     int status;
     int h;
 
-    /* ƒnƒ“ƒhƒ‹‚Ìƒ`ƒFƒbƒN */
+    /* ãƒãƒ³ãƒ‰ãƒ«ã®ãƒã‚§ãƒƒã‚¯ */
     if ((h = sock_free) < 0) {
         return -1;
     }
@@ -215,7 +215,7 @@ int prc_SockTcpClient(int ich, int och, char *host, int port) {
 }
 
 /*
- * ƒT[ƒo[ƒ\ƒPƒbƒg‚Ìƒnƒ“ƒhƒ‹‚ğ•Ô‚·
+ * ã‚µãƒ¼ãƒãƒ¼ã‚½ã‚±ãƒƒãƒˆã®ãƒãƒ³ãƒ‰ãƒ«ã‚’è¿”ã™
  */
 int prc_SockTcpServer(int ch, int port) {
     SOCKADDR_IN addr;
@@ -224,7 +224,7 @@ int prc_SockTcpServer(int ch, int port) {
     int status;
     int h;
 
-    /* ƒnƒ“ƒhƒ‹‚Ìƒ`ƒFƒbƒN */
+    /* ãƒãƒ³ãƒ‰ãƒ«ã®ãƒã‚§ãƒƒã‚¯ */
     if ((h = sock_free) < 0) {
         return -1;
     }
@@ -296,7 +296,7 @@ void prc_SockClose(int h) {
 }
 
 extern ioent_t io_table[];
-/* ƒ\ƒPƒbƒgØ’fˆ— */
+/* ã‚½ã‚±ãƒƒãƒˆåˆ‡æ–­å‡¦ç† */
 static int func_sockdc(void) {
     ioent_t *io = &io_table[TOCINT(__prc__regs[1])];
 
@@ -305,7 +305,7 @@ static int func_sockdc(void) {
     return chan_send(ich_array[io->handle], __prc__regs[0]);
 }
 
-/* ƒ\ƒPƒbƒgÚ‘±‘Ò‹@ˆ— */
+/* ã‚½ã‚±ãƒƒãƒˆæ¥ç¶šå¾…æ©Ÿå‡¦ç† */
 static int func_sockac(void) {
     ioent_t *io = &io_table[TOCINT(__prc__regs[1])];
     SOCKET csock;
@@ -322,7 +322,7 @@ static int func_sockac(void) {
     return chan_send(ich_array[io->handle], __prc__regs[3]);
 }
 
-/* ƒ\ƒPƒbƒg“ü—Íˆ— */
+/* ã‚½ã‚±ãƒƒãƒˆå…¥åŠ›å‡¦ç† */
 static int func_sockin(void) {
     static char buf[BUFSIZ];
     ioent_t *io = &io_table[TOCINT(__prc__regs[1])];
@@ -345,7 +345,7 @@ static int func_sockout(void) {
 
     if ((evt = chout_next((chan_t *)och_array[io->handle])) == NULL) {
         // perr(PERR_INTERNAL, __FILE__, __LINE__);
-        // Accept’¼Œã‚ÉWindows ‚ª‹ó‚ÌFD_WRITEƒCƒxƒ“ƒg‚ğƒZƒbƒg‚µ‚Ä‚µ‚Ü‚¤‚±‚Æ‚ª‚ ‚é
+        // Acceptç›´å¾Œã«Windows ãŒç©ºã®FD_WRITEã‚¤ãƒ™ãƒ³ãƒˆã‚’ã‚»ãƒƒãƒˆã—ã¦ã—ã¾ã†ã“ã¨ãŒã‚ã‚‹
         return (int)__disp__;
     }
     if ((len = STRLEN(evt->val)) == 0) {
@@ -366,7 +366,7 @@ static int clos_sockdc[1] = { (int)func_sockdc };
 static int clos_sockin[1] = { (int)func_sockin };
 static int clos_sockout[1] = { (int)func_sockout };
 
-/* IOƒe[ƒuƒ‹‚ğƒZƒbƒg‚·‚é */
+/* IOãƒ†ãƒ¼ãƒ–ãƒ«ã‚’ã‚»ãƒƒãƒˆã™ã‚‹ */
 int sock_io(HANDLE handles[], ioent_t io_table[], int *io_count) {
     static char buf[BUFSIZ];
     int len;
@@ -447,7 +447,7 @@ int sock_io(HANDLE handles[], ioent_t io_table[], int *io_count) {
     return  0;
 }
 
-/* Às‚·‚éƒNƒ[ƒWƒƒ‚ğæ‚èo‚· */
+/* å®Ÿè¡Œã™ã‚‹ã‚¯ãƒ­ãƒ¼ã‚¸ãƒ£ã‚’å–ã‚Šå‡ºã™ */
 int sock_clos(int h) {
     WSANETWORKEVENTS NetworkEvents;
 

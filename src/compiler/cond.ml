@@ -1,5 +1,5 @@
 (**
-   ‘JˆÚğŒƒ‚ƒWƒ…[ƒ‹
+   é·ç§»æ¡ä»¶ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: cond.ml,v 1.2 2006/06/21 00:14:14 hattori Exp $
@@ -7,15 +7,15 @@
 module P = Prop
 module PosSet = Set.Make(Pos)
 
-(* ‘JˆÚğŒ‚ÌŒ^’è‹` *)
+(* é·ç§»æ¡ä»¶ã®å‹å®šç¾© *)
 type t =
     Const of bool
   | Prop  of var P.t
 
-(* ’lQÆí•Ê *)
+(* å€¤å‚ç…§ç¨®åˆ¥ *)
 and var =
-    Counter of Label.t (* ƒJƒEƒ“ƒ^’l‚ğQÆ *)
-  | Value   of Label.t (* ƒ‰ƒxƒ‹’l‚ğQÆ   *)
+    Counter of Label.t (* ã‚«ã‚¦ãƒ³ã‚¿å€¤ã‚’å‚ç…§ *)
+  | Value   of Label.t (* ãƒ©ãƒ™ãƒ«å€¤ã‚’å‚ç…§   *)
 
 let conj = function
   | c1,Const(b2)      -> if b2 then c1 else Const false
@@ -34,21 +34,21 @@ let is_true = function
   | Prop(p)  -> P.taut p
 
 (*
- * ‘JˆÚğŒƒŠƒXƒg‚©‚ç–½‘è˜_—®‚Ì‘g‚İ‡‚í‚¹‚ğ’Šo
+ * é·ç§»æ¡ä»¶ãƒªã‚¹ãƒˆã‹ã‚‰å‘½é¡Œè«–ç†å¼ã®çµ„ã¿åˆã‚ã›ã‚’æŠ½å‡º
  * 
- *   ˆø@”Fcs : Cond.t list --- ‘JˆÚğŒ‚Ì‘g‚ÌƒŠƒXƒg
+ *   å¼•ã€€æ•°ï¼šcs : Cond.t list --- é·ç§»æ¡ä»¶ã®çµ„ã®ãƒªã‚¹ãƒˆ
  * 
- *   –ß‚è’lF¶¬‚µ‚½˜_—®‚ÌƒŠƒXƒgFCond.t list
+ *   æˆ»ã‚Šå€¤ï¼šç”Ÿæˆã—ãŸè«–ç†å¼ã®ãƒªã‚¹ãƒˆï¼šCond.t list
  *)
 let get_vars cs = 
-  let ps = List.fold_left (                      (* –½‘è•Ï”‚ğ’Šo *)
+  let ps = List.fold_left (                      (* å‘½é¡Œå¤‰æ•°ã‚’æŠ½å‡º *)
     fun ps -> function
         Const true -> ps
       | Prop p     -> P.get_vars p @ ps
-      | _          -> assert false (* Const false ‚Íœ‹Ï‚İ *)
+      | _          -> assert false (* Const false ã¯é™¤å»æ¸ˆã¿ *)
   ) [] cs in
-  let ps' = List.fold_left (                     (* d•¡‚ğæ‚èœ‚­ *)
+  let ps' = List.fold_left (                     (* é‡è¤‡ã‚’å–ã‚Šé™¤ã *)
     fun r p -> if List.mem p r then r else p::r
   ) [] ps
-  in List.map (fun p -> Prop p) (P.gen_comb ps') (* ‘g‚İ‡‚í‚¹‚ğ¶¬ *)
+  in List.map (fun p -> Prop p) (P.gen_comb ps') (* çµ„ã¿åˆã‚ã›ã‚’ç”Ÿæˆ *)
 

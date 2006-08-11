@@ -1,5 +1,5 @@
 (**
-   CƒR[ƒh¶¬ƒ‚ƒWƒ…[ƒ‹
+   Cã‚³ãƒ¼ãƒ‰ç”Ÿæˆãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: emit.ml,v 1.8 2006/07/27 00:07:17 hattori Exp $
@@ -68,9 +68,9 @@ let monop2str = function
   | C.Set -> "SET"
   | _     -> assert false
 
-(** CƒR[ƒh‚Ìo—Í *)
+(** Cã‚³ãƒ¼ãƒ‰ã®å‡ºåŠ› *)
 let rec emit rmap (cexp,fv) =
-  (* ƒŒƒWƒXƒ^ƒ}ƒbƒv‚ğXV *)
+  (* ãƒ¬ã‚¸ã‚¹ã‚¿ãƒãƒƒãƒ—ã‚’æ›´æ–° *)
   let rm = Rmap.release rmap !fv in
   match cexp with
     C.Prim(p,ops,rs,cs) ->
@@ -78,10 +78,10 @@ let rec emit rmap (cexp,fv) =
   | C.Fix(bs,c) ->
       emitHeader();
       Dfa.emit();
-      (* ŠÖ”éŒ¾o—Í *)
+      (* é–¢æ•°å®£è¨€å‡ºåŠ› *)
       List.iter (fun (f,_,_) -> emitFndecl (Symbol.name f)) bs;
-      List.iter emitFbind bs;  (* ŠeŠÖ”’è‹`‚Ìo—Í *)
-      emitPrologInit();        (* ‰Šú‰»ƒR[ƒh‚Ìo—Í *)
+      List.iter emitFbind bs;  (* å„é–¢æ•°å®šç¾©ã®å‡ºåŠ› *)
+      emitPrologInit();        (* åˆæœŸåŒ–ã‚³ãƒ¼ãƒ‰ã®å‡ºåŠ› *)
       emit Rmap.empty c;
       emitEpilog();
       emitRegdecl()
@@ -95,23 +95,23 @@ let rec emit rmap (cexp,fv) =
 
 and emitFbind (f,ps,c) =
   emitProlog(Symbol.name f);
-  emit (Rmap.make ps) c; (* ŠÖ”–{‘Ì‚Ìo—Í *)
+  emit (Rmap.make ps) c; (* é–¢æ•°æœ¬ä½“ã®å‡ºåŠ› *)
   emitEpilog()
 
 and emitApp rmap (op,ops) = 
-  (* ƒIƒyƒŒ[ƒ^‚Ì‘Ş”ğ *)
+  (* ã‚ªãƒšãƒ¬ãƒ¼ã‚¿ã®é€€é¿ *)
   let saveop rm =
     match op with
         C.Var l ->
-          let i = List.length ops in (* ƒIƒyƒ‰ƒ“ƒh‚Ì” *)
-          let j = Rmap.find rm l in  (* ƒIƒyƒŒ[ƒ^‚ÌƒŒƒWƒXƒ^ *)
+          let i = List.length ops in (* ã‚ªãƒšãƒ©ãƒ³ãƒ‰ã®æ•° *)
+          let j = Rmap.find rm l in  (* ã‚ªãƒšãƒ¬ãƒ¼ã‚¿ã®ãƒ¬ã‚¸ã‚¹ã‚¿ *)
             if j < i then
-              (* ƒIƒyƒ‰ƒ“ƒh‚Ì”ˆÈ~‚Å‹ó‚¢‚Ä‚¢‚éƒŒƒWƒXƒ^‚É‘Ş”ğ *)
+              (* ã‚ªãƒšãƒ©ãƒ³ãƒ‰ã®æ•°ä»¥é™ã§ç©ºã„ã¦ã„ã‚‹ãƒ¬ã‚¸ã‚¹ã‚¿ã«é€€é¿ *)
               let n = Rmap.next i rm in (emitMoveReg j n; Rmap.move rm j n)
             else rm
       | _ -> rm in
 
-  (* ƒŒƒWƒXƒ^‚Ì’uŠ· *)
+  (* ãƒ¬ã‚¸ã‚¹ã‚¿ã®ç½®æ› *)
   let perm rm = List.fold_left (
     fun (i,rm',rtry,movd) v -> match v with
         C.Var l ->
@@ -124,9 +124,9 @@ and emitApp rmap (op,ops) =
     (0,rm,(-1,-1),0) in
   let rec permvar rm vs =
       match perm rm vs with
-        _,rm',(-1,-1),_ -> rm'                          (* Š®—¹ó‘Ô *)
-      | _,rm',( i, j),0 -> permvar (save rm' i j vs) vs (* zŠÂó‘Ô *)
-      | _,rm',      _,_ -> permvar rm' vs               (* ‘±só‘Ô *)
+        _,rm',(-1,-1),_ -> rm'                          (* å®Œäº†çŠ¶æ…‹ *)
+      | _,rm',( i, j),0 -> permvar (save rm' i j vs) vs (* å¾ªç’°çŠ¶æ…‹ *)
+      | _,rm',      _,_ -> permvar rm' vs               (* ç¶šè¡ŒçŠ¶æ…‹ *)
 
   and save rm i j vs = 
     emitMoveReg i Rmap.treg;
@@ -136,7 +136,7 @@ and emitApp rmap (op,ops) =
         _,rm',_,0 -> rm'
       | _,rm',_,_ -> loop rm' vs in
 
-  (* ’è”ƒpƒ‰ƒ[ƒ^‚ÌƒZƒbƒg *)
+  (* å®šæ•°ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®ã‚»ãƒƒãƒˆ *)
   let setval =
     List.fold_left (
       fun i v -> match v with

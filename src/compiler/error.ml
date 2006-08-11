@@ -1,8 +1,8 @@
 (**
-   �G���[���b�Z�[�W�\�����[�`��
+   エラーメッセージ表示ルーチン
 
    TODO:
-    - �G���[���b�Z�[�W�ƃG���[��ʂ𕪗����Ē�`������
+    - エラーメッセージとエラー種別を分離して定義したい
 
    @author Hattori Kenta
    @version $Id: error.ml,v 1.5 2006/07/11 00:12:20 hattori Exp $
@@ -10,7 +10,7 @@
 
 exception Exit of int
 
-(** �G���[��ʂ̒�` *)
+(** エラー種別の定義 *)
 type err =
     ERR_UNDEF_VAR       of Symbol.t
   | ERR_UNDEF_LABEL     of Symbol.t
@@ -69,7 +69,7 @@ let errmsg = function
   | ERR_INTERNAL           -> "internal error"
   | _                      -> "unknown error"
 
-(** �x����ʂ̒�` *)
+(** 警告種別の定義 *)
 type war =
     WAR_UNKNOWN
 

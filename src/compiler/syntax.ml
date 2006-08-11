@@ -1,16 +1,16 @@
 (**
-   ’ŠÛ\•¶–Ø‚Ì’è‹`
+   æŠ½è±¡æ§‹æ–‡æœ¨ã®å®šç¾©
 
    TODO:
-    - info‚Ìˆµ‚¢‚É‚Â‚¢‚Ä®—‚·‚é•K—v‚ª‚ ‚é(•s—v‚Èinfo‚ðíœ‚·‚é‚È‚Ç)
-    - –½–¼‹K‘¥‚É‚Â‚¢‚ÄÄl‚Ì—]’n‚ ‚è
+    - infoã®æ‰±ã„ã«ã¤ã„ã¦æ•´ç†ã™ã‚‹å¿…è¦ãŒã‚ã‚‹(ä¸è¦ãªinfoã‚’å‰Šé™¤ã™ã‚‹ãªã©)
+    - å‘½åè¦å‰‡ã«ã¤ã„ã¦å†è€ƒã®ä½™åœ°ã‚ã‚Š
 
    @author Hattori Kenta
    @version $Id: syntax.ml,v 1.10 2006/07/27 00:07:18 hattori Exp $
 *)
 open Error
 
-(** éŒ¾ *)
+(** å®£è¨€ *)
 type def =
     DefVar  of (info * Symbol.t * decl)
   | DefType of (info * Symbol.t * typ) list
@@ -20,7 +20,7 @@ and decl  =
   | DeclType of typ * Types.t ref
 and param = Symbol.t * typ
 
-(** Œ^Ž® *)
+(** åž‹å¼ *)
 and typ =
     TypName   of info * Symbol.t
   | TypDeriv  of info * Symbol.t * (var * typ) list
@@ -30,7 +30,7 @@ and typ =
   | TypRecord of (info * Symbol.t * typ) list
   | TypTuple  of typ list
 
-(** ³‹K•\Œ»Ž® *)
+(** æ­£è¦è¡¨ç¾å¼ *)
 and rgx =
   | RgxString of info * string
   | RgxChrcls of info * string
@@ -44,13 +44,13 @@ and rgx =
   | RgxIter   of info * rgx * Symbol.t
   | RgxRecord of (info * Symbol.t * rgx) list
 
-(** ƒpƒ^[ƒ“Ž® *)
+(** ãƒ‘ã‚¿ãƒ¼ãƒ³å¼ *)
 and pat =
     PatAny   of info
   | PatConst of const
   | PatRegex of info * Symbol.t * rgx * Types.rgx ref
 
-(** ƒvƒƒZƒXŽ® *)
+(** ãƒ—ãƒ­ã‚»ã‚¹å¼ *)
 and proc =
     ProcStop   of info
   | ProcSkip   of info
@@ -64,7 +64,7 @@ and proc =
   | ProcAsign  of info * var * exp
   | ProcCblock of info * string list * var list
 
-(** ŽZpŽ® *)
+(** ç®—è¡“å¼ *)
 and exp =
     ExpConst  of const
   | ExpVar    of var
@@ -74,26 +74,26 @@ and exp =
   | ExpTuple  of exp list
 and record = info * Symbol.t * exp
 
-(** ’è”ƒŠƒeƒ‰ƒ‹ *)
+(** å®šæ•°ãƒªãƒ†ãƒ©ãƒ« *)
 and const =
     ConBool  of info * bool
   | ConInt   of info * int
   | ConStr   of info * string
 
-(** •Ï” *)
+(** å¤‰æ•° *)
 and var =
   | VarSimple of info * Symbol.t      
-  | VarField  of info * var * Symbol.t * int ref * Types.t ref (* ƒ‰ƒxƒ‹ŽQÆ *)
-  | VarSubscr of info * var * exp                (* ”z—ñ—v‘f   *)
+  | VarField  of info * var * Symbol.t * int ref * Types.t ref (* ãƒ©ãƒ™ãƒ«å‚ç…§ *)
+  | VarSubscr of info * var * exp                (* é…åˆ—è¦ç´    *)
   | VarProj   of info * var * int
 
-(** “ñ€‰‰ŽZŽq *)
+(** äºŒé …æ¼”ç®—å­ *)
 and binop =
     BopAdd | BopSub | BopMul | BopDiv | BopMod
   | BopEq  | BopNeq | BopLt  | BopLeq | BopGt  | BopGeq
   | BopAnd | BopOr  | BopCat
   
-(** ’P€‰‰ŽZŽq *)
+(** å˜é …æ¼”ç®—å­ *)
 and monop = MopNeg | MopNot
 
 let info_of_const = function  ConBool(i,_) | ConInt(i,_) | ConStr(i,_) -> i

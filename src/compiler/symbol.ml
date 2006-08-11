@@ -1,5 +1,5 @@
 (**
-   ‹L†•\ƒ‚ƒWƒ…[ƒ‹
+   è¨˜å·è¡¨ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: symbol.ml,v 1.5 2006/05/25 06:33:57 hattori Exp $
@@ -10,10 +10,10 @@ module Ht = Hashtbl
 type t = string * int
 let compare = Pervasives.compare
 
-let nextsym = ref 0    (* ƒVƒ“ƒ{ƒ‹”Ô† *)
+let nextsym = ref 0    (* ã‚·ãƒ³ãƒœãƒ«ç•ªå· *)
 let symtbl:(string,int) Ht.t = Ht.create 2048
 
-(** •¶š—ñ‚©‚çƒVƒ“ƒ{ƒ‹‚ğ¶¬ *)
+(** æ–‡å­—åˆ—ã‹ã‚‰ã‚·ãƒ³ãƒœãƒ«ã‚’ç”Ÿæˆ *)
 let symbol name =
   try 
     name,Ht.find symtbl name
@@ -21,8 +21,8 @@ let symbol name =
     let i = !nextsym in
       incr nextsym; Ht.add symtbl name i; name,i
 
-(** ƒVƒ“ƒ{ƒ‹‚©‚ç•¶š—ñ‚ğæ‚èo‚· *)
+(** ã‚·ãƒ³ãƒœãƒ«ã‹ã‚‰æ–‡å­—åˆ—ã‚’å–ã‚Šå‡ºã™ *)
 let name (s,n) = s
 
-(** ƒVƒ“ƒ{ƒ‹‚Ì“™‰¿”»’è *)
+(** ã‚·ãƒ³ãƒœãƒ«ã®ç­‰ä¾¡åˆ¤å®š *)
 let equal (s1,n1) (s2,n2) = n1==n2

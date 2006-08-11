@@ -1,7 +1,7 @@
 (**
-   ’†ŠÔŒ¾Œê•ÏŠ·ƒ‚ƒWƒ…[ƒ‹
+   ä¸­é–“è¨€èªå¤‰æ›ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
    
-   ŠT—vFƒÎ’†ŠÔŒ¾Œê‚©‚çCPSŒ`®‚Ö‚Ì•ÏŠ·‚ğs‚¤
+   æ¦‚è¦ï¼šÏ€ä¸­é–“è¨€èªã‹ã‚‰CPSå½¢å¼ã¸ã®å¤‰æ›ã‚’è¡Œã†
 
    @author Hattori Kenta
    @version $Id: trans.ml,v 1.6 2006/07/27 00:07:18 hattori Exp $
@@ -36,12 +36,12 @@ and expand_exp_list o =
                  ) ([],o)
   
 (*
- * ’l®‚Ì•ÏŠ·
+ * å€¤å¼ã®å¤‰æ›
  * 
- *   ˆø@”Fenv : Env.t         --- –¼‘OŠÂ‹«
- *           ctxt: C.value->cexp --- •]‰¿•¶–¬
- *           --- : Pi.exp        --- ’l®
- *   –ß‚è’lF•ÏŠ·Œã‚Ì’l®
+ *   å¼•ã€€æ•°ï¼šenv : Env.t         --- åå‰ç’°å¢ƒ
+ *           ctxt: C.value->cexp --- è©•ä¾¡æ–‡è„ˆ
+ *           --- : Pi.exp        --- å€¤å¼
+ *   æˆ»ã‚Šå€¤ï¼šå¤‰æ›å¾Œã®å€¤å¼
  * 
  *)
 let rec trans_exp env ctxt = function
@@ -55,7 +55,7 @@ let rec trans_exp env ctxt = function
   | P.Cint i   -> ctxt (C.Cint i)
   | P.String s -> ctxt (C.String s)
   | P.If(b,e1,e2) ->
-      let j = C.genid "j" in (* •ªŠòI—¹Œã‚Ì“®ì *)
+      let j = C.genid "j" in (* åˆ†å²çµ‚äº†å¾Œã®å‹•ä½œ *)
       let v = C.genid "v" in
         trans_exp env (
           fun x ->
@@ -97,7 +97,7 @@ let rec trans_exp env ctxt = function
           fun vs -> C.Prim(trans_prim op,vs,[t],[ctxt (C.Var t)]),ref []
         ) es
 
-(* ’l®‚Ì•ÏŠ·(ƒŠƒXƒg”Å) *)
+(* å€¤å¼ã®å¤‰æ›(ãƒªã‚¹ãƒˆç‰ˆ) *)
 and trans_exp_list env ctxt vs =
   let rec g xs = function
       []    -> ctxt (List.rev xs)
@@ -106,18 +106,18 @@ and trans_exp_list env ctxt vs =
     g [] vs
 
 (*
- * ƒvƒƒZƒX®‚Ì•ÏŠ·
+ * ãƒ—ãƒ­ã‚»ã‚¹å¼ã®å¤‰æ›
  * 
- *   ˆø@”Fenv : Env.t         --- –¼‘OŠÂ‹«
- *           cont: cexp          --- Œp‘±ˆ—
- *           --- : Pi.exp        --- ƒÎ®
- *   –ß‚è’lF•ÏŠ·Œã‚ÌCPS®
+ *   å¼•ã€€æ•°ï¼šenv : Env.t         --- åå‰ç’°å¢ƒ
+ *           cont: cexp          --- ç¶™ç¶šå‡¦ç†
+ *           --- : Pi.exp        --- Ï€å¼
+ *   æˆ»ã‚Šå€¤ï¼šå¤‰æ›å¾Œã®CPSå¼
  * 
  *)
 and trans_proc env cont = function
     P.End        -> cont
   | P.Guard g    ->
-      let t = C.genid "t" in (* ƒgƒ‰ƒ“ƒUƒNƒVƒ‡ƒ“ŠÇ——p *)
+      let t = C.genid "t" in (* ãƒˆãƒ©ãƒ³ã‚¶ã‚¯ã‚·ãƒ§ãƒ³ç®¡ç†ç”¨ *)
         C.Prim(C.Record,[C.Bool false],[t],
                [trans_guard env (C.Var t) cont C.disp g]),ref []
   | P.New(v,p)   ->
@@ -172,7 +172,7 @@ and trans_proc env cont = function
                    ) (C.App(C.Var k,[]),ref []) p)
               ) bs,trans_proc env cont p),ref []
 
-(* ƒvƒƒZƒX®‚Ì•ÏŠ·(ƒK[ƒh®”Å) *)
+(* ãƒ—ãƒ­ã‚»ã‚¹å¼ã®å¤‰æ›(ã‚¬ãƒ¼ãƒ‰å¼ç‰ˆ) *)
 and trans_guard env t c1 c2 = function
     P.Send(e1,e2,p) ->
       let k1 = C.genid "k" in

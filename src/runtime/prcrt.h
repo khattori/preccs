@@ -9,19 +9,19 @@
 #include "file.h"
 #include "wave.h"
 
-/* PreccsƒƒCƒ“ŠÖ” */
+/* Preccsãƒ¡ã‚¤ãƒ³é–¢æ•° */
 int prc_main(void);
 int __prc__stdin__(void);
 
-/* ƒXƒ^[ƒgƒAƒbƒvƒ‹[ƒ`ƒ“ */
+/* ã‚¹ã‚¿ãƒ¼ãƒˆã‚¢ãƒƒãƒ—ãƒ«ãƒ¼ãƒãƒ³ */
 extern int __prc__init(void);
 
-/* ƒOƒ[ƒoƒ‹ƒ`ƒƒƒlƒ‹‚ÌéŒ¾ */
+/* ã‚°ãƒ­ãƒ¼ãƒãƒ«ãƒãƒ£ãƒãƒ«ã®å®£è¨€ */
 extern int __prc__stdout;
 extern int __prc__stdin;
 extern int __prc__timer;
 
-/* ƒŒƒWƒXƒ^éŒ¾ */
+/* ãƒ¬ã‚¸ã‚¹ã‚¿å®£è¨€ */
 extern int __prc__treg;
 extern int __prc__regs[];
 extern int __prc__rnum;
@@ -31,7 +31,7 @@ extern int __prc__send;
 extern int __prc__recv;
 extern int __prc__run;
 
-/* ‘g‚İŠÖ” */
+/* çµ„è¾¼ã¿é–¢æ•° */
 int __concat__(int s1, int s2);
 int __equals__(int s1, int s2);
 int __disp__(void);

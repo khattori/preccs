@@ -1,19 +1,19 @@
 //
-// SNTPƒNƒ‰ƒCƒAƒ“ƒg
+// SNTPã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆ
 //
 C{
 extern void print_ntp_time(char *msg);
 C}
 
 //
-// ƒ^ƒCƒ€ƒXƒ^ƒ“ƒvŒ`®‚Ì’è‹`
+// ã‚¿ã‚¤ãƒ ã‚¹ã‚¿ãƒ³ãƒ—å½¢å¼ã®å®šç¾©
 //
 type TimeStamp = {{
     second  : octet[4];
     decimal : octet[4]
 }}
 //
-// SNTPƒpƒPƒbƒgŒ`®‚Ì’è‹`
+// SNTPãƒ‘ã‚±ãƒƒãƒˆå½¢å¼ã®å®šç¾©
 //
 type SntpPacket = {{
     mode	: octet;

@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief ƒ^ƒCƒ}[ˆ—ƒ‚ƒWƒ…[ƒ‹(Àsƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief ã‚¿ã‚¤ãƒãƒ¼å‡¦ç†ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
  * @author Kenta HATTORI
  * @date   2006/04/24
@@ -16,7 +16,7 @@
 tmrq_t *__prc__tmrq;
 
 /**
- * ƒ^ƒCƒ}[ˆ—‚Ì‰Šú‰»
+ * ã‚¿ã‚¤ãƒãƒ¼å‡¦ç†ã®åˆæœŸåŒ–
  */
 void timer_init(void) {
     __prc__tmrq = (tmrq_t *)gc_record(GC_ALIGN(sizeof(*__prc__tmrq)));
@@ -24,7 +24,7 @@ void timer_init(void) {
 }
 
 /**
- * ƒ^ƒCƒ}[ƒCƒxƒ“ƒg‚ğ’Ç‰Á‚·‚é
+ * ã‚¿ã‚¤ãƒãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆã‚’è¿½åŠ ã™ã‚‹
  */
 void timer_add(event_t *evt) {
     event_t *e;
@@ -33,13 +33,13 @@ void timer_add(event_t *evt) {
     now = GetTickCount();
     evt->val = now + TOCINT(evt->val)*1000;
 
-    /* ‘}“üêŠ‚ğ’Tõ */
+    /* æŒ¿å…¥å ´æ‰€ã‚’æ¢ç´¢ */
     for (e = __prc__tmrq->tqh_first; e != NULL; e = e->link.tqe_next) {
 	if ((DWORD)e->val > (DWORD)evt->val) {
 	    break;
 	}
     }
-    /* ƒ^ƒCƒ}[ƒLƒ…[‚ÉƒCƒxƒ“ƒg‚ğ‘}“ü */
+    /* ã‚¿ã‚¤ãƒãƒ¼ã‚­ãƒ¥ãƒ¼ã«ã‚¤ãƒ™ãƒ³ãƒˆã‚’æŒ¿å…¥ */
     if (e == NULL) {
 	TAILQ_INSERT_TAIL(__prc__tmrq, evt, link);
     } else {
@@ -54,7 +54,7 @@ static event_t *tmrq_next(void) {
         if (!EV_IS_CANCELLED(evt)) {
             break;
         }
-        /* ƒLƒƒƒ“ƒZƒ‹Ï‚İ‚ÌƒCƒxƒ“ƒg */
+        /* ã‚­ãƒ£ãƒ³ã‚»ãƒ«æ¸ˆã¿ã®ã‚¤ãƒ™ãƒ³ãƒˆ */
         TAILQ_REMOVE(__prc__tmrq, evt, link);
         /* evt_free(evt); */
     }
@@ -63,27 +63,27 @@ static event_t *tmrq_next(void) {
 }
 
 /**
- * Ÿ‚Ì”­‰Î‚Ü‚Å‚ÌŠÔ‚ğmsec’PˆÊ‚Åæ“¾‚·‚é
+ * æ¬¡ã®ç™ºç«ã¾ã§ã®æ™‚é–“ã‚’msecå˜ä½ã§å–å¾—ã™ã‚‹
  */
 DWORD timer_next(void) {
     event_t *evt;
     DWORD now;
 
-    /* ƒ^ƒCƒ}[‘Ò‚¿ƒvƒƒZƒX‚ª–³‚¢ê‡ */
+    /* ã‚¿ã‚¤ãƒãƒ¼å¾…ã¡ãƒ—ãƒ­ã‚»ã‚¹ãŒç„¡ã„å ´åˆ */
     if ((evt = tmrq_next()) == NULL) {
         return INFINITE;
     }
 
     now = GetTickCount();
     if (now > (DWORD)evt->val) {
-        return 0;  /* Šù‚É”­‰Î‚ğ‰ß‚¬‚½ê‡ */
+        return 0;  /* æ—¢ã«ç™ºç«æ™‚åˆ»ã‚’éããŸå ´åˆ */
     }
 
     return (DWORD)evt->val - now;
 }
 
 /**
- * Ÿ‚Ìƒ^ƒCƒ}[ƒCƒxƒ“ƒg‚ğæ‚èo‚·
+ * æ¬¡ã®ã‚¿ã‚¤ãƒãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆã‚’å–ã‚Šå‡ºã™
  */
 event_t *timer_take(void) {
     event_t *evt;

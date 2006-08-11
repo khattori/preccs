@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief ƒtƒ@ƒCƒ‹“üo—Íˆ—(Àsƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief ãƒ•ã‚¡ã‚¤ãƒ«å…¥å‡ºåŠ›å‡¦ç†(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
  * @author Kenta HATTORI
  * @date   2006/04/26
@@ -25,7 +25,7 @@ static OVERLAPPED ovl_array[MAX_FILENO];
 static char *buf_array[MAX_FILENO];
 
 /*
- * ƒtƒ@ƒCƒ‹ƒnƒ“ƒhƒ‹‚Æƒ`ƒƒƒlƒ‹‚Ì‘g‚ğ“o˜^‚·‚é
+ * ãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«ã¨ãƒãƒ£ãƒãƒ«ã®çµ„ã‚’ç™»éŒ²ã™ã‚‹
  */
 static int file_register(int ch, HANDLE hFile) {
     HANDLE hEvent;
@@ -54,7 +54,7 @@ static int file_register(int ch, HANDLE hFile) {
     return h;
 }
 /*
- * ƒtƒ@ƒCƒ‹‚ğƒNƒ[ƒY‚µC“o˜^íœ‚·‚é
+ * ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚¯ãƒ­ãƒ¼ã‚ºã—ï¼Œç™»éŒ²å‰Šé™¤ã™ã‚‹
  */
 static void file_close(int h) {
     CloseHandle(file_array[h]);
@@ -101,7 +101,7 @@ int file_io(HANDLE handles[], ioent_t io_table[], int *io_count) {
 
         /* input channel */
         if (chin_next((chan_t *)ch) != NULL) {
-            /* ‘O‰ñ‚Ì“ü—Íˆ—‚ªŠ®—¹‚µ‚½ê‡‚Ìƒ`ƒFƒbƒN */
+            /* å‰å›ã®å…¥åŠ›å‡¦ç†ãŒå®Œäº†ã—ãŸå ´åˆã®ãƒã‚§ãƒƒã‚¯ */
             switch (ret = WaitForSingleObject(pOvl->hEvent, 0)) {
             case WAIT_OBJECT_0:
                 if(!GetOverlappedResult(hFile, pOvl, &len, FALSE)) {
@@ -116,7 +116,7 @@ int file_io(HANDLE handles[], ioent_t io_table[], int *io_count) {
             case WAIT_FAILED:
                 perr(PERR_SYSTEM, "WaitForSingleObject", ret, __FILE__, __LINE__);
             }
-            /* ‰‰ñ‚Ì“ü—Íˆ—‚Ìê‡ */
+            /* åˆå›ã®å…¥åŠ›å‡¦ç†ã®å ´åˆ */
             if (ReadFile(hFile, buf, BUFSIZ, &len, pOvl)) {
                 pOvl->Offset += len;
                 ResetEvent(pOvl->hEvent);
@@ -141,7 +141,7 @@ int file_io(HANDLE handles[], ioent_t io_table[], int *io_count) {
         }
         /* output channel */
         else if ((evt = chout_next((chan_t *)ch)) != NULL) {
-            /* ‘O‰ñ‚Ìo—Íˆ—‚ªŠ®—¹‚µ‚½ê‡‚Ìƒ`ƒFƒbƒN */
+            /* å‰å›ã®å‡ºåŠ›å‡¦ç†ãŒå®Œäº†ã—ãŸå ´åˆã®ãƒã‚§ãƒƒã‚¯ */
             switch (ret = WaitForSingleObject(pOvl->hEvent, 0)) {
             case WAIT_OBJECT_0:
                 if(!GetOverlappedResult(hFile, pOvl, &len, FALSE)) {
@@ -155,7 +155,7 @@ int file_io(HANDLE handles[], ioent_t io_table[], int *io_count) {
             case WAIT_FAILED:
                 perr(PERR_SYSTEM, "WaitForSingleObject", ret, __FILE__, __LINE__);
             }
-            /* ‰‰ñ‚Ìo—Íˆ—‚Ìê‡ */
+            /* åˆå›ã®å‡ºåŠ›å‡¦ç†ã®å ´åˆ */
             len = STRLEN(evt->val);
             if (len == 0) {
                 file_close(i);
@@ -215,7 +215,7 @@ int file_clos(int h) {
 }
 
 /*
- * ƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚İê—p‚ÉƒI[ƒvƒ“‚·‚é
+ * ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã¿å°‚ç”¨ã«ã‚ªãƒ¼ãƒ—ãƒ³ã™ã‚‹
  */
 int prc_FileOpenR(int ich, char *fname) {
     HANDLE h;
@@ -235,7 +235,7 @@ int prc_FileOpenR(int ich, char *fname) {
 }
 
 /*
- * ƒtƒ@ƒCƒ‹‚ğV‹Kì¬‚·‚é
+ * ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æ–°è¦ä½œæˆã™ã‚‹
  */
 int prc_FileCreate(int och, char *fname) {
     HANDLE h;

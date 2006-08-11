@@ -1,7 +1,7 @@
 (**
-   Œ^ŒŸ¸ƒ‚ƒWƒ…[ƒ‹
+   å‹æ¤œæŸ»ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
    
-   ŠT—vFŒ^ŒŸ¸AŒ^®‚Ì•ÏŠ·‚ğs‚¤
+   æ¦‚è¦ï¼šå‹æ¤œæŸ»ã€å‹å¼ã®å¤‰æ›ã‚’è¡Œã†
 
    @author Hattori Kenta
    @version $Id: check.ml,v 1.9 2006/08/07 09:08:06 hattori Exp $
@@ -13,11 +13,11 @@ module E = Env
 module T = Types
 module R = Regex
 
-(* t1 <: t2‚Å‚ ‚é‚±‚Æ‚ğŠm”F‚·‚é *)
+(* t1 <: t2ã§ã‚ã‚‹ã“ã¨ã‚’ç¢ºèªã™ã‚‹ *)
 let assert_type i t1 t2 =
   if T.subtype t1 t2 then () else errorAt i (ERR_TYPE_MISMATCH (t1,t2))
 
-(* ƒtƒB[ƒ‹ƒh‚ğæ“¾‚·‚é *)
+(* ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã‚’å–å¾—ã™ã‚‹ *)
 let get_field info t s =
   try
     T.field t s
@@ -25,7 +25,7 @@ let get_field info t s =
       Not_found -> errorAt info (ERR_UNDEF_LABEL s)
     | T.Ill_field -> errorAt info ERR_ILLEGAL_LABEL
     
-(* ”z—ñ—v‘f‚ğæ“¾‚·‚é *)
+(* é…åˆ—è¦ç´ ã‚’å–å¾—ã™ã‚‹ *)
 let get_index info t =
   try
     T.index t
@@ -33,12 +33,12 @@ let get_index info t =
       _ -> errorAt info ERR_ILLEGAL_ARRAY
 
 (*
- * ƒvƒƒZƒX‚Ì–{‘Ì‚ğæ“¾‚·‚é
+ * ãƒ—ãƒ­ã‚»ã‚¹ã®æœ¬ä½“ã‚’å–å¾—ã™ã‚‹
  * 
- *   ˆø@”Finfo: Error.info --- ƒGƒ‰[î•ñ
- *           env : Env.t      --- –¼‘OŠÂ‹«
- *           s   : Symbol.t   --- –¼‘O
- *   –ß‚è’lFƒvƒƒZƒX‚Ìˆø”‚ÌŒ^‚Ì•À‚Ñ
+ *   å¼•ã€€æ•°ï¼šinfo: Error.info --- ã‚¨ãƒ©ãƒ¼æƒ…å ±
+ *           env : Env.t      --- åå‰ç’°å¢ƒ
+ *           s   : Symbol.t   --- åå‰
+ *   æˆ»ã‚Šå€¤ï¼šãƒ—ãƒ­ã‚»ã‚¹ã®å¼•æ•°ã®å‹ã®ä¸¦ã³
  * 
  *)
 let lookup_proc info env s =
@@ -49,12 +49,12 @@ let lookup_proc info env s =
       Not_found -> errorAt info (ERR_UNDEF_PROC s)
 
 (*
- * Œ^–¼‚©‚çŒ^î•ñ‚ğŒŸõ‚·‚é
+ * å‹åã‹ã‚‰å‹æƒ…å ±ã‚’æ¤œç´¢ã™ã‚‹
  * 
- *   ˆø@”Finfo: Error.info --- ƒGƒ‰[î•ñ
- *           env : Env.t      --- –¼‘OŠÂ‹«
- *           s   : Symbol.t   --- –¼‘O
- *   –ß‚è’lFŒ^î•ñ
+ *   å¼•ã€€æ•°ï¼šinfo: Error.info --- ã‚¨ãƒ©ãƒ¼æƒ…å ±
+ *           env : Env.t      --- åå‰ç’°å¢ƒ
+ *           s   : Symbol.t   --- åå‰
+ *   æˆ»ã‚Šå€¤ï¼šå‹æƒ…å ±
  * 
  *)
 let lookup_type info env s =
@@ -70,33 +70,33 @@ let lookup_rtype info env s =
     | _ -> errorAt info ERR_ILLEGAL_TYPE
 
 (*
- * ƒ`ƒƒƒlƒ‹‚Ì‚ÂŒ^‚ğæ“¾‚·‚é
+ * ãƒãƒ£ãƒãƒ«ã®æŒã¤å‹ã‚’å–å¾—ã™ã‚‹
  * 
- *   ˆø  ”Finfo: Error.info --- ƒGƒ‰[î•ñ
- *             ch: Types.t    --- ƒ`ƒƒƒlƒ‹Œ^
- *   •Ô‚è’lF ƒ`ƒƒƒlƒ‹‚Ì‚ÂŒ^
+ *   å¼•  æ•°ï¼šinfo: Error.info --- ã‚¨ãƒ©ãƒ¼æƒ…å ±
+ *             ch: Types.t    --- ãƒãƒ£ãƒãƒ«å‹
+ *   è¿”ã‚Šå€¤ï¼š ãƒãƒ£ãƒãƒ«ã®æŒã¤å‹
  * 
  *)
 let type_of_chan info = function
     T.CHAN ty -> ty
   | _         -> errorAt info ERR_NOT_CHANNEL
 
-(* ’è”‚ÌŒ^‚ğ•Ô‚· *)
+(* å®šæ•°ã®å‹ã‚’è¿”ã™ *)
 let type_of_const = function
     A.ConBool(_,b) -> T.BOOL
   | A.ConInt(_,n)  -> T.INT
   | A.ConStr(_,s)  -> T.STRING
 
 (*
- * Œ^’è‹`‚Ìƒ`ƒFƒbƒN‚ğs‚¢Œ^®‚É•ÏŠ·‚·‚é
+ * å‹å®šç¾©ã®ãƒã‚§ãƒƒã‚¯ã‚’è¡Œã„å‹å¼ã«å¤‰æ›ã™ã‚‹
  * 
- *   ˆø@”Fenv: Env.t --- –¼‘OŠÂ‹«
- *           -  : S.typ --- Œ^\•¶
- *   –ß‚è’lF•ÏŠ·‚µ‚½Œ^®
+ *   å¼•ã€€æ•°ï¼šenv: Env.t --- åå‰ç’°å¢ƒ
+ *           -  : S.typ --- å‹æ§‹æ–‡
+ *   æˆ»ã‚Šå€¤ï¼šå¤‰æ›ã—ãŸå‹å¼
  * 
  *)
 let rec check_type env =
-  (* ”h¶Œ^’è‹`—p‚Ì•Ï”QÆ *)
+  (* æ´¾ç”Ÿå‹å®šç¾©ç”¨ã®å¤‰æ•°å‚ç…§ *)
   let rec deriv_var t = function
       A.VarSimple(i,s)    -> get_field i t s
     | A.VarField(i,v,s,_,_) ->
@@ -133,11 +133,11 @@ let rec check_type env =
             (lookup_type i env s) ds
 
 (*
- * ³‹K•\Œ»Œ^‚Ìƒ`ƒFƒbƒN‚ğs‚¢Œ^®‚É•ÏŠ·‚·‚é
+ * æ­£è¦è¡¨ç¾å‹ã®ãƒã‚§ãƒƒã‚¯ã‚’è¡Œã„å‹å¼ã«å¤‰æ›ã™ã‚‹
  * 
- *   ˆø@”Fenv: Env.t --- –¼‘OŠÂ‹«
- *           -  : S.rgx --- ³‹K•\Œ»Œ^\•¶
- *   –ß‚è’lF•ÏŠ·‚µ‚½Œ^®
+ *   å¼•ã€€æ•°ï¼šenv: Env.t --- åå‰ç’°å¢ƒ
+ *           -  : S.rgx --- æ­£è¦è¡¨ç¾å‹æ§‹æ–‡
+ *   æˆ»ã‚Šå€¤ï¼šå¤‰æ›ã—ãŸå‹å¼
  * 
  *)
 and check_regex env = function
@@ -159,11 +159,11 @@ and check_regex env = function
   | A.RgxRecord rs    -> T.RRCD(List.map (fun (_,s,r) -> s,check_regex env r) rs)
 
 (*
- * ƒvƒƒZƒX®‚Ìƒ`ƒFƒbƒN‚ğs‚¤
+ * ãƒ—ãƒ­ã‚»ã‚¹å¼ã®ãƒã‚§ãƒƒã‚¯ã‚’è¡Œã†
  * 
- *   ˆø  ”Fenv: Env.t --- ŠÂ‹«
- *           -  : proc  --- ƒvƒƒZƒX®
- *   –ß‚è’lFŠÂ‹«‚ğ•Ô‚·
+ *   å¼•  æ•°ï¼šenv: Env.t --- ç’°å¢ƒ
+ *           -  : proc  --- ãƒ—ãƒ­ã‚»ã‚¹å¼
+ *   æˆ»ã‚Šå€¤ï¼šç’°å¢ƒã‚’è¿”ã™
  *
  *)
 and check_proc env = function
@@ -200,11 +200,11 @@ and check_proc env = function
       List.iter (fun v -> ignore (check_var env v)) vs; env
 
 (*
- * ®‚ÌŒ^ƒ`ƒFƒbƒN‚ğs‚¢CŒ^‚ğ•Ô‚·
+ * å¼ã®å‹ãƒã‚§ãƒƒã‚¯ã‚’è¡Œã„ï¼Œå‹ã‚’è¿”ã™
  *
- *   ˆø  ”Fenv: Env.t --- ŠÂ‹«
- *           -  : exp   --- ®
- *   –ß‚è’lFˆø”‚Å“n‚³‚ê‚½®‚Ì‚ÂŒ^
+ *   å¼•  æ•°ï¼šenv: Env.t --- ç’°å¢ƒ
+ *           -  : exp   --- å¼
+ *   æˆ»ã‚Šå€¤ï¼šå¼•æ•°ã§æ¸¡ã•ã‚ŒãŸå¼ã®æŒã¤å‹
  *
  *)
 and check_expr env = function
@@ -241,15 +241,15 @@ and check_expr env = function
   | A.ExpMonop(i,A.MopNot,e) -> assert_type i (check_expr env e) T.BOOL;T.BOOL
 
 (*
- * •Ï”’è‹`‚Ìƒ`ƒFƒbƒN‚ğs‚¤
+ * å¤‰æ•°å®šç¾©ã®ãƒã‚§ãƒƒã‚¯ã‚’è¡Œã†
  * 
- *   ˆø  ”Fenv: Env.t --- ŠÂ‹«
- *           -  : var   --- •Ï”
- *   –ß‚è’lFˆø”‚Å“n‚³‚ê‚½•Ï”‚ÌŒ^
+ *   å¼•  æ•°ï¼šenv: Env.t --- ç’°å¢ƒ
+ *           -  : var   --- å¤‰æ•°
+ *   æˆ»ã‚Šå€¤ï¼šå¼•æ•°ã§æ¸¡ã•ã‚ŒãŸå¤‰æ•°ã®å‹
  * 
  *)
 and check_var env =
-  (* •Ï”‚ğŒŸõ‚·‚é *)
+  (* å¤‰æ•°ã‚’æ¤œç´¢ã™ã‚‹ *)
   let lookup_var info s =
     try
       match E.find s env with
@@ -257,7 +257,7 @@ and check_var env =
         | _             -> raise Not_found
     with
         Not_found -> errorAt info (ERR_UNDEF_VAR s) in
-    (* ƒAƒNƒZƒXƒpƒX‚ğ‚½‚Ç‚é *)
+    (* ã‚¢ã‚¯ã‚»ã‚¹ãƒ‘ã‚¹ã‚’ãŸã©ã‚‹ *)
     function
         A.VarSimple(i,s)    -> lookup_var i s
       | A.VarField(i,v,s,o,r) ->
@@ -267,17 +267,17 @@ and check_var env =
             o := T.offset t s; t'
       | A.VarProj(i,v,n) -> T.proj (check_var env v) n
       | A.VarSubscr(i,v,e)  ->
-          assert_type i (check_expr env e) T.INT;  (* e‚ÍINTŒ^‚Å‚ ‚é‚±‚Æ   *)
+          assert_type i (check_expr env e) T.INT;  (* eã¯INTå‹ã§ã‚ã‚‹ã“ã¨   *)
           get_index i (check_var env v)
 
 
 (*
- * ƒpƒ^[ƒ“®‚Ìƒ`ƒFƒbƒN
+ * ãƒ‘ã‚¿ãƒ¼ãƒ³å¼ã®ãƒã‚§ãƒƒã‚¯
  * 
- *   ˆø@”Fenv: Env.t   --- –¼‘OŠÂ‹«
- *           ty : Types.t --- ƒpƒ^[ƒ“ƒ}ƒbƒ`‚·‚é’l‚ÌŒ^î•ñ
- *           -  : pat     --- ƒpƒ^[ƒ“\•¶
- *   –ß‚è’lFV‚µ‚¢ŠÂ‹«‚ğ•Ô‚·
+ *   å¼•ã€€æ•°ï¼šenv: Env.t   --- åå‰ç’°å¢ƒ
+ *           ty : Types.t --- ãƒ‘ã‚¿ãƒ¼ãƒ³ãƒãƒƒãƒã™ã‚‹å€¤ã®å‹æƒ…å ±
+ *           -  : pat     --- ãƒ‘ã‚¿ãƒ¼ãƒ³æ§‹æ–‡
+ *   æˆ»ã‚Šå€¤ï¼šæ–°ã—ã„ç’°å¢ƒã‚’è¿”ã™
 *)
 and check_match env ty = function
     A.PatAny _   -> env
@@ -292,14 +292,14 @@ and check_match env ty = function
         ) else errorAt i ERR_ILLEGAL_PATTERN
 
 (*
- * Œ^ƒ`ƒFƒbƒN‚ğs‚¤ŠÖ”
+ * å‹ãƒã‚§ãƒƒã‚¯ã‚’è¡Œã†é–¢æ•°
  *
- *   ˆø  ”Fdefs: toplevel --- ƒgƒbƒvƒŒƒxƒ‹’è‹`‚ÌƒŠƒXƒg
- *   –ß‚è’lFƒgƒbƒvƒŒƒxƒ‹ŠÂ‹«
+ *   å¼•  æ•°ï¼šdefs: toplevel --- ãƒˆãƒƒãƒ—ãƒ¬ãƒ™ãƒ«å®šç¾©ã®ãƒªã‚¹ãƒˆ
+ *   æˆ»ã‚Šå€¤ï¼šãƒˆãƒƒãƒ—ãƒ¬ãƒ™ãƒ«ç’°å¢ƒ
  * 
  *)
 let check defs =
-  (* ƒgƒbƒvƒŒƒxƒ‹’è‹`‚ÌŒ^ƒ`ƒFƒbƒN‚ğs‚¤ *)
+  (* ãƒˆãƒƒãƒ—ãƒ¬ãƒ™ãƒ«å®šç¾©ã®å‹ãƒã‚§ãƒƒã‚¯ã‚’è¡Œã† *)
   List.fold_left (
     fun e -> (
       function
@@ -311,7 +311,7 @@ let check defs =
               fun e (_,s,ty) -> E.add s (E.TypeEntry(check_type e ty)) e
             ) e types
         | A.DefProc procs ->
-            (* ƒvƒƒZƒX’è‹`ƒwƒbƒ_•”‚Ìƒ`ƒFƒbƒN *)
+            (* ãƒ—ãƒ­ã‚»ã‚¹å®šç¾©ãƒ˜ãƒƒãƒ€éƒ¨ã®ãƒã‚§ãƒƒã‚¯ *)
             let e = List.fold_left (
               fun e (_,s,ds,_) ->
                 E.add s (E.ProcEntry(List.map (fun (_,t) -> check_type e t) ds)) e
@@ -319,7 +319,7 @@ let check defs =
               List.iter (
                 fun (i,s,ds,p) ->
                   match (E.find s e) with
-                      (* ƒvƒƒZƒX–{‘Ì‚Ìƒ`ƒFƒbƒN *)
+                      (* ãƒ—ãƒ­ã‚»ã‚¹æœ¬ä½“ã®ãƒã‚§ãƒƒã‚¯ *)
                       E.ProcEntry(ts) -> ignore (
                         check_proc (
                           List.fold_left2 (

@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief ƒvƒƒZƒXÀsƒGƒ“ƒWƒ“(Àsƒ‰ƒCƒuƒ‰ƒŠ)
+ * @brief ãƒ—ãƒ­ã‚»ã‚¹å®Ÿè¡Œã‚¨ãƒ³ã‚¸ãƒ³(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
  * @author Kenta HATTORI
  * @date   2006/04/18
@@ -23,7 +23,7 @@ int __prc__disp = (int)disp_clos;
 typedef int (*func_t)(void);
 
 /**
- * PreccsƒƒCƒ“ƒ‹[ƒ`ƒ“
+ * Preccsãƒ¡ã‚¤ãƒ³ãƒ«ãƒ¼ãƒãƒ³
  */
 int prc_main(void) {
     func_t start;
@@ -33,12 +33,12 @@ int prc_main(void) {
     proc_init();
     timer_init();
 
-    /* ƒOƒ[ƒoƒ‹ƒ`ƒƒƒlƒ‹‚Ì‰Šú‰» */
+    /* ã‚°ãƒ­ãƒ¼ãƒãƒ«ãƒãƒ£ãƒãƒ«ã®åˆæœŸåŒ– */
     __prc__stdout = (int)__chan__();
     __prc__stdin  = (int)__chan__();
     __prc__timer  = (int)__chan__();
 
-    /* ƒvƒƒZƒXƒ‹[ƒv */
+    /* ãƒ—ãƒ­ã‚»ã‚¹ãƒ«ãƒ¼ãƒ— */
     start = __prc__init;
     for (;;) {
         start = (func_t)start();

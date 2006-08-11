@@ -1,5 +1,5 @@
 (**
-   正規表現のラベル管理モジュール
+   豁｣隕剰｡ｨ迴ｾ縺ｮ繝ｩ繝吶Ν邂｡逅�繝｢繧ｸ繝･繝ｼ繝ｫ
 
    @author Hattori Kenta
    @version $Id: label.ml,v 1.2 2006/06/21 00:14:14 hattori Exp $
@@ -15,7 +15,7 @@ let create sz = let lid = !lbl in incr lbl; Hashtbl.add size_table lid sz; lid
 let size l = Hashtbl.find size_table l
 let show l = print_int l
 
-(* ラベルID→ラベル番号への変換用 *)
+(* 繝ｩ繝吶ΝID竊偵Λ繝吶Ν逡ｪ蜿ｷ縺ｸ縺ｮ螟画鋤逕ｨ *)
 type map = (t,int) Hashtbl.t * int ref
 let map_create() = Hashtbl.create(13),ref 0
 let map_find (tbl,num) lbl =

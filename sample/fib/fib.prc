@@ -1,5 +1,5 @@
 /*
- * Fibonacci”‚ğ‹‚ß‚é
+ * Fibonacciæ•°ã‚’æ±‚ã‚ã‚‹
  */
 C{
 #include <stdio.h>

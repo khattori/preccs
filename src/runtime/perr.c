@@ -1,6 +1,6 @@
 /**
  * @file 
- * @brief ¥¨¥é¡¼½èÍıµ¡¹½(¼Â¹Ô»ş¥é¥¤¥Ö¥é¥ê)
+ * @brief ã‚¨ãƒ©ãƒ¼å‡¦ç†æ©Ÿæ§‹(å®Ÿè¡Œæ™‚ãƒ©ã‚¤ãƒ–ãƒ©ãƒª)
  *
  * @author Kenta Hattori
  * @date   2005/07/05
@@ -12,14 +12,14 @@
 #include "perr.h"
 
 /*
- * ¥¨¥é¡¼¥¯¥é¥¹¤ÎÄêµÁ
+ * ã‚¨ãƒ©ãƒ¼ã‚¯ãƒ©ã‚¹ã®å®šç¾©
  */
 #define PERRCLS_FATAL 0
 #define PERRCLS_ERROR 1
 #define PERRCLS_WARN  2
 
 /*
- * ¥¨¥é¡¼°ìÍ÷¤ÎÄêµÁ
+ * ã‚¨ãƒ©ãƒ¼ä¸€è¦§ã®å®šç¾©
  */
 struct {
     int   cls;
@@ -31,13 +31,13 @@ struct {
 };
 
 /**
- *  ¥¨¥é¡¼¥á¥Ã¥»¡¼¥¸¤òÉ½¼¨¤¹¤ë
+ *  ã‚¨ãƒ©ãƒ¼ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’è¡¨ç¤ºã™ã‚‹
  *
- *  @param err [in] ¥¨¥é¡¼¼ïÊÌ
- *  @param ... [in] ¥¨¥é¡¼¥á¥Ã¥»¡¼¥¸¤Î¥Ñ¥é¥á¡¼¥¿
- *  @return ¤Ê¤·
+ *  @param err [in] ã‚¨ãƒ©ãƒ¼ç¨®åˆ¥
+ *  @param ... [in] ã‚¨ãƒ©ãƒ¼ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+ *  @return ãªã—
  *
- *  @note FATAL¤Î¾ì¹ç¤Ïexit(1)¤¹¤ë¡£
+ *  @note FATALã®å ´åˆã¯exit(1)ã™ã‚‹ã€‚
  *
  */
 void perr(perr_t err, ...) {
@@ -51,7 +51,7 @@ void perr(perr_t err, ...) {
     fflush(stderr);
     va_end(ap);
 
-    /* FATAL»ş¤Ï½ªÎ» */
+    /* FATALæ™‚ã¯çµ‚äº† */
     if (cls == PERRCLS_FATAL) {
 	exit(1);
     }

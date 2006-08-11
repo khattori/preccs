@@ -1,7 +1,7 @@
 type Sockets = {h:int;in:<string>;out:<string>}
 
 //
-// Echoサーバー
+// Echo繧ｵ繝ｼ繝舌�ｼ
 //
 proc Main() =
     var lsock:<Sockets>;
@@ -10,7 +10,7 @@ proc Main() =
 
 proc EchoSrv(lsock:<Sockets>) =
       stdin?msg   -> stop
-    | lsock?csock -> ( stdout!"conneted\n";		// 接続待ち
+    | lsock?csock -> ( stdout!"conneted\n";		// 謗･邯壼ｾ�縺｡
 			  EchoProc(csock);
 		         EchoSrv(lsock) )
 

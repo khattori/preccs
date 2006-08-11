@@ -1,12 +1,12 @@
 (**
-   –½‘è˜_—ƒ‚ƒWƒ…[ƒ‹
+   å‘½é¡Œè«–ç†ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: prop.ml,v 1.4 2006/06/06 04:39:15 hattori Exp $
 *)
 
 (*
- * –½‘è˜_—Ž®‚ÌŒ^’è‹`i'a‚Í–½‘è•Ï”‚ÌŒ^j
+ * å‘½é¡Œè«–ç†å¼ã®åž‹å®šç¾©ï¼ˆ'aã¯å‘½é¡Œå¤‰æ•°ã®åž‹ï¼‰
  *)
 type 'a t =
     Atom of 'a
@@ -15,17 +15,17 @@ type 'a t =
   | Disj of 'a t * 'a t
 
 (*
- * ŠÜˆÓ‚ð\¬‚·‚éFp¨q ß ÊpÉq
+ * å«æ„ã‚’æ§‹æˆã™ã‚‹ï¼špâ†’q â‰¡ Â¬pâˆ¨q
  *)
 let implies p q = Disj(Neg(p),q)
 
 (*
- * ƒg[ƒgƒƒW[ƒ`ƒFƒbƒJ[F
- *     Wang‚ÌƒAƒ‹ƒSƒŠƒYƒ€‚É‚æ‚èC—^‚¦‚ç‚ê‚½–½‘è˜_—Ž®‚ÌP^”»’è‚ðs‚¤
+ * ãƒˆãƒ¼ãƒˆãƒ­ã‚¸ãƒ¼ãƒã‚§ãƒƒã‚«ãƒ¼ï¼š
+ *     Wangã®ã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã«ã‚ˆã‚Šï¼Œä¸Žãˆã‚‰ã‚ŒãŸå‘½é¡Œè«–ç†å¼ã®æ’çœŸåˆ¤å®šã‚’è¡Œã†
  * 
- *   ˆø@”Fp : 'a Prop.t --- –½‘è˜_—Ž®
+ *   å¼•ã€€æ•°ï¼šp : 'a Prop.t --- å‘½é¡Œè«–ç†å¼
  * 
- *   –ß‚è’lFP^‚È‚çtrueC‚»‚¤‚Å‚È‚¯‚ê‚Îfalse‚ð•Ô‚·
+ *   æˆ»ã‚Šå€¤ï¼šæ’çœŸãªã‚‰trueï¼Œãã†ã§ãªã‘ã‚Œã°falseã‚’è¿”ã™
  * 
  *)
 let taut p = 
@@ -36,23 +36,23 @@ let taut p =
       ([], la, [], ra) -> common (la, ra)
    |  (lt, la, Atom(a)::tl, ra) -> wang(lt, la, tl, Atom(a)::ra)
    |  (Atom(a)::tl, la, rt, ra) -> wang(tl, Atom(a)::la, rt, ra)
-   |  (lt, la, Neg(a)::tl, ra) -> wang(a::lt, la, tl, ra)         (* Ê‰E *)
-   |  (Neg(a)::tl, la, rt, ra) -> wang(tl, la, a::rt, ra)         (* Ê¶ *)
+   |  (lt, la, Neg(a)::tl, ra) -> wang(a::lt, la, tl, ra)         (* Â¬å³ *)
+   |  (Neg(a)::tl, la, rt, ra) -> wang(tl, la, a::rt, ra)         (* Â¬å·¦ *)
    |  (lt, la, Conj(a,b)::tl, ra) -> wang(lt, la, a::tl, ra)
-                                   & wang(lt, la, b::tl, ra)      (* È‰E *)
-   |  (Conj(a,b)::tl, la, rt, ra) -> wang(a::b::tl, la, rt, ra)   (* È¶ *)
-   |  (lt, la, Disj(a,b)::tl, ra) -> wang(lt, la, a::b::tl, ra)   (* É‰E *)
+                                   & wang(lt, la, b::tl, ra)      (* âˆ§å³ *)
+   |  (Conj(a,b)::tl, la, rt, ra) -> wang(a::b::tl, la, rt, ra)   (* âˆ§å·¦ *)
+   |  (lt, la, Disj(a,b)::tl, ra) -> wang(lt, la, a::b::tl, ra)   (* âˆ¨å³ *)
    |  (Disj(a,b)::tl, la, rt, ra) -> wang(a::tl, la, rt, ra)
-                                   & wang(b::tl, la, rt, ra)      (* É¶ *)
+                                   & wang(b::tl, la, rt, ra)      (* âˆ¨å·¦ *)
   in
     wang ([],[],[p],[])
 
 (*
- * –½‘è•Ï”‚ÌƒŠƒXƒg‚©‚çC‚·‚×‚Ä‚Ì‘g‡‚¹‚Ì–½‘è˜_—Ž®‚ð¶¬‚·‚é
+ * å‘½é¡Œå¤‰æ•°ã®ãƒªã‚¹ãƒˆã‹ã‚‰ï¼Œã™ã¹ã¦ã®çµ„åˆã›ã®å‘½é¡Œè«–ç†å¼ã‚’ç”Ÿæˆã™ã‚‹
  * 
- *   ˆø@”F---: 'a list --- –½‘è•Ï”‚ÌƒŠƒXƒg
+ *   å¼•ã€€æ•°ï¼š---: 'a list --- å‘½é¡Œå¤‰æ•°ã®ãƒªã‚¹ãƒˆ
  * 
- *   –ß‚è’lF¶¬‚µ‚½–½‘è˜_—Ž®‚ÌƒŠƒXƒg
+ *   æˆ»ã‚Šå€¤ï¼šç”Ÿæˆã—ãŸå‘½é¡Œè«–ç†å¼ã®ãƒªã‚¹ãƒˆ
  * 
  *)
 let rec gen_comb = function
@@ -64,11 +64,11 @@ let rec gen_comb = function
         @ List.map (fun p -> Conj(Neg(Atom x),p)) ps
 
 (*
- * –½‘è•Ï”‚ÌƒŠƒXƒg‚ðŽæ“¾‚·‚é
+ * å‘½é¡Œå¤‰æ•°ã®ãƒªã‚¹ãƒˆã‚’å–å¾—ã™ã‚‹
  * 
- *   ˆø@”Fp: Prop.t --- –½‘è˜_—Ž®
+ *   å¼•ã€€æ•°ï¼šp: Prop.t --- å‘½é¡Œè«–ç†å¼
  * 
- *   –ß‚è’lF–½‘è•Ï”‚ÌƒŠƒXƒg
+ *   æˆ»ã‚Šå€¤ï¼šå‘½é¡Œå¤‰æ•°ã®ãƒªã‚¹ãƒˆ
  * 
  *)
 let get_vars p =

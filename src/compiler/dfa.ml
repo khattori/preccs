@@ -1,5 +1,5 @@
 (**
-   DFAƒ‚ƒWƒ…[ƒ‹
+   DFAãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: dfa.ml,v 1.3 2006/07/06 04:15:36 hattori Exp $
@@ -18,10 +18,10 @@ module PosSetMap = Map.Make(PosSet)
 
 module LabelSet  = Set.Make(Label)
 
-(* ƒXƒLƒbƒvƒ‚[ƒh *)
+(* ã‚¹ã‚­ãƒƒãƒ—ãƒ¢ãƒ¼ãƒ‰ *)
 let skipMode = ref false
 
-(* ó—ó‘Ôƒe[ƒuƒ‹ *)
+(* å—ç†çŠ¶æ…‹ãƒ†ãƒ¼ãƒ–ãƒ« *)
 let acc_tbl:(Pos.t, int * T.field list) Ht.t = Ht.create(13)
 
 let show_posset ps =
@@ -43,7 +43,7 @@ let show_lblset ls =
   LabelSet.iter (fun l -> Label.show l; print_string ";") ls;
   Printf.printf ")"
 
-(* ‘JˆÚğŒ *)
+(* é·ç§»æ¡ä»¶ *)
 module Tcond =
 struct
   type t =
@@ -60,7 +60,7 @@ struct
     | CntNonz(l) -> Printf.printf "CntNonz("; Label.show l; print_string ")"
 
 end
-(* ‘JˆÚğŒ‚ÌW‡ *)
+(* é·ç§»æ¡ä»¶ã®é›†åˆ *)
 module TcondSet =
 struct
   module T  = Tcond
@@ -85,7 +85,7 @@ struct
     | C.Const(true) -> TS.empty
     | _             -> assert false
 
-  (* tc1Ëtc2‚©‚Ç‚¤‚©‚ÌŠÈˆÕ”»’è --- TODO:‚«‚¿‚ñ‚Æ‚µ‚½”»’è‚Å‚Í‚È‚¢ *)
+  (* tc1â‡’tc2ã‹ã©ã†ã‹ã®ç°¡æ˜“åˆ¤å®š --- TODO:ãã¡ã‚“ã¨ã—ãŸåˆ¤å®šã§ã¯ãªã„ *)
   let imply tc1 tc2 = TS.subset tc2 tc1
 
   let show ts =
@@ -94,7 +94,7 @@ struct
     print_string "]";
 end
 
-(* DFA‘JˆÚ‚ÌŒ^ *)
+(* DFAé·ç§»ã®å‹ *)
 module TransMap =
 struct
   module S = Set.Make(
@@ -110,13 +110,13 @@ struct
     end
   )
 
-  type t = S.t    (* ƒ•¶šW‡~‘JˆÚğŒW‡~Ÿó‘Ô„ ‚ÌW‡ *)
+  type t = S.t    (* ï¼œæ–‡å­—é›†åˆÃ—é·ç§»æ¡ä»¶é›†åˆÃ—æ¬¡çŠ¶æ…‹ï¼ ã®é›†åˆ *)
   let empty = S.empty
   let tpeq (_,t1,p1) (_,t2,p2) =
     (TcondSet.compare t1 t2) == 0 && (PosSet.compare p1 p2) == 0
       
-  (* ‘JˆÚ•\‚É‘JˆÚ‚ğ’Ç‰Á‚·‚éD
-     ¦ ‘JˆÚğŒ‚ÆŸó‘Ô‚ª“™‚µ‚¯‚ê‚ÎC•¶šW‡‚ğƒ}[ƒW *)
+  (* é·ç§»è¡¨ã«é·ç§»ã‚’è¿½åŠ ã™ã‚‹ï¼
+     â€» é·ç§»æ¡ä»¶ã¨æ¬¡çŠ¶æ…‹ãŒç­‰ã—ã‘ã‚Œã°ï¼Œæ–‡å­—é›†åˆã‚’ãƒãƒ¼ã‚¸ *)
   let add (cset,condset) posset s = 
     if S.exists (tpeq (cset,condset,posset)) s then
       let s1,s2 = S.partition (tpeq (cset,condset,posset)) s in
@@ -125,22 +125,22 @@ struct
     else
       S.add (cset,condset,posset) s
 
-  (* Ÿ‚Ìó‘Ô‚ÌƒŠƒXƒg‚ğæ“¾‚·‚é *)
+  (* æ¬¡ã®çŠ¶æ…‹ã®ãƒªã‚¹ãƒˆã‚’å–å¾—ã™ã‚‹ *)
   let next_all s =
     PosSetSet.elements
       (S.fold (fun (c,t,p) pss -> PosSetSet.add p pss) s PosSetSet.empty)
 
-  (* —^‚¦‚ç‚ê‚½•¶šW‡‚É‚Â‚¢‚ÄŸ‚ÌğŒ‚Æó‘Ô‚ÌƒŠƒXƒg‚ğæ“¾‚·‚é *)
+  (* ä¸ãˆã‚‰ã‚ŒãŸæ–‡å­—é›†åˆã«ã¤ã„ã¦æ¬¡ã®æ¡ä»¶ã¨çŠ¶æ…‹ã®ãƒªã‚¹ãƒˆã‚’å–å¾—ã™ã‚‹ *)
   let next_list cs s =
     let s',_ = S.partition (fun (c',_,_) -> c' = cs) s in
       List.map (fun (_,t,p) -> (t,p)) (S.elements s')
 
-  (* •¶šW‡‚ªƒTƒuƒZƒbƒg‚Å‚àOK *)
+  (* æ–‡å­—é›†åˆãŒã‚µãƒ–ã‚»ãƒƒãƒˆã§ã‚‚OK *)
   let next_list2 cs s =
     let s',_ = S.partition (fun (c',_,_) -> Cset.subset cs c') s in
       List.map (fun (_,t,p) -> (t,p)) (S.elements s')
 
-  (* ƒXƒLƒbƒvˆ—‚É•ÏX‚·‚é *)
+  (* ã‚¹ã‚­ãƒƒãƒ—å‡¦ç†ã«å¤‰æ›´ã™ã‚‹ *)
   let skip cs s =
     let s1,s2 = S.partition (fun (c',_,_) -> c' = cs) s in
       List.fold_left (fun s' e -> S.add e s') s2
@@ -153,7 +153,7 @@ struct
     let cs = cset_list s in
       List.iter (
         fun c ->
-          (* s'‚Íc‚Ån‚Ü‚é‘JˆÚ *)
+          (* s'ã¯cã§å§‹ã¾ã‚‹é·ç§» *)
           let s',_ = S.partition (fun (c',_,_) -> c' = c) s in
             print_string "\t->";
             Cset.show c;
@@ -169,11 +169,11 @@ struct
 end
 
 (*
- * DFA‚ğƒ_ƒ“ƒv‚·‚é
+ * DFAã‚’ãƒ€ãƒ³ãƒ—ã™ã‚‹
  * 
- *   ˆø@”Finit   : PosSet.t    --- DFA‰Šúó‘Ô
- *           ps_map : PosSetMap.t --- ó‘Ô‘JˆÚ•\
- *           ls_map : PosSetMap.t --- ƒ‰ƒxƒ‹•\
+ *   å¼•ã€€æ•°ï¼šinit   : PosSet.t    --- DFAåˆæœŸçŠ¶æ…‹
+ *           ps_map : PosSetMap.t --- çŠ¶æ…‹é·ç§»è¡¨
+ *           ls_map : PosSetMap.t --- ãƒ©ãƒ™ãƒ«è¡¨
  * 
  *)
 let show (init,(ps_map,ls_map)) =
@@ -187,12 +187,12 @@ let show (init,(ps_map,ls_map)) =
   ) ps_map
 
 (*
- * “ñ‚Â‚ÌğŒ•t‚«‘JˆÚƒŠƒXƒg‚ğƒ}[ƒW‚·‚é
+ * äºŒã¤ã®æ¡ä»¶ä»˜ãé·ç§»ãƒªã‚¹ãƒˆã‚’ãƒãƒ¼ã‚¸ã™ã‚‹
  * 
- *   ˆø@”Ftr1 : trans list --- ğŒ•t‚«‘JˆÚƒŠƒXƒg1
- *           tr2 : trans list --- ğŒ•t‚«‘JˆÚƒŠƒXƒg2
+ *   å¼•ã€€æ•°ï¼štr1 : trans list --- æ¡ä»¶ä»˜ãé·ç§»ãƒªã‚¹ãƒˆ1
+ *           tr2 : trans list --- æ¡ä»¶ä»˜ãé·ç§»ãƒªã‚¹ãƒˆ2
  * 
- *   –ß‚è’lFƒ}[ƒW‚µ‚½Œ‹‰Ê‚ÌğŒ•t‚«‘JˆÚƒŠƒXƒg
+ *   æˆ»ã‚Šå€¤ï¼šãƒãƒ¼ã‚¸ã—ãŸçµæœã®æ¡ä»¶ä»˜ãé·ç§»ãƒªã‚¹ãƒˆ
  * 
  *)
 let rec union tr1 tr2 = N.normalize (
@@ -208,12 +208,12 @@ let rec union tr1 tr2 = N.normalize (
 )
 
 (*
- * ŠJnƒ‰ƒxƒ‹‚ÌŒvZ
+ * é–‹å§‹ãƒ©ãƒ™ãƒ«ã®è¨ˆç®—
  * 
- *   ˆø@”Fls1 : LabelSet.t --- ‘JˆÚŒ³ƒm[ƒh‚É‘Î‰‚·‚éƒ‰ƒxƒ‹W‡
- *           ls2 : LabelSet.t --- ‘JˆÚæƒm[ƒh‚É‘Î‰‚·‚éƒ‰ƒxƒ‹W‡
+ *   å¼•ã€€æ•°ï¼šls1 : LabelSet.t --- é·ç§»å…ƒãƒãƒ¼ãƒ‰ã«å¯¾å¿œã™ã‚‹ãƒ©ãƒ™ãƒ«é›†åˆ
+ *           ls2 : LabelSet.t --- é·ç§»å…ˆãƒãƒ¼ãƒ‰ã«å¯¾å¿œã™ã‚‹ãƒ©ãƒ™ãƒ«é›†åˆ
  * 
- *   –ß‚è’lFŠJnƒ‰ƒxƒ‹‚ÌW‡
+ *   æˆ»ã‚Šå€¤ï¼šé–‹å§‹ãƒ©ãƒ™ãƒ«ã®é›†åˆ
  * 
  *)
 let start_labels ls1 ls2 = 
@@ -222,12 +222,12 @@ let start_labels ls1 ls2 =
   ) ls2 LabelSet.empty
 
 (*
- * ŠJnó‘Ô‚Ìƒ‰ƒxƒ‹‚ğŒvZ
+ * é–‹å§‹çŠ¶æ…‹ã®ãƒ©ãƒ™ãƒ«ã‚’è¨ˆç®—
  * 
- *   ˆø@”Fps  : PosSet.t --- ŠJnó‘Ô‚É‘Î‰‚·‚éˆÊ’uW‡
- *           ltbl: (Pos.t,LabelSet.t) Ht.t --- ƒ‰ƒxƒ‹•\
+ *   å¼•ã€€æ•°ï¼šps  : PosSet.t --- é–‹å§‹çŠ¶æ…‹ã«å¯¾å¿œã™ã‚‹ä½ç½®é›†åˆ
+ *           ltbl: (Pos.t,LabelSet.t) Ht.t --- ãƒ©ãƒ™ãƒ«è¡¨
  * 
- *   –ß‚è’lFŠJnó‘Ô‚ÌŠJnƒ‰ƒxƒ‹‚ÌW‡
+ *   æˆ»ã‚Šå€¤ï¼šé–‹å§‹çŠ¶æ…‹ã®é–‹å§‹ãƒ©ãƒ™ãƒ«ã®é›†åˆ
  * 
  *)
 let init_labels ps ltbl =
@@ -240,11 +240,11 @@ let init_labels ps ltbl =
   ) ps LabelSet.empty
 
 (*
- * ƒ‰ƒxƒ‹ƒm[ƒh‚æ‚è‰º‚ÉˆÊ’u‚·‚é—tiPos.tj‚É‘Î‚µ‚Äƒ‰ƒxƒ‹‚ğ‹L˜^‚·‚é
+ * ãƒ©ãƒ™ãƒ«ãƒãƒ¼ãƒ‰ã‚ˆã‚Šä¸‹ã«ä½ç½®ã™ã‚‹è‘‰ï¼ˆPos.tï¼‰ã«å¯¾ã—ã¦ãƒ©ãƒ™ãƒ«ã‚’è¨˜éŒ²ã™ã‚‹
  * 
- *   ˆø@”Fre : Regex.t --- ³‹K•\Œ»ƒcƒŠ[
+ *   å¼•ã€€æ•°ï¼šre : Regex.t --- æ­£è¦è¡¨ç¾ãƒ„ãƒªãƒ¼
  * 
- *   –ß‚è’lFƒ‰ƒxƒ‹‹L˜^•\
+ *   æˆ»ã‚Šå€¤ï¼šãƒ©ãƒ™ãƒ«è¨˜éŒ²è¡¨
  * 
  *)
 let rcdlabel re =
@@ -259,15 +259,15 @@ let rcdlabel re =
     rcd LabelSet.empty re; tbl
 
 (*
- * ‘JˆÚğŒ‚ÌƒŠƒXƒg‚ğ’¼Œğ•ª‰ğ‚·‚é
+ * é·ç§»æ¡ä»¶ã®ãƒªã‚¹ãƒˆã‚’ç›´äº¤åˆ†è§£ã™ã‚‹
  *
- *   ˆø@”Fcs :(Cond.t * (Pos.t * LabelSet.t)) list --- ‘JˆÚğŒ‚Æ’l‚Ì‘g‚ÌƒŠƒXƒg
+ *   å¼•ã€€æ•°ï¼šcs :(Cond.t * (Pos.t * LabelSet.t)) list --- é·ç§»æ¡ä»¶ã¨å€¤ã®çµ„ã®ãƒªã‚¹ãƒˆ
  * 
- *   –ß‚è’lF’¼Œğ•ª‰ğ‚µ‚½Œ‹‰Ê‚ÌƒŠƒXƒgF(Cond.t * (PosSet.t * LabelSet.t)) list
+ *   æˆ»ã‚Šå€¤ï¼šç›´äº¤åˆ†è§£ã—ãŸçµæœã®ãƒªã‚¹ãƒˆï¼š(Cond.t * (PosSet.t * LabelSet.t)) list
  * 
  *)
 let decomp cs =
-  (* ‘JˆÚğŒƒŠƒXƒg‚©‚ç–½‘è˜_—®‚Ì‘g‚İ‡‚í‚¹‚ğ’Šo *)
+  (* é·ç§»æ¡ä»¶ãƒªã‚¹ãƒˆã‹ã‚‰å‘½é¡Œè«–ç†å¼ã®çµ„ã¿åˆã‚ã›ã‚’æŠ½å‡º *)
   let ps = C.get_vars (fst (List.split cs)) in
     match cs,ps with
         [],_ -> []
@@ -277,7 +277,7 @@ let decomp cs =
                      (PosSet.add pos ps),(LabelSet.union lbl ls)
                  ) (PosSet.empty,LabelSet.empty) (snd (List.split cs))]
       | _    ->
-          (* Še‘JˆÚğŒ‚ğƒ`ƒFƒbƒN *)
+          (* å„é·ç§»æ¡ä»¶ã‚’ãƒã‚§ãƒƒã‚¯ *)
           List.filter (fun (_,(ps,ls)) -> not (PosSet.is_empty ps)) (
             List.fold_left (
               fun rs p ->
@@ -293,18 +293,18 @@ let decomp cs =
 
 
 type act =
-    ACT_NULL          (* –³ˆ— *)
-  | ACT_MATCH         (* •¶šW‡ƒ}ƒbƒ`ˆ— *)
-  | ACT_TRANS         (* ó‘Ô‘JˆÚ *)
-  | ACT_FINAL         (* I—¹ˆ— *)
-  | ACT_RECORD        (* ƒ‰ƒxƒ‹‹L˜^ˆ— *)
+    ACT_NULL          (* ç„¡å‡¦ç† *)
+  | ACT_MATCH         (* æ–‡å­—é›†åˆãƒãƒƒãƒå‡¦ç† *)
+  | ACT_TRANS         (* çŠ¶æ…‹é·ç§» *)
+  | ACT_FINAL         (* çµ‚äº†å‡¦ç† *)
+  | ACT_RECORD        (* ãƒ©ãƒ™ãƒ«è¨˜éŒ²å‡¦ç† *)
 
-  | ACT_COND_VALZERO  (* ğŒ”»’è(V_l==0) *)
-  | ACT_COND_VALNONZ  (* ğŒ”»’è(V_l!=0) *)
-  | ACT_COND_CNTZERO  (* ğŒ”»’è(C_l==0) *)
-  | ACT_COND_CNTNONZ  (* ğŒ”»’è(C_l!=0) *)
-  | ACT_COUNT_SET     (* ƒJƒEƒ“ƒ^ˆ—(C_l=V_l-1) *)
-  | ACT_COUNT_DECR    (* ƒJƒEƒ“ƒ^ˆ—(C_l--) *)
+  | ACT_COND_VALZERO  (* æ¡ä»¶åˆ¤å®š(V_l==0) *)
+  | ACT_COND_VALNONZ  (* æ¡ä»¶åˆ¤å®š(V_l!=0) *)
+  | ACT_COND_CNTZERO  (* æ¡ä»¶åˆ¤å®š(C_l==0) *)
+  | ACT_COND_CNTNONZ  (* æ¡ä»¶åˆ¤å®š(C_l!=0) *)
+  | ACT_COUNT_SET     (* ã‚«ã‚¦ãƒ³ã‚¿å‡¦ç†(C_l=V_l-1) *)
+  | ACT_COUNT_DECR    (* ã‚«ã‚¦ãƒ³ã‚¿å‡¦ç†(C_l--) *)
 let act_string = function
     ACT_NULL          -> "ACT_NULL        "
   | ACT_MATCH         -> "ACT_MATCH       "
@@ -322,9 +322,9 @@ type next  = act * int
 type stent = next * int
 type fent  = string * int
 type ment  = next * Cset.t
-type rent  = next * int * int  (* Ÿˆ— * ƒ‰ƒxƒ‹ID * ƒTƒCƒY *)
-type cond  = next * next * int (* TRUEˆ— * FALSEˆ— * ƒ‰ƒxƒ‹ID *)
-type cact  = next * int        (* Ÿˆ— * ƒ‰ƒxƒ‹ID *)
+type rent  = next * int * int  (* æ¬¡å‡¦ç† * ãƒ©ãƒ™ãƒ«ID * ã‚µã‚¤ã‚º *)
+type cond  = next * next * int (* TRUEæ™‚å‡¦ç† * FALSEæ™‚å‡¦ç† * ãƒ©ãƒ™ãƒ«ID *)
+type cact  = next * int        (* æ¬¡å‡¦ç† * ãƒ©ãƒ™ãƒ«ID *)
 
 let state_map = ref PosSetMap.empty  (* PosSet.t -> State.ID *)
 let state_table = Ht.create(29)      (* State.ID -> stent *)
@@ -379,18 +379,18 @@ let update_max_label n =
   if n > !max_label then max_label := n
 
 (*
- * DFAƒIƒuƒWƒFƒNƒg‚ğ¶¬‚·‚é
+ * DFAã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ç”Ÿæˆã™ã‚‹
  * 
- *   ˆø@”Finit   : PosSet.t    --- ‰Šúó‘Ô
- *           ps_map : PosSetMap.t --- ‘JˆÚ•\
- *           ls_map : PosSetMap.t --- ‹L˜^ƒ‰ƒxƒ‹•\(ƒ‰ƒxƒ‹‚ğ‹L˜^‚·‚éó‘Ô‚Ì•\)
- *   –ß‚è’lF‰Šúó‘Ô‚ÌID
+ *   å¼•ã€€æ•°ï¼šinit   : PosSet.t    --- åˆæœŸçŠ¶æ…‹
+ *           ps_map : PosSetMap.t --- é·ç§»è¡¨
+ *           ls_map : PosSetMap.t --- è¨˜éŒ²ãƒ©ãƒ™ãƒ«è¡¨(ãƒ©ãƒ™ãƒ«ã‚’è¨˜éŒ²ã™ã‚‹çŠ¶æ…‹ã®è¡¨)
+ *   æˆ»ã‚Šå€¤ï¼šåˆæœŸçŠ¶æ…‹ã®ID
  * 
  *)
 let create (init,(ps_map,ls_map)) =
   let label_map = Label.map_create() in
   let rec create_next tm =
-    let cset_list = TransMap.cset_list tm in (* Cset.t‚ÌƒŠƒXƒg‚ğæ“¾ *)
+    let cset_list = TransMap.cset_list tm in (* Cset.tã®ãƒªã‚¹ãƒˆã‚’å–å¾— *)
     let next = create_cset_next (List.hd cset_list) tm in
       List.iter (fun cs -> ignore(create_cset_next cs tm)) (List.tl cset_list);
       next
@@ -443,7 +443,7 @@ let create (init,(ps_map,ls_map)) =
     ) tcset next in
       next'
   and create_final ps =
-    let num,field_list = PosSet.fold ( (* Å¬‚Ìó—”Ô†‚ğ‘I‘ğ‚·‚é *)
+    let num,field_list = PosSet.fold ( (* æœ€å°ã®å—ç†ç•ªå·ã‚’é¸æŠã™ã‚‹ *)
       fun p (n,fs) ->
         if Ht.mem acc_tbl p then
           let n',fs' = Ht.find acc_tbl p in
@@ -486,9 +486,9 @@ let gendfa re =
               let nxts' = List.map (
                 fun (c,p') ->
                   if Ht.mem ltbl p' then
-                    let lbls  = Ht.find ltbl p in (* ‘JˆÚŒ³‚Ìƒ‰ƒxƒ‹W‡ *)
-                    let lbls' = Ht.find ltbl p' in (* ‘JˆÚæ‚Ìƒ‰ƒxƒ‹W‡ *)
-                      c,(p',start_labels lbls lbls') (* ŠJnƒ‰ƒxƒ‹‚ğæ“¾ *)
+                    let lbls  = Ht.find ltbl p in (* é·ç§»å…ƒã®ãƒ©ãƒ™ãƒ«é›†åˆ *)
+                    let lbls' = Ht.find ltbl p' in (* é·ç§»å…ˆã®ãƒ©ãƒ™ãƒ«é›†åˆ *)
+                      c,(p',start_labels lbls lbls') (* é–‹å§‹ãƒ©ãƒ™ãƒ«ã‚’å–å¾— *)
                   else c,(p',LabelSet.empty)
               ) nxts in
                 if Cset.mem a (Pos.pos2cs p) then union cp nxts' else cp in
@@ -520,11 +520,11 @@ let gendfa re =
     )
 
 (*
- * ³‹K•\Œ»Œ^‚ÌƒŠƒXƒg‚©‚çDFA‚ğ¶¬‚·‚é
+ * æ­£è¦è¡¨ç¾å‹ã®ãƒªã‚¹ãƒˆã‹ã‚‰DFAã‚’ç”Ÿæˆã™ã‚‹
  * 
- *   ˆø@”Fts : Types.rgx list --- ³‹K•\Œ»Œ^‚ÌƒŠƒXƒg
+ *   å¼•ã€€æ•°ï¼šts : Types.rgx list --- æ­£è¦è¡¨ç¾å‹ã®ãƒªã‚¹ãƒˆ
  * 
- *   –ß‚è’lFint --- ¶¬‚µ‚½DFA‚ÌID
+ *   æˆ»ã‚Šå€¤ï¼šint --- ç”Ÿæˆã—ãŸDFAã®ID
  * 
  *)
 let generate ts =
@@ -555,9 +555,9 @@ let generate ts =
               let nxts' = List.map (
                 fun (c,p') ->
                   if Ht.mem ltbl p' then
-                    let lbls  = Ht.find ltbl p in (* ‘JˆÚŒ³‚Ìƒ‰ƒxƒ‹W‡ *)
-                    let lbls' = Ht.find ltbl p' in (* ‘JˆÚæ‚Ìƒ‰ƒxƒ‹W‡ *)
-                      c,(p',start_labels lbls lbls') (* ŠJnƒ‰ƒxƒ‹‚ğæ“¾ *)
+                    let lbls  = Ht.find ltbl p in (* é·ç§»å…ƒã®ãƒ©ãƒ™ãƒ«é›†åˆ *)
+                    let lbls' = Ht.find ltbl p' in (* é·ç§»å…ˆã®ãƒ©ãƒ™ãƒ«é›†åˆ *)
+                      c,(p',start_labels lbls lbls') (* é–‹å§‹ãƒ©ãƒ™ãƒ«ã‚’å–å¾— *)
                   else c,(p',LabelSet.empty)
               ) nxts in
                 if Cset.mem a (Pos.pos2cs p) then union cp nxts' else cp in
@@ -591,12 +591,12 @@ let generate ts =
     create dfa
 
 (*
- * ³‹K•\Œ»Œ^‚ÌƒŠƒXƒg‚©‚çƒXƒLƒbƒvˆ—•t‚«DFA‚ğ¶¬‚·‚é
+ * æ­£è¦è¡¨ç¾å‹ã®ãƒªã‚¹ãƒˆã‹ã‚‰ã‚¹ã‚­ãƒƒãƒ—å‡¦ç†ä»˜ãDFAã‚’ç”Ÿæˆã™ã‚‹
  * 
- *   ˆø@”Ft  : Types.rgx      --- ³‹K•\Œ»Œ^ieƒpƒ^[ƒ“j
- *           ts : Types.rgx list --- ³‹K•\Œ»Œ^‚ÌƒŠƒXƒg
+ *   å¼•ã€€æ•°ï¼št  : Types.rgx      --- æ­£è¦è¡¨ç¾å‹ï¼ˆè¦ªãƒ‘ã‚¿ãƒ¼ãƒ³ï¼‰
+ *           ts : Types.rgx list --- æ­£è¦è¡¨ç¾å‹ã®ãƒªã‚¹ãƒˆ
  * 
- *   –ß‚è’lFint --- ¶¬‚µ‚½DFA‚ÌID
+ *   æˆ»ã‚Šå€¤ï¼šint --- ç”Ÿæˆã—ãŸDFAã®ID
  * 
  *)
 let generate2_ t ts =
@@ -614,24 +614,24 @@ let generate2_ t ts =
     ) ps fs in
   let re = List.fold_left (fun r' r -> R.ALT(r',r)) (List.hd rs') (List.tl rs') in
   let re' = R.posify (T.regexify t) in
-  let init,(ps_map,ls_map) = gendfa re in   (* ƒpƒ^ƒ“ƒ}ƒbƒ`‚ÌDFA *)
-  let init',(ps_map',ls_map') = gendfa re' in (* ƒ}ƒbƒ`Ï‚İ‚ÌDFA *)
-(* DFA‚Ì\‘¢
- *           init   : PosSet.t    --- ‰Šúó‘Ô
- *           ps_map : PosSetMap.t --- ‘JˆÚ•\
- *           ls_map : PosSetMap.t --- ‹L˜^ƒ‰ƒxƒ‹•\(ƒ‰ƒxƒ‹‚ğ‹L˜^‚·‚éó‘Ô‚Ì•\)
+  let init,(ps_map,ls_map) = gendfa re in   (* ãƒ‘ã‚¿ãƒ³ãƒãƒƒãƒã®DFA *)
+  let init',(ps_map',ls_map') = gendfa re' in (* ãƒãƒƒãƒæ¸ˆã¿ã®DFA *)
+(* DFAã®æ§‹é€ 
+ *           init   : PosSet.t    --- åˆæœŸçŠ¶æ…‹
+ *           ps_map : PosSetMap.t --- é·ç§»è¡¨
+ *           ls_map : PosSetMap.t --- è¨˜éŒ²ãƒ©ãƒ™ãƒ«è¡¨(ãƒ©ãƒ™ãƒ«ã‚’è¨˜éŒ²ã™ã‚‹çŠ¶æ…‹ã®è¡¨)
  *)
   let pairs = ref [init,init'] in
   let checked = ref [] in
   let new_ps_map = ref PosSetMap.empty in
     (* tm <: tm' *)
   let next_pairs tm tm' =
-    let cl = TransMap.cset_list tm in    (* “ü—Í•¶šW‡‚ÌƒŠƒXƒg *)
+    let cl = TransMap.cset_list tm in    (* å…¥åŠ›æ–‡å­—é›†åˆã®ãƒªã‚¹ãƒˆ *)
       List.iter (
         fun cs ->
-          let nl = TransMap.next_list cs tm in    (* Ÿ‘JˆÚğŒ~Ÿó‘Ô‚ÌƒŠƒXƒg *)
+          let nl = TransMap.next_list cs tm in    (* æ¬¡é·ç§»æ¡ä»¶Ã—æ¬¡çŠ¶æ…‹ã®ãƒªã‚¹ãƒˆ *)
           let nl' = TransMap.next_list2 cs tm' in
-            (* TODO: ‘JˆÚğŒ‚ÉŠÖ‚·‚éƒ`ƒFƒbƒN *)
+            (* TODO: é·ç§»æ¡ä»¶ã«é–¢ã™ã‚‹ãƒã‚§ãƒƒã‚¯ *)
             List.iter (
               fun (t,p) ->
                 let t',p' = List.find (fun (t',p') -> TcondSet.imply t t') nl' in
@@ -641,9 +641,9 @@ let generate2_ t ts =
     while !pairs != []
     do
       let s,s' = List.hd !pairs in
-      let tm = PosSetMap.find s ps_map in  (* ‘JˆÚƒe[ƒuƒ‹ *)
+      let tm = PosSetMap.find s ps_map in  (* é·ç§»ãƒ†ãƒ¼ãƒ–ãƒ« *)
       let tm' = PosSetMap.find s' ps_map' in 
-      let cl = TransMap.cset_list tm in    (* “ü—Í•¶šW‡‚ÌƒŠƒXƒg *)
+      let cl = TransMap.cset_list tm in    (* å…¥åŠ›æ–‡å­—é›†åˆã®ãƒªã‚¹ãƒˆ *)
       let cl' = TransMap.cset_list tm' in
         pairs := List.tl !pairs;
         checked := (s,s')::!checked;
@@ -667,21 +667,21 @@ let generate2 t ts =
     generate ts
 
 (*
- * DFA‚Ìo—Í
+ * DFAã®å‡ºåŠ›
  *
- *   ˆø@”F‚È‚µ
- *   –ß‚è’lF‚È‚µ
+ *   å¼•ã€€æ•°ï¼šãªã—
+ *   æˆ»ã‚Šå€¤ï¼šãªã—
  * 
  *)
 let emit () =
-  (* ó‘Ôƒe[ƒuƒ‹ *)
+  (* çŠ¶æ…‹ãƒ†ãƒ¼ãƒ–ãƒ« *)
   Printf.printf "state_t __prc__state_table[] = {\n";
   for i = 0 to !state_size - 1 do
     let (act,nidx),fidx = Ht.find state_table i in
       Printf.printf "/* [%03d] */ { %s,%4d,%4d },\n" i (act_string act) nidx fidx
   done;
   Printf.printf "};\n";
-  (* I—¹ˆ—ƒGƒ“ƒgƒŠ *)
+  (* çµ‚äº†å‡¦ç†ã‚¨ãƒ³ãƒˆãƒª *)
   Printf.printf "fact_t __prc__fact_table[] = {\n";
   for i = 0 to !fact_size - 1 do
     let cons,num = Ht.find fact_table i in
@@ -691,7 +691,7 @@ let emit () =
         Printf.printf "/* [%03d] */ { %2d, \"%s\" },\n" i num cons
   done;
   Printf.printf "};\n";
-  (* •¶šW‡ƒe[ƒuƒ‹ *)
+  (* æ–‡å­—é›†åˆãƒ†ãƒ¼ãƒ–ãƒ« *)
   Printf.printf "mact_t __prc__mact_table[] = {\n";
   for i = 0 to !mact_size - 1 do
     let (act,nidx),cs = Ht.find mact_table i in
@@ -699,7 +699,7 @@ let emit () =
         i (act_string act) nidx (Cset.encode cs)
   done;
   Printf.printf "};\n";
-  (* ƒ‰ƒxƒ‹‹L˜^ˆ—ƒe[ƒuƒ‹ *)
+  (* ãƒ©ãƒ™ãƒ«è¨˜éŒ²å‡¦ç†ãƒ†ãƒ¼ãƒ–ãƒ« *)
   Printf.printf "ract_t __prc__ract_table[] = {\n";
   for i = 0 to !ract_size - 1 do
     let (act,nidx),lid,lsiz = Ht.find ract_table i in
@@ -707,7 +707,7 @@ let emit () =
         i (act_string act) nidx lid lsiz
   done;
   Printf.printf "};\n";
-  (* ğŒˆ—ƒe[ƒuƒ‹ *)
+  (* æ¡ä»¶å‡¦ç†ãƒ†ãƒ¼ãƒ–ãƒ« *)
   Printf.printf "cond_t __prc__cond_table[] = {\n";
   for i = 0 to !cond_size - 1 do
     let (tact,tidx),(fact,fidx),lid = Ht.find cond_table i in
@@ -715,7 +715,7 @@ let emit () =
         i (act_string tact) tidx (act_string fact) fidx lid
   done;
   Printf.printf "};\n";
-  (* ƒJƒEƒ“ƒ^ˆ—ƒe[ƒuƒ‹ *)
+  (* ã‚«ã‚¦ãƒ³ã‚¿å‡¦ç†ãƒ†ãƒ¼ãƒ–ãƒ« *)
   Printf.printf "cact_t __prc__cact_table[] = {\n";
   for i = 0 to !cact_size - 1 do
     let (act,nidx),lid = Ht.find cact_table i in
@@ -723,7 +723,7 @@ let emit () =
         i (act_string act) nidx lid
   done;
   Printf.printf "};\n";
-  (* ƒ‰ƒxƒ‹ƒŒƒWƒXƒ^ *)
+  (* ãƒ©ãƒ™ãƒ«ãƒ¬ã‚¸ã‚¹ã‚¿ *)
   Printf.printf "#define MAX_LABEL (%d)\n" !max_label;
   Printf.printf "u_char *__prc__lbl_ptr[MAX_LABEL];\n";
   Printf.printf "u_int __prc__lbl_value[MAX_LABEL];\n";

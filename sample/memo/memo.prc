@@ -1,5 +1,5 @@
 //
-// MemoƒRƒ}ƒ“ƒh
+// Memoã‚³ãƒžãƒ³ãƒ‰
 //
 type FileOut = {ok:bool;out:<string>}
 
