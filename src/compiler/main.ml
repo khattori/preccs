@@ -10,8 +10,6 @@ open Error
 let inputFiles = ref []      (* 入力ファイル名のリスト *)
 let outputFile = ref None    (* 出力ファイル名の指定   *)
 let debugMode  = ref false   (* デバッグ出力フラグ     *)
-let poutMode   = ref false   (* π式出力フラグ         *)
-let coutMode   = ref false   (* CPS式出力フラグ        *)
 
 let error s =
   print_string (Sys.executable_name ^ ": " ^ s); raise (Exit 1)
@@ -39,12 +37,12 @@ let argDefs = [
   );
   ( (* π式出力モード *)
     "-p",
-    Arg.Set(poutMode),
+    Arg.Set(Semant.poutMode),
     "Pexp output."
   );
   ( (* CPS式出力モード *)
     "-c",
-    Arg.Set(coutMode),
+    Arg.Set(Semant.coutMode),
     "Cexp output."
   );
   ( (* CPS式出力モード *)
@@ -69,44 +67,33 @@ let parseArgs () =
 
 (** 入力ファイルの解析 *)
 let parseFiles () = 
-  let parse file =
-    let inp = open_in file in
-    let lexbuf = Lexer.create file inp in
-    let result =
-      try 
-        let (head,abs,foot) = Parser.toplevel Lexer.main lexbuf in
-          if (!poutMode) then
-            Pi.show_proc
-              (Pi.reducPar
-                 (Pi.removeUnused
-                    (Pi.reducComm
-                       (Pi.trans (Check.check abs) abs))))
-          else if (!coutMode) then
-            print_string (
-              Cps.showCexp
-                (Cps.etaReduc
-                   (Trans.trans
-                      (Pi.reducPar
-                         (Pi.removeUnused
-                            (Pi.reducComm
-                               (Pi.trans (Check.check abs) abs)))))))
-          else
-            let cexp = Semant.translate abs in
-              Closure.attachFv cexp;
-              print_string head;
-              Emit.emit Rmap.empty cexp;
-              print_string foot
+  let files = Stack.create() in
+  let head = ref "" in
+  let synt = ref [] in
+  let foot = ref "" in
+    begin
+      List.iter (fun f -> Stack.push f files) !inputFiles;
+      while not (Stack.is_empty files)
+      do
+        let file = Stack.pop files in
+        let inp = open_in file in
+        let lexbuf = Lexer.create file inp in
+          try
+            let (fs,hd,sy,ft) = Parser.toplevel Lexer.main lexbuf in
+              begin
+                List.iter (fun f -> Stack.push f files) fs;
+                head := hd ^ !head;
+                synt := sy @ !synt;
+                foot := ft ^ !foot;
+                Parsing.clear_parser();
+                close_in inp
+              end
+          with
+	      Parsing.Parse_error -> errorAt (Lexer.info lexbuf) ERR_PARSE_ERROR
+      done;
+      Semant.translate !head !synt !foot
+    end
 
-(*
-  Printf.printf "%s\n"
-  (Cps.showCexp (Trans.trans (Pi.trans (Check.check abs) abs)))
-*)
-      with
-	  Parsing.Parse_error -> errorAt (Lexer.info lexbuf) ERR_PARSE_ERROR
-    in
-      Parsing.clear_parser(); close_in inp
-  in
-    List.iter parse !inputFiles
 
 (** 処理本体 *)
 let () =

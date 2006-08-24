@@ -21,6 +21,7 @@ module R = Regex
 %token <Error.info> STOP
 %token <Error.info> RUN
 %token <Error.info> NULL
+%token <Error.info> IMPORT
 
 /* 識別子と定数値のトークン */
 %token <Symbol.t Error.withinfo> IDENT
@@ -85,15 +86,15 @@ module R = Regex
 %nonassoc UMIN LNOT
 
 %start toplevel
-%type <string * Syntax.toplevel * string> toplevel
+%type <string list * string * Syntax.toplevel * string> toplevel
 
 %%
 
 /* 開始ルール */
 toplevel
-  : cblockPart definitionList cblockPart EOF { 
-    let vars,types,procs = $2 in
-      $1,vars@[DefType types]@[DefProc procs],$3
+  : cblockPart importList definitionList cblockPart EOF { 
+    let vars,types,procs = $3 in
+      $2,$1,vars@[DefType types]@[DefProc procs],$4
   }
 ;
 definitionList
@@ -116,6 +117,11 @@ definitionList
 cblockPart
   : /* empty */       { "" }
   | LCBLK CFRAG RCBLK { $2 }
+;
+
+importList
+  : /* empty */ { [] }
+  | importList IMPORT STRV  { $1 @ [$3.v] }
 ;
 
 /*****************************************************************

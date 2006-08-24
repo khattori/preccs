@@ -26,6 +26,7 @@ type proc =
   | Par   of proc * proc                   (* 並行合成       *)
   | Case  of exp  * proc list              (* 分岐実行       *)
   | Call  of var  * exp list               (* プロセス呼出し *)
+  | Set   of exp  * exp * proc             (* 代入           *)
   | Cblk  of string list * exp list * proc (* Cコード        *)
   | Fix   of bind list * proc              (* プロセス定義   *)
 and bind = var * var list * proc
@@ -45,9 +46,9 @@ and exp =
   | Cint   of int
   | String of string
   | If     of exp * exp * exp
-  | Record of exp list          (* レコード値     *)
-  | Rexrcd of string * exp list (* 正規表現レコード *)
-  | Select of exp * exp         (* フィールド選択 *)
+  | Record of exp list          (* レコード値         *)
+  | Rexrcd of string * exp list (* 正規表現レコード   *)
+  | Select of exp * exp         (* フィールド選択     *)
   | Offset of exp * exp         (* レコードオフセット *)
   | Prim   of prim * exp list
 
@@ -62,6 +63,12 @@ let v_next = Symbol.symbol("next")
 let v_junk = Symbol.symbol("junk")
 let v_temp = Symbol.symbol("temp")
 let v_mval = Symbol.symbol("mval")
+
+(** 識別子生成 *)
+let counter = ref 0
+let genid s =
+  incr counter;
+  Symbol.symbol (Printf.sprintf "%s%d" s !counter)
 
 let trans_const = function
     A.ConBool(_,b) -> Bool b
@@ -175,9 +182,9 @@ and trans_proc env nxt = function
   | A.ProcOutput(_,c,e) -> Guard(Send(trans_var env c,trans_expr env e,nxt))
   | A.ProcRun(_,s,es) -> Par(Call(s,List.map (fun e -> trans_expr env e) es),nxt)
   | A.ProcVar(_,s,A.DeclExpr e)  -> Let(s,trans_expr env e,nxt)
-  | A.ProcVar(_,s,A.DeclType(t,ty)) when T.is_chan !ty -> New(s,nxt)
-  | A.ProcVar(_,s,A.DeclType(t,ty)) -> Let(s,trans_type !ty,nxt)
-  | A.ProcAsign(_,v,e) -> assert false (* not yet implement *)
+  | A.ProcVar(_,s,A.DeclType(_,ty)) when T.is_chan !ty -> New(s,nxt)
+  | A.ProcVar(_,s,A.DeclType(_,ty)) -> Let(s,trans_type !ty,nxt)
+  | A.ProcAsign(_,v,e) -> Set(trans_var env v,trans_expr env e,nxt)
   | A.ProcCblock(_,cs,vs) -> Cblk(cs,List.map (trans_var env) vs,nxt)
 
 (* ガード式変換 *)
@@ -197,24 +204,29 @@ and trans_gproc env nxt = function
  *   戻り値：プロセス式（π式）
  *)
 and trans_match env nxt ty exp pts =
-  let pt_ls,pr_ls = List.split pts in match ty with 
-      T.STRING | T.REGEX _ ->
-        let mexp,binds  = trans_patns ty (Var v_mval) pt_ls in
-          Let(v_mval,(trans_expr env exp),
-              Let(v_temp,mexp, (* v_temp:(index,data) *)
-                  Case(Select(Var v_temp,Int 0),
-                       List.map2 (
-                         fun p -> function
-                             None   -> trans_proc env nxt p
-                           | Some s -> Let(s,Select(Var v_temp,Int 1),
-                                           trans_proc env nxt p)
-                       ) pr_ls binds)))
-    | _ -> let mexp = trans_case (Var v_mval) pt_ls in
-        Let(v_mval,(trans_expr env exp),
-            Let(v_temp,mexp, (* v_temp:index *)
-                Case(Var v_temp,
-                     List.map (fun p -> trans_proc env nxt p) pr_ls)))
-
+  let pt_ls,pr_ls = List.split pts in
+  let v_nprc = genid "nprc" in
+    Fix([v_nprc,[],nxt],
+        match ty with 
+            T.STRING | T.REGEX _ ->
+              let mexp,binds  = trans_patns ty (Var v_mval) pt_ls in
+                Let(v_mval,(trans_expr env exp),
+                    Let(v_temp,mexp, (* v_temp:(index,data) *)
+                        Case(Select(Var v_temp,Int 0),
+                             List.map2 (
+                               fun p -> function
+                                   None   -> trans_proc env (Call(v_nprc,[])) p
+                                 | Some s -> Let(s,Select(Var v_temp,Int 1),
+                                                 trans_proc env (Call(v_nprc,[])) p)
+                             ) pr_ls binds)))
+          | _ -> let mexp = trans_case (Var v_mval) pt_ls in
+              Let(v_mval,(trans_expr env exp),
+                  Let(v_temp,mexp, (* v_temp:index *)
+                      Case(Var v_temp,
+                           List.map (fun p ->
+                                       trans_proc env (Call(v_nprc,[])) p) pr_ls)))
+       )
+      
 (* パタン式と束縛リストを返す *)
 and trans_patns ty v patns =
   (* 型のリストからDFAを作成する． *)
@@ -281,6 +293,7 @@ let trans env defs =
     fun def proc -> (
       match def with
           A.DefVar(_,s,A.DeclExpr ex) -> Let(s,trans_expr env ex,proc)
+        | A.DefVar(_,s,A.DeclType(_,ty)) when T.is_chan !ty -> New(s,proc)
         | A.DefVar(_,s,A.DeclType(_,ty)) -> Let(s,trans_type !ty,proc)
         | A.DefType types -> proc
         | A.DefProc procs ->
@@ -330,6 +343,7 @@ let rec unused v = function
   | Case(e,ps) -> unusedE v e && List.for_all (unused v) ps
   | Call(v',es) -> not (Symbol.equal v v') && List.for_all (unusedE v) es
   | Cblk(cs,es,p) -> unused v p && List.for_all (unusedE v) es
+  | Set(e1,e2,p) -> unusedE v e1 && unusedE v e2 && unused v p
   | Fix(bs,p) ->
       unused v p &&
         List.for_all (
@@ -452,6 +466,11 @@ let rec show_proc = function
       Printf.printf ",[";
       List.iter (fun v -> show_exp v; Printf.printf ";") vs;
       Printf.printf "],";
+      show_proc p; Printf.printf ")"
+  | Set(e1,e2,p) ->
+      Printf.printf "Set(";
+      show_exp e1; Printf.printf ",";
+      show_exp e2; Printf.printf ",";
       show_proc p; Printf.printf ")"
   | Fix(bs,p) ->
       Printf.printf "Fix([";

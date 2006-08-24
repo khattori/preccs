@@ -19,16 +19,16 @@ error.cmo: types.cmo symbol.cmo
 error.cmx: types.cmx symbol.cmx 
 lexer.cmo: symbol.cmo parser.cmi error.cmo 
 lexer.cmx: symbol.cmx parser.cmx error.cmx 
-main.cmo: semant.cmo rmap.cmo pi.cmo parser.cmi lexer.cmo error.cmo emit.cmo \
-    closure.cmo check.cmo 
-main.cmx: semant.cmx rmap.cmx pi.cmx parser.cmx lexer.cmx error.cmx emit.cmx \
-    closure.cmx check.cmx 
-match.cmo: types.cmo regex.cmo prop.cmo pos.cmo nfa.cmo cset.cmo cond.cmo 
-match.cmx: types.cmx regex.cmx prop.cmx pos.cmx nfa.cmx cset.cmx cond.cmx 
+main.cmo: trans.cmo semant.cmo rmap.cmo pi.cmo parser.cmi lexer.cmo error.cmo \
+    emit.cmo dfa.cmo cps.cmo closure.cmo check.cmo 
+main.cmx: trans.cmx semant.cmx rmap.cmx pi.cmx parser.cmx lexer.cmx error.cmx \
+    emit.cmx dfa.cmx cps.cmx closure.cmx check.cmx 
 nfa.cmo: regex.cmo prop.cmo pos.cmo cset.cmo cond.cmo 
 nfa.cmx: regex.cmx prop.cmx pos.cmx cset.cmx cond.cmx 
-parser.cmo: types.cmo syntax.cmo symbol.cmo regex.cmo error.cmo parser.cmi 
-parser.cmx: types.cmx syntax.cmx symbol.cmx regex.cmx error.cmx parser.cmi 
+parser.cmo: types.cmo syntax.cmo symbol.cmo regex.cmo parser.cmi lexer.cmo \
+    error.cmo parser.cmi 
+parser.cmx: types.cmx syntax.cmx symbol.cmx regex.cmx parser.cmx lexer.cmx \
+    error.cmx parser.cmi 
 pi.cmo: types.cmo syntax.cmo symbol.cmo regex.cmo dfa.cmo 
 pi.cmx: types.cmx syntax.cmx symbol.cmx regex.cmx dfa.cmx 
 pos.cmo: cset.cmo 

@@ -28,6 +28,7 @@ let _ =
       ( "skip",   fun i -> Parser.SKIP i    );
       ( "stop",   fun i -> Parser.STOP i    );
       ( "null",   fun i -> Parser.NULL i    );
+      ( "import", fun i -> Parser.IMPORT i  );
       (* 特殊記号 *)
       ( "@",      fun i -> Parser.AT i      );
       ( "#",      fun i -> Parser.SHARP i   );

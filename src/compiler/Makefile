@@ -22,8 +22,8 @@ OBJS =	symbol.cmo	\
 	subset.cmo	\
 	types.cmo	\
 	env.cmo	\
-	parser.cmo	\
 	lexer.cmo	\
+	parser.cmo	\
 	syntax.cmo	\
 	check.cmo	\
 	dfa.cmo	\

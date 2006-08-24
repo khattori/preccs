@@ -162,6 +162,30 @@ and trans_proc env cont = function
         | e::es -> trans_exp env' (fun x -> g (x::xs) env' es) e
       in
         g [] env es
+  | P.Set(e1,e2,p) -> (
+      match e1 with
+          P.Var v -> 
+            trans_exp env (
+              fun x ->
+                trans_exp env (
+                  fun y ->
+                    match x with
+                        C.Var _ ->
+                          C.Prim(C.Asign,[x;y],[],[trans_proc env cont p]),ref []
+                      | _ ->
+                          let t = C.genid "t" in
+                            C.Prim(C.Set,[y],[t],[trans_proc (Sm.add v (C.Var t) env) cont p]),ref []
+                ) e2 ) e1
+        | P.Select(r,i) ->
+            trans_exp env (
+              fun x ->
+                let t = C.genid "t" in
+                  trans_exp_list env (
+                    fun vs ->
+                      C.Prim(C.Update,vs@[x],[],[trans_proc env cont p]),ref []
+                  ) [r;i] ) e2
+        | _ -> assert false )
+
   | P.Fix(bs,p) ->
       let k = C.genid "k" in
         C.Fix(List.map (

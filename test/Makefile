@@ -13,7 +13,7 @@ OBJS	= $(SRCS:.c=.o)
 $(TARGET)	: $(OBJS)
 	$(CC) -g -o $@ $(OBJS) $(LIBS) 
 
-test.out.c	: test2.prc
+test.out.c	: test.prc
 	$(PRCC) $< > $@
 
 clean	:

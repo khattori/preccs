@@ -24,6 +24,8 @@ and prim =
   | Switch        (* 値分岐   *)
   | Match         (* パターンマッチ: (DFA ID, String val)->lvar list*)
   | Set           (* 値セット: (lvar, value) *)
+  | Asign         (* 値更新 *)
+  | Update        (* フィールド更新 *)
   | New           (* チャネル生成 *)
   | Alloc
   | Record | Rexrcd | Select | Offset
@@ -80,6 +82,8 @@ and showPrim = function
   | Switch -> "Switch"
   | Match  -> "Match"
   | Set    -> "Set"
+  | Asign  -> "Asign"
+  | Update -> "Update"
   | New    -> "New"
   | Record -> "Record"
   | Rexrcd -> "Rexrcd"

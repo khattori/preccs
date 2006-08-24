@@ -1,6 +1,6 @@
 CC	= gcc
 CFLAGS	= -Wall -g -I../../src/runtime
-LIBS	= -L../../src/runtime -lprcrt -lws2_32
+LIBS	= -L../../src/runtime -lprcrt -lws2_32 -lwinmm
 PRCC	= ../../src/compiler/prcc
 
 TARGET	= echod

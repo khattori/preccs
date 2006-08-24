@@ -44,7 +44,7 @@ int __dmatch__(int val, u_int st);
 #define STRPTR(s) ((char*)((int*)s)[1]+((int*)s)[0])
 #define STRLEN(s) (((int*)s)[3]-((int*)s)[0])
 
-#define TOCINT(i) ((i)/2)
+#define TOCINT(i) ((i)>>1)
 #define TOPINT(i) (((i)<<1)^0x01)
 
 #define DEFAULT_HEAP_SIZE (1024*1024*16)
@@ -64,7 +64,7 @@ int __dmatch__(int val, u_int st);
 #define AND(a,b) ((a)&(b))
 #define OR(a,b)  ((a)|(b))
 
-#define INEG(a)  (((a/2)<<1)^1)
+#define INEG(a)  TOPINT(-TOCINT(a))
 #define NOT(a)  (-(a))
 #define SET(a)  (a)
 

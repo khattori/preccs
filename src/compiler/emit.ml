@@ -203,6 +203,15 @@ and emitPrim rm = function
       let rs   = val2str rm'' (C.Var r) in
         Printf.printf "%s=(int)&((int *)%s)[%d];\n" rs (val2str rm v) o;
         emit rm'' (c,fv)
+  | C.Asign,[v1;v2],[],[c,fv] ->
+      let rm'  = Rmap.release rm !fv in
+        Printf.printf "%s=%s;\n" (val2str rm v1) (val2str rm v2);
+        emit rm' (c,fv)
+  | C.Update,[v1;o;v2],[],[c,fv] ->
+      let rm'  = Rmap.release rm !fv in
+        Printf.printf "((int *)%s)[TOCINT(%s)]=%s;\n"
+          (val2str rm v1) (val2str rm o) (val2str rm v2);
+        emit rm' (c,fv)
   | binop,[v1;v2],[r],[c,fv] ->
       let rm'  = Rmap.release rm !fv in
       let rm'' = Rmap.assign rm' r in
