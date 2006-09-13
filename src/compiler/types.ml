@@ -114,8 +114,11 @@ let regexify rt =
   let rec trans tbl = function
     | REXP re   -> re
     | RARR(r,n) -> R.array (trans tbl r) n
-    | RITR(r,s) ->
-        let l = List.assoc s tbl in R.REP(trans tbl r,l)
+    | RITR(r,s) -> (
+        try
+          let l = List.assoc s tbl in R.REP(trans tbl r,l)
+        with Not_found -> R.CLOS(trans tbl r)
+      )
     | RRCD rs   ->
         let re,_ =
           List.fold_left (

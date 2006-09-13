@@ -15,6 +15,15 @@ type 'a t =
   | Disj of 'a t * 'a t
 
 (*
+ * 命題論理式の命題変数をマッピングする
+ *)
+let rec map f = function
+    Atom a -> Atom(f a)
+  | Neg p  -> Neg(map f p)
+  | Conj(p1,p2) -> Conj(map f p1, map f p2)
+  | Disj(p1,p2) -> Disj(map f p1, map f p2)
+
+(*
  * 含意を構成する：p→q ≡ ¬p∨q
  *)
 let implies p q = Disj(Neg(p),q)

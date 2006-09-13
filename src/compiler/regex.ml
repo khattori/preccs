@@ -71,9 +71,11 @@ let of_chrcls s =
         if Cset.is_empty !cs then EPS else CHARS(!cs)
     
 let oct = CHARS(Cset.all)
+let any = CLOS(oct)
 
 let pclos r = SEQ(r,CLOS r)
 let opt   r = ALT(EPS,r)
+
 let rec array r n =
   if      n<=0 then assert false
   else if n==1 then r
@@ -88,20 +90,6 @@ let rec posify = function
   | CLOS(r)    -> CLOS(posify r)
   | LBL(r,l)   -> LBL(posify r,l)
   | REP(r,l)   -> REP(posify r,l)
-
-
-(*
-(** 位置とラベルの対応付けを行う *)
-let labelify =
-  let rec trav ls = function
-      EPS        -> ()
-    | CHARS(p)   -> Pos.add p ls
-    | SEQ(r1,r2) -> SEQ(trav ls r1,trav ls r2)
-    | ALT(r1,r2) -> ALT(trav ls r1,trav ls r2)
-    | CLOS(r)    -> CLOS(trav ls r)
-    | LBL(r,l)   -> LBL(trav (l::ls) r,l)
-    | REP(r,_)   -> REP(trav ls r,_)
-*)
 
 (** 正規表現から文字列を取得 *)
 let rec to_string = function

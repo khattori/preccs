@@ -177,7 +177,11 @@ and trans_proc env nxt = function
             fun proc (g,p) ->
               Alt(trans_gproc env (trans_proc env nxt p) g,proc)
           ) (trans_gproc env (trans_proc env nxt p) g) ps)
-  | A.ProcMatch(_,e,ps,t) -> trans_match env nxt (!t) e ps
+  | A.ProcMatch(i,e,ps,t) -> (
+      try 
+        trans_match env nxt (!t) e ps
+      with
+          Dfa.Not_exhaustive -> Error.errorAt i Error.ERR_NOT_EXHAUSTIVE )
   | A.ProcInput(_,c,s)  -> Guard(Recv(trans_var env c,s,nxt))
   | A.ProcOutput(_,c,e) -> Guard(Send(trans_var env c,trans_expr env e,nxt))
   | A.ProcRun(_,s,es) -> Par(Call(s,List.map (fun e -> trans_expr env e) es),nxt)
@@ -233,11 +237,7 @@ and trans_patns ty v patns =
   let binds,rs = List.split (
     List.map (
       function 
-          A.PatAny _ ->
-            ( match ty with
-                  T.STRING  -> None,T.REXP(R.CLOS(R.oct))
-                | T.REGEX r -> None,r
-                | _ -> assert false )
+          A.PatAny _                -> None,T.REXP(R.CLOS(R.oct))
         | A.PatConst(A.ConStr(_,s)) -> None,T.REXP(R.of_string s)
         | A.PatRegex(_,s,_,t)       -> Some s,!t
         | _ -> assert false

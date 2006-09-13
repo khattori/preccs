@@ -18,8 +18,25 @@ module PosSetMap = Map.Make(PosSet)
 
 module LabelSet  = Set.Make(Label)
 
+exception Not_exhaustive
+
 (* スキップモード *)
 let skipMode = ref false
+
+(*
+ * パターンマッチが網羅的かどうかを検査する
+ * 
+ *   引　数：re : Regex.t      --- マッチ元の正規表現
+ *           rs : Regex.t list --- パターンマッチ正規表現のリスト
+ * 
+ *   戻り値：真偽値
+ *
+ *)
+let exhaustive re rs =
+  let re2 =
+    List.fold_left (fun r' r -> R.ALT(r',r)) (List.hd rs) (List.tl rs)
+  in
+    Subset.subset re re2
 
 (* 受理状態テーブル *)
 let acc_tbl:(Pos.t, int * T.field list) Ht.t = Ht.create(13)
@@ -142,9 +159,15 @@ struct
 
   (* スキップ処理に変更する *)
   let skip cs s =
+    let s1,_ = S.partition (fun (c',_,_) -> c' = cs) s in
+      List.fold_left (fun s' e -> S.add e s') S.empty
+        (List.map (fun (c,t,p) -> (Cset.all,t,p)) (S.elements s1))
+(*
+  let skip cs s =
     let s1,s2 = S.partition (fun (c',_,_) -> c' = cs) s in
       List.fold_left (fun s' e -> S.add e s') s2
         (List.map (fun (c,t,p) -> (Cset.all,t,p)) (S.elements s1))
+*)
 
   let cset_list s =
     S.fold (fun (c,t,p) cs -> if List.mem c cs then cs else c::cs) s []
@@ -209,6 +232,7 @@ let rec union tr1 tr2 = N.normalize (
 
 (*
  * 開始ラベルの計算
+ *   ( ls2 - ls1を計算する )
  * 
  *   引　数：ls1 : LabelSet.t --- 遷移元ノードに対応するラベル集合
  *           ls2 : LabelSet.t --- 遷移先ノードに対応するラベル集合
@@ -216,7 +240,7 @@ let rec union tr1 tr2 = N.normalize (
  *   戻り値：開始ラベルの集合
  * 
  *)
-let start_labels ls1 ls2 = 
+let start_labels ls1 ls2 =
   LabelSet.fold (
     fun lbl ls -> if LabelSet.mem lbl ls1 then ls else LabelSet.add lbl ls
   ) ls2 LabelSet.empty
@@ -391,9 +415,12 @@ let create (init,(ps_map,ls_map)) =
   let label_map = Label.map_create() in
   let rec create_next tm =
     let cset_list = TransMap.cset_list tm in (* Cset.tのリストを取得 *)
-    let next = create_cset_next (List.hd cset_list) tm in
-      List.iter (fun cs -> ignore(create_cset_next cs tm)) (List.tl cset_list);
-      next
+      if (cset_list == []) then
+        ACT_NULL,0        (* 次状態が無い *)
+      else
+        let next = create_cset_next (List.hd cset_list) tm in
+          List.iter (fun cs -> ignore(create_cset_next cs tm)) (List.tl cset_list);
+          next
   and create_cset_next cs tm =
     let tp_list = TransMap.next_list cs tm in
     let next = List.fold_left (
@@ -471,10 +498,20 @@ let create (init,(ps_map,ls_map)) =
   update_max_label (Label.map_size label_map);
   PosSetMap.find init !state_map
 
+(*
+ * 正規表現からDFAを構成する
+ * 
+ *     引  数： re : Regex.t -- 正規表現
+ * 
+ *     戻り値： DFA
+ *) 
 let gendfa re =
   let ltbl = rcdlabel re in
+  (* let ltbl = Ht.create 13 in
+    Subset.rcdlabel ltbl re; *)
   let init_st = N.cp2ps (N.firstpos re) in
   let follow  = N.followpos re in
+    (* labels : PosSet.t -> LabelSet.t (位置集合とラベル集合の表) *)
   let rec make marked unmarked labels =
     if PosSetSet.is_empty unmarked then marked,labels else
       let ps = PosSetSet.choose unmarked in
@@ -486,7 +523,7 @@ let gendfa re =
               let nxts' = List.map (
                 fun (c,p') ->
                   if Ht.mem ltbl p' then
-                    let lbls  = Ht.find ltbl p in (* 遷移元のラベル集合 *)
+                    let lbls  = Ht.find ltbl p in  (* 遷移元のラベル集合 *)
                     let lbls' = Ht.find ltbl p' in (* 遷移先のラベル集合 *)
                       c,(p',start_labels lbls lbls') (* 開始ラベルを取得 *)
                   else c,(p',LabelSet.empty)
@@ -542,6 +579,8 @@ let generate ts =
     ) ps fs in
   let re = List.fold_left (fun r' r -> R.ALT(r',r)) (List.hd rs') (List.tl rs') in
   let ltbl = rcdlabel re in
+  (* let ltbl = Ht.create 13 in
+    Subset.rcdlabel ltbl re; *)
   let init_st = N.cp2ps (N.firstpos re) in
   let follow  = N.followpos re in
   let rec make marked unmarked labels =
@@ -555,7 +594,7 @@ let generate ts =
               let nxts' = List.map (
                 fun (c,p') ->
                   if Ht.mem ltbl p' then
-                    let lbls  = Ht.find ltbl p in (* 遷移元のラベル集合 *)
+                    let lbls  = Ht.find ltbl p in  (* 遷移元のラベル集合 *)
                     let lbls' = Ht.find ltbl p' in (* 遷移先のラベル集合 *)
                       c,(p',start_labels lbls lbls') (* 開始ラベルを取得 *)
                   else c,(p',LabelSet.empty)
@@ -587,8 +626,58 @@ let generate ts =
       (PosSetSet.singleton init_st)
       (PosSetMap.add init_st (init_labels init_st ltbl) PosSetMap.empty)
   )
-  in
-    create dfa
+  in create dfa
+
+(*
+ * 二つのDFAから積オートマトンを構成する
+ *
+ *   引  数： dfa1 : DFA
+ *            dfa2 : DFA
+ * 
+ *   戻り値：積オートマトン
+ * 
+ *)
+let prod_dfa (init,ps_map,ls_map) (init',ps_map') =
+  let pairs = ref [init,init'] in
+  let checked = ref [] in
+  let new_ps_map = ref PosSetMap.empty in
+  let new_ls_map = ref PosSetMap.empty in
+    (* tm <: tm' *)
+    while !pairs != []
+    do
+      let s,s' = List.hd !pairs in
+      let tm = PosSetMap.find s ps_map in  (* 遷移テーブル *)
+      let tm' = PosSetMap.find s' ps_map' in
+      let ns = PosSet.union s s' in (* 新しい状態(s×s') *)
+      let ntm = ref TransMap.empty in (* 新しい遷移 *)
+      let cl = TransMap.cset_list tm in    (* 入力文字集合のリスト *)
+      let cl' = TransMap.cset_list tm' in
+      let cl'' = List.fold_left (
+        fun l cs -> List.fold_left (
+          fun l' cs' ->
+            let cs'' = Cset.inter cs cs' in
+              if Cset.is_empty cs'' then l' else cs''::l'
+        ) l cl'
+      ) [] cl in
+        pairs := List.tl !pairs;
+        checked := (s,s')::!checked;
+        List.iter (
+          fun cs ->
+            let nl = TransMap.next_list2 cs tm in
+            let nl' = TransMap.next_list2 cs tm' in
+              List.iter (
+                fun (t,p) -> List.iter (
+                  fun (t',p') ->
+                    ntm := TransMap.add (cs,t) (PosSet.union p p') !ntm;
+                    if not (List.mem (p,p') !checked) then
+                      pairs := (p,p')::!pairs
+                ) nl'
+              ) nl
+        ) cl'';
+        new_ps_map := PosSetMap.add ns !ntm !new_ps_map;
+        new_ls_map := PosSetMap.add ns (PosSetMap.find s ls_map) !new_ls_map;
+    done;
+    (PosSet.union init init'),!new_ps_map,!new_ls_map,!checked
 
 (*
  * 正規表現型のリストからスキップ処理付きDFAを生成する
@@ -608,63 +697,40 @@ let generate2_ t ts =
                           ) rs) in
   let _ = let idx = ref 0 in
     List.iter2 (
-      fun p f ->
-        Ht.add acc_tbl p (!idx,f);
-        incr idx
+      fun p f -> Ht.add acc_tbl p (!idx,f); incr idx
     ) ps fs in
   let re = List.fold_left (fun r' r -> R.ALT(r',r)) (List.hd rs') (List.tl rs') in
-  let re' = R.posify (T.regexify t) in
-  let init,(ps_map,ls_map) = gendfa re in   (* パタンマッチのDFA *)
-  let init',(ps_map',ls_map') = gendfa re' in (* マッチ済みのDFA *)
+  let re' = R.SEQ(R.posify (T.regexify t),R.CHARS(Pos.create Cset.fin)) in
+  let init,(ps_map,ls_map) as dfa1 = gendfa re in   (* パタンマッチのDFA *)
+  let init',(ps_map',ls_map') as dfa2 = gendfa re' in (* マッチ済みのDFA *)
+  let init'',ps_map'',ls_map'',chkd = prod_dfa (init,ps_map,ls_map) (init',ps_map') in
 (* DFAの構造
  *           init   : PosSet.t    --- 初期状態
  *           ps_map : PosSetMap.t --- 遷移表
  *           ls_map : PosSetMap.t --- 記録ラベル表(ラベルを記録する状態の表)
  *)
-  let pairs = ref [init,init'] in
-  let checked = ref [] in
   let new_ps_map = ref PosSetMap.empty in
-    (* tm <: tm' *)
-  let next_pairs tm tm' =
-    let cl = TransMap.cset_list tm in    (* 入力文字集合のリスト *)
-      List.iter (
-        fun cs ->
-          let nl = TransMap.next_list cs tm in    (* 次遷移条件×次状態のリスト *)
-          let nl' = TransMap.next_list2 cs tm' in
-            (* TODO: 遷移条件に関するチェック *)
-            List.iter (
-              fun (t,p) ->
-                let t',p' = List.find (fun (t',p') -> TcondSet.imply t t') nl' in
-                  if not (List.mem (p,p') !checked) then pairs := (p,p')::!pairs
-            ) nl
-      ) cl in
-    while !pairs != []
-    do
-      let s,s' = List.hd !pairs in
-      let tm = PosSetMap.find s ps_map in  (* 遷移テーブル *)
-      let tm' = PosSetMap.find s' ps_map' in 
-      let cl = TransMap.cset_list tm in    (* 入力文字集合のリスト *)
-      let cl' = TransMap.cset_list tm' in
-        pairs := List.tl !pairs;
-        checked := (s,s')::!checked;
-        ( if (List.length cl)=1 && (List.length cl')=1 && (List.hd cl=List.hd cl')
-          then
-            let cs = List.hd cl in
-            let tc = TransMap.next_list cs tm in
-              new_ps_map := PosSetMap.add s (TransMap.skip cs tm) !new_ps_map
-              (* if (List.length tc) = 1 then *)
-          else
-            new_ps_map := PosSetMap.add s tm !new_ps_map
-        );
-        next_pairs tm tm'
-    done;
-    create (init,(!new_ps_map,ls_map))
+    List.iter (
+      fun (s,s') ->
+        let ns  = PosSet.union s s' in
+        let ntm = ref (PosSetMap.find ns ps_map'') in
+        let ncl = TransMap.cset_list !ntm in
+        let tm' = PosSetMap.find s' ps_map' in
+        let cl' = TransMap.cset_list tm' in
+          if (List.length ncl = 1) && (List.length cl' = 1) then
+            ntm := TransMap.skip (List.hd ncl) !ntm;
+          new_ps_map := PosSetMap.add ns !ntm !new_ps_map
+    ) chkd;
+    create (init'',(!new_ps_map,ls_map''))
 
 let generate2 t ts =
-  if !skipMode then
-    generate2_ t ts
-  else
-    generate ts
+  let rs = List.map T.regexify ts in
+  let re = T.regexify t in
+    if not (exhaustive re rs) then raise Not_exhaustive else
+      if !skipMode then 
+        generate2_ t ts
+      else
+        generate ts
 
 (*
  * DFAの出力
@@ -728,5 +794,6 @@ let emit () =
   Printf.printf "u_char *__prc__lbl_ptr[MAX_LABEL];\n";
   Printf.printf "u_int __prc__lbl_value[MAX_LABEL];\n";
   Printf.printf "u_int __prc__lbl_count[MAX_LABEL];\n";
+  Printf.printf "u_int __prc__lbl_max = MAX_LABEL;\n";
 
   

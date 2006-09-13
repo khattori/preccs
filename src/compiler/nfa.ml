@@ -4,7 +4,6 @@
    @author Hattori Kenta
    @version $Id: nfa.ml,v 1.2 2006/06/21 00:14:15 hattori Exp $
 *)
-
 module R  = Regex
 module C  = Cond
 module Ht = Hashtbl
@@ -14,6 +13,15 @@ module Ps = Set.Make(Pos)
  * 条件付き遷移の型定義
  *)
 type trans = Cond.t * Pos.t
+
+(*
+ * ラベルをα変換する
+ * 
+ *   引　数：lm  : Lm.t       --- ラベル変換マップ
+ *           trs : trans list --- 条件付き遷移
+ *)
+let alpha lm trs =
+  List.map (fun (cond,pos) -> C.alpha lm cond, pos) trs
 
 (*
  * 条件付き遷移リストの正規化を行う：
@@ -106,8 +114,8 @@ let followpos (re:Pos.t Regex.t) =
  * 条件付き遷移の判定：
  *     tr1の遷移のなかで対応するtr2でも可能な遷移を取得する
  * 
- *   引　数：tr1 : trans list --- 条件付き遷移1
- *           tr2 : trans list --- 条件付き遷移2
+ *   引　数：tr1 : trans list             --- 条件付き遷移1
+ *           tr2 : trans list             --- 条件付き遷移2
  * 
  *   戻り値：対応する遷移先の組
  *)

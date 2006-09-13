@@ -40,6 +40,19 @@ let rec union s1 s2 =
             union s1 r2
         )
 
+(** 積集合の計算S1∩S2 *)
+let rec inter s1 s2 =
+  match s1,s2 with
+      [],_ | _,[] -> []
+    | (c1,_)::_, (c2,_)::_ when c1 > c2 -> inter s2 s1
+    | (c1,d1)::r1, (c2,d2)::r2 -> (* c1 <= c2 *)
+        if d1 < c2 then
+          inter r1 s2
+        else if d1 < d2 then
+          (c2,d1)::inter r1 ((d1+1,d2)::r2)
+        else
+          (c2,d2)::inter r2 ((d2+1,d1)::r1)
+
 (** 文字集合に文字が含まれているか *)
 let rec mem c = function
     []         -> false

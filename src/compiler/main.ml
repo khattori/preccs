@@ -45,7 +45,7 @@ let argDefs = [
     Arg.Set(Semant.coutMode),
     "Cexp output."
   );
-  ( (* CPS式出力モード *)
+  ( (* スキップモード *)
     "-s",
     Arg.Set(Dfa.skipMode),
     "Matching with skipping."

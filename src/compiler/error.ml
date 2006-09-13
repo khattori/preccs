@@ -17,6 +17,7 @@ type err =
   | ERR_UNDEF_PROC      of Symbol.t
   | ERR_UNDEF_TYPE      of Symbol.t
   | ERR_NOT_CHANNEL
+  | ERR_NOT_EXHAUSTIVE
   | ERR_ILLEGAL_VAR     of Symbol.t
   | ERR_ILLEGAL_INDEX   of int
   | ERR_ILLEGAL_CHAR    of string
@@ -46,6 +47,7 @@ let errmsg = function
   | ERR_UNDEF_PROC(s)      -> "undefined process \"" ^ Symbol.name(s) ^ "\""
   | ERR_UNDEF_TYPE(s)      -> "undefined type \"" ^ Symbol.name(s) ^ "\""
   | ERR_NOT_CHANNEL        -> "channel is expected here"
+  | ERR_NOT_EXHAUSTIVE     -> "pattern is not exahaustive"
   | ERR_ILLEGAL_VAR(s)     -> "illegal variable \"" ^ Symbol.name(s) ^ "\""
   | ERR_ILLEGAL_INDEX(n)   -> "illegal index " ^ (string_of_int n)
   | ERR_ILLEGAL_CHAR(c)    -> "illegal character '" ^ c ^ "'"

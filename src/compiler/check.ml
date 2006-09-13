@@ -286,10 +286,16 @@ and check_match env ty = function
       else errorAt (A.info_of_const c) ERR_ILLEGAL_PATTERN
   | A.PatRegex(i,s,r,t) ->
       let rt = check_regex env r in
+        t := rt;
+        E.add s (E.VarEntry(T.REGEX rt)) env
+
+(* 
+      let rt = check_regex env r in
         if T.subtype (T.REGEX rt) ty then (
           t := rt;
-          E.add s (E.VarEntry(T.REGEX rt)) env
-        ) else errorAt i ERR_ILLEGAL_PATTERN
+          E.add s (E.VarEntry(T.REGEX rt)) env)
+        else errorAt i ERR_ILLEGAL_PATTERN
+*)
 
 (*
  * 型チェックを行う関数

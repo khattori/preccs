@@ -94,5 +94,6 @@ extern cact_t __prc__cact_table[];
 extern u_char *__prc__lbl_ptr[];
 extern u_int __prc__lbl_value[];
 extern u_int __prc__lbl_count[];
+extern u_int __prc__lbl_max;
 
 #endif /*  __INC_DFA_H__ */

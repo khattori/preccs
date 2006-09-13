@@ -32,6 +32,12 @@ int __dmatch__(int val, u_int st) {
     act_t act = state->nact;
     u_int idx = state->nidx;
     u_char *p, *ep;
+    int i;
+
+    /* ラベル記録ポインタの初期化 */
+    for (i = 0; i < __prc__lbl_max; i++) {
+        __prc__lbl_ptr[i] = NULL;
+    }
 
     p      = STRPTR(val);              /* データ   */
     ep     = STRPTR(val)+STRLEN(val);  /* 終了位置 */
@@ -86,13 +92,14 @@ int __dmatch__(int val, u_int st) {
         u_char lid = ract->lid;
         int i;
 
-        __prc__lbl_value[lid] = 0;
-        __prc__lbl_ptr[lid] = p;
-        for (i = 0; i < ract->lsiz; i++) {
-            __prc__lbl_value[lid]
-                = (__prc__lbl_value[lid]<<8) + __prc__lbl_ptr[lid][i];
+        if (__prc__lbl_ptr[lid] == NULL) { /* 初回のみ記録 */
+            __prc__lbl_value[lid] = 0;
+            __prc__lbl_ptr[lid] = p;
+            for (i = 0; i < ract->lsiz; i++) {
+                __prc__lbl_value[lid]
+                    = (__prc__lbl_value[lid]<<8) + __prc__lbl_ptr[lid][i];
+            }
         }
-
         act = ract->nact;
         idx = ract->nidx;
         break;
@@ -100,7 +107,7 @@ int __dmatch__(int val, u_int st) {
     case ACT_COND_VALZERO: { /* 条件マッチ */
         cond_t *cond = &__prc__cond_table[idx];
         u_char lid = cond->lid;
-
+        __prc__lbl_ptr[lid] = NULL;
         COND_ACT(__prc__lbl_value[lid] == 0,cond)
 
         break;
@@ -108,7 +115,7 @@ int __dmatch__(int val, u_int st) {
     case ACT_COND_VALNONZ: {
         cond_t *cond = &__prc__cond_table[idx];
         u_char lid = cond->lid;
-
+        __prc__lbl_ptr[lid] = NULL;
         COND_ACT(__prc__lbl_value[lid] != 0,cond)
 
         break;

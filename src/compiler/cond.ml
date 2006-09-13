@@ -6,6 +6,7 @@
 *)
 module P = Prop
 module PosSet = Set.Make(Pos)
+module Lm = Map.Make(Label)
 
 (* 遷移条件の型定義 *)
 type t =
@@ -18,7 +19,7 @@ and var =
   | Value   of Label.t (* ラベル値を参照   *)
 
 let conj = function
-  | c1,Const(b2)      -> if b2 then c1 else Const false
+    c1,Const(b2)      -> if b2 then c1 else Const false
   | Const(b1),c2      -> if b1 then c2 else Const false
   | Prop(p1),Prop(p2) -> Prop(P.Conj(p1,p2))
 let disj = function
@@ -32,6 +33,23 @@ let impl c1 c2 = disj(neg c1,c2)
 let is_true = function
     Const(b) -> b
   | Prop(p)  -> P.taut p
+
+
+(*
+ * 遷移条件のラベルのα変換を行う
+ * 
+ *   引　数：lm  : Lm.t   --- ラベル変換マップ
+ *           cond: Cond.t --- 遷移条件
+ * 
+ *)
+let alpha lm = function
+    Const b -> Const b
+  | Prop p  -> Prop(P.map (
+                      function 
+                          Counter l when Lm.mem l lm -> Counter (Lm.find l lm)
+                        | Value   l when Lm.mem l lm -> Value   (Lm.find l lm)
+                        | v -> v
+                    ) p)
 
 (*
  * 遷移条件リストから命題論理式の組み合わせを抽出
