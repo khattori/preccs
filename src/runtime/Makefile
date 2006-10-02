@@ -9,6 +9,7 @@ CC	= gcc
 SHELL	= /bin/sh
 INCLUDES= -I../../inc
 CFLAGS	= -Wall -g $(INCLUDES)
+LIBS	= /mingw/lib/libws2_32.a /mingw/lib/libwinmm.a
 
 TARGET	= libprcrt.a
 SRCS	=		\
@@ -30,21 +31,16 @@ SRCS	=		\
 OBJS	= $(SRCS:.c=.o)
 
 $(TARGET)	: $(OBJS)
-	$(AR) rcs $@ $(LIBS) $(OBJS)
+	@if [ ! -d .libs ]; then \
+		mkdir .libs; \
+	fi
+	cd .libs && \
+	for i in $(LIBS); \
+	do \
+		$(AR) x $$i; \
+	done
+	$(AR) rcs $@ $(OBJS) .libs/*.o
 
 clean	:
 	rm -fr $(OBJS) $(TARGET)
-
-install	: $(TARGET)
-	cp $(TARGET) $(INSTALLDIR)/lib/
-	if [ -d $(INSTALLDIR)/include/preccs ];	\
-	then \
-		cp *.h *.def $(INSTALLDIR)/include/preccs; \
-	else \
-		mkdir $(INSTALLDIR)/include/preccs; \
-		cp *.h *.def $(INSTALLDIR)/include/preccs; \
-	fi
-
-clobber	:
-	rm -f $(INSTALLDIR)/lib/$(TARGET)
-	rm -rf $(INSTALLDIR)/include/preccs
+	rm -rf .libs
