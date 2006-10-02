@@ -1,9 +1,9 @@
 CC	= gcc
 CFLAGS	= -Wall -g -I../../src/runtime
-LIBS	= -L../../src/runtime -lprcrt -lws2_32 -lwinmm
+LIBS	= -L../../src/runtime -lprcrt
 PRCC	= ../../src/compiler/prcc
 
-TARGET	= recorder
+TARGET	= recorder.exe
 SRCS	=	\
 	recorder.c	\
 	recorder.out.c

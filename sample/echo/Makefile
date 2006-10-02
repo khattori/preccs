@@ -1,9 +1,9 @@
 CC	= gcc
 CFLAGS	= -Wall -g -I../../src/runtime
-LIBS	= -L../../src/runtime -lprcrt -lws2_32 -lwinmm
+LIBS	= -L../../src/runtime -lprcrt
 PRCC	= ../../src/compiler/prcc
 
-TARGET	= echo
+TARGET	= echo.exe
 SRCS	=	\
 	echo.c	\
 	echo.out.c
