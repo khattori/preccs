@@ -15,7 +15,7 @@ let error s =
   print_string (Sys.executable_name ^ ": " ^ s); raise (Exit 1)
 
 (* バージョン情報の定義 *)
-let version = "2.0.0"
+let version = "0.2.0a"
 let verMsg  = "Preccs Compiler Ver." ^ version ^ ".\n" ^
   "Copyright (C) 2006 Kenta Hattori\n"
 
