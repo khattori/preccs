@@ -1,0 +1,34 @@
+\pagestyle{headings}
+\setlength{\textwidth}{17cm}
+\setlength{\textheight}{24.5cm}
+\setlength{\topmargin}{-0.8cm}
+\setlength{\headsep}{8mm}
+\setlength{\footskip}{8mm}
+\setlength{\oddsidemargin}{-0.5cm} 
+
+\RequirePackage{fancyhdr}
+\RequirePackage[GlennJp]{fncychapjp}
+
+\renewcommand{\maketitle}{%
+  \begin{titlepage}%
+    \let\footnotesize\small
+    \let\footnoterule\relax
+    \begin{flushright}%
+      {\rm\Huge\gt \@title \par}%
+      \mghrulefill{6\RW}\par
+      {\large\it Protocol code generator based on Regular Expressions and ConCurrent ProcesseS}
+      \par
+      Edition 0.1, for Version 0.2.0
+      \vfill
+      \vfill\vfill
+      \mghrulefill{\RW} \par
+      {\large
+       \@date \par
+      }%
+    \end{flushright}%\par
+    \@thanks
+  \end{titlepage}%
+  \setcounter{footnote}{0}%
+  \let\thanks\relax\let\maketitle\relax
+  \gdef\@thanks{}\gdef\@author{}\gdef\@title{}
+}

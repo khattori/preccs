@@ -1,0 +1,185 @@
+/* Preccs Webサイト用スタイルシート */
+
+img {
+	margin			: 0;
+	padding		: 0;
+	border-width		: 0;
+}
+
+.contents {
+	border			: solid 1px #5e8eab;
+	width			: 702px;
+	margin-left		: 40px;
+}
+.section {
+	margin-left		: 30px;
+	margin-right		: 30px;
+}
+
+
+h1.top {
+	text-align		: center;
+	background-color	: #c5e1ed;
+	padding-top		: 10px;
+	padding-bottom	: 10px;
+	font-size		: large;
+	color			: #2d444f;
+	margin-bottom		: 0;
+}
+
+/* コンテンツのヘッダ */
+h1 {
+	background-color	: #c5e1ed;
+	font-size		: large;
+	color			: #2d444f;
+}
+h1 img {
+	margin-right		: 10px;
+	vertical-align	: middle;
+}
+h2 {
+	color			: #666666;
+	padding-top		: 2px;
+	padding-bottom	: 2px;
+	padding-left		: 16px;
+	border-style		: solid;
+	border-top-width	: 0px;
+	border-bottom-width	: 1px;
+	border-left-width	: 12px;
+	border-right-width	: 0px;
+	border-bottom-color	: #6666ff;
+	border-left-color	: #6666ff;
+	font-size		: medium;
+}
+
+
+p {
+	font-size		: 0.875em;
+	line-height		: 1.5em;
+	color			: #555555;
+}
+p.img {
+	margin-top		: 0;
+}
+li {
+	font-size		: 0.875em;
+	line-height		: 1.5em;
+	color			: #555555;
+}
+span.date {
+	font-size		: 0.75em;
+	font-weight		: bold;
+	color			: #5e8eab;
+	padding-top		: 2px;
+	padding-right		: 2px;
+	float			: right;
+}
+
+/* リード文の書式設定 */
+p.policy {
+	font-size		: 0.75em;
+	font-weight		: bold;
+	color			: #5e8eab;
+	text-align		: center;
+	width			: 100%;
+	margin-left		: auto;
+	margin-top		: 5px;
+	border-bottom		: solid 3px #c5e1ed;
+	padding-bottom	: 5px;
+}
+
+/* メニューの設定 */
+p.menu {
+	font-size		: 0.75em;
+	background-color	: #5e8eab;
+	height			: 2em;
+	text-align		: center;
+/*	border-top		: solid 1px #5e8eab; */
+/*	border-bottom		: solid 1px #5e8eab; */
+}
+p.menu a {
+	color			: #ffffff;	/* リンクの色を指定 */
+	background-color	: #5e8eab;	/* 背景色の指定 */
+	border-right		: solid 1px #ffffff;
+	text-decoration	: none;	/* 下線を削除 */
+	display		: block;
+	width			: 10em;
+	float			: left;
+	line-height		: 2em;
+}
+p.menu a:hover {
+	background-color	: #49abdb;	/* カーソルを重ねた時の色を指定 */
+}
+p.menu span {
+	color			: #c5e1ed;
+	display		: none;	/* 区切り線を消す */
+}
+p.menu b {
+	color			: #ffffff;	/* リンクの色を指定 */
+	background-color	: #6f9fbc;	/* 背景色の指定 */
+	border-right		: solid 1px #ffffff;
+	text-decoration	: none;	/* 下線を削除 */
+	display		: block;
+	width			: 10em;
+	float			: left;
+	line-height		: 2em;
+}
+/* 更新日時設定 */
+p.update {
+	text-align		: right;
+	font-size		: 0.625em;
+}
+
+/* 連絡先表示設定 */
+address {
+	border-top		: solid 9px #c5e1ed;
+	padding-top		: 4px;
+	padding-left		: 10px;
+	padding-right		: 10px;
+	padding-bottom	: 22px;
+	font-size		: 0.625em;
+	font-weight		: bold;
+	font-style		: normal;
+	color			: #5e8eab;
+}
+address a {
+	text-decoration	: none;
+}
+address a:hover {
+	text-decoration	: underline;
+}
+
+address img {
+	vertical-align	: middle;
+}
+
+.left {
+	float			: left;
+}
+.right {
+	float			: right;
+}
+
+/* 更新履歴 ==================================================== */
+.history {
+	margin-top		: 10px;
+	margin-right		: 2px;
+	margin-bottom		: 10px;
+	margin-left		: 50px;
+}
+.history table {
+	width			: 600px;
+	font-size		: 84%;
+	padding-left		: 8px;
+}
+.history td {
+	border-bottom		: 1px solid #cacaca;
+}
+.history .date {
+	width			: 112px;
+	color			: #333333;
+	vertical-align	: top;
+}
+.history .title {
+	vertical-align	: top;
+}

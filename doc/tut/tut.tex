@@ -1,0 +1,1348 @@
+\documentclass{jreport}
+\usepackage{booktabs}
+\usepackage[dvipdfm]{graphicx}
+\usepackage{preccs}
+
+\title{Preccsチュートリアル}
+\author{服部 健太}
+\begin{document}
+\maketitle
+\chapter*{はじめに}
+このチュートリアルでは通信プロトコルのための仕様記述言語であるPreccsの
+基礎を学びます．いくつかの簡単なプログラムを作りながら，Preccsによる仕
+様の書き方からコンパイル，デバッグの方法について習得することが目標です．
+\section*{想定する読者層}
+本チュートリアルが対象とするのは，多少でもC言語によるネットワークプロ
+グラミングの経験がある人たちです．並行プロセス計算に関する知識は特に必
+要ありませんが，正規表現については知っていることを想定しています．
+
+\section*{Preccsとは}
+PreccsはProtocol code generator based on Regular Expressions and
+ConCurrent processeSの略で，正規表現と並行プロセスにもとづいて記述され
+た通信プロトコルの仕様からC言語のプログラムを自動的に出力する通信プロ
+トコルコンパイラです．Preccsを利用することで，簡単に通信プロトコルを記
+述することができ，さらにプロトコルを処理するコードが自動的に生成されま
+すから，実際に通信プロトコルの動作を動かして確認することもできます．
+
+\section*{対象となる通信プロトコル}
+一般的に通信プロトコルといっても，物理層からアプリケーション層まで幅広
+く，様々な種類のものが存在します．Preccsでは主としてUDPやTCPを用いてメッ
+セージやり取りするような通信プロトコルを想定しています．これはOSIの参
+照モデルにおけるトランスポート層からアプリケーション層までに位置するよ
+うなプロトコルで，例えばSNMP，RIP，IKE，HTTPなどの通信プロトコルがこれ
+に相当します．
+
+\section*{Preccsの特徴}
+Preccsは通信プロトコルを簡単に記述できるように設計されているので，ある
+程度，プログラミングの経験がある人ならば，すぐにでも通信プロトコルを実
+装することができます．さらに，Preccsコンパイラによって実際にプロトコル
+の処理を行うCのコードが生成されるので，実際に動かして動作を確認するこ
+とができます．Preccsの主な特徴は以下のとおりです．
+\begin{itemize}
+\item 簡単な文法
+\item 並行プロセスにもとづく処理手順の記述
+\item 拡張正規表現によるメッセージ形式の定義
+\item パタンマッチ機能
+\item Cへのコンパイル
+\item インラインC
+\end{itemize}
+\tableofcontents
+
+\chapter{Preccs入門}
+
+\section{最初のプログラム}
+このチュートリアルで紹介する最初のプログラムは，定番の「Hello, world.」
+プログラムです．図\ref{helloprc}にPreccsのソースプログラムを示します．
+\begin{figure}[t]
+  \setbox0\vbox{
+    \begin{tabular}{rl}
+  1: & \verb@proc Main() = stdout!"Hello,world.\n"@
+  \end{tabular}}\centerline{\fbox{\box0}}
+  \caption{Hello, worldプロセス}
+  \label{helloprc}
+\end{figure}%
+たった一行だけのプログラムですが，簡単に説明しておくと，$\texttt{proc
+Main()=}\cdots$でPreccsのMainプロセスを定義しています．MainプロセスはC
+言語のmain関数と同じようなもので，Preccsの処理が開始されると一番初めに
+生成されるプロセスです．\verb|stdout!"Hello, world.\n"|の部分は，Main
+プロセスの本体の定義で，標準出力に対して文字列\verb|"Hello, world.\n"|
+を出力することを意味しています．
+
+\subsection{Preccsコンパイラの起動}
+Preccsで書かれたプログラムを，Preccsコンパイラで処理すると，C言語のプ
+ログラムを出力してくれます．先ほどの「Hello, world」プログラムを実際に
+コンパイルしてみましょう．やり方は簡単で，Preccsのソースファイルを引数
+としてPreccsコンパイラのコマンド（prcc）を起動するだけです．
+\begin{verbatim}
+% prcc hello.prc
+\end{verbatim}
+すると，エラーが無ければ同じディレクトリにCのコードが出力されているは
+ずです．
+\begin{verbatim}
+% ls
+hello.prc     prcc.out.c
+\end{verbatim}
+prcc.out.cというファイルがPreccsコンパイラによって出力されたファイルで
+す．
+
+\subsection{Preccs処理ループの呼び出し}
+さて，「Hello, world」プログラムを動かすためには，prcc.out.cの他に，
+Preccsの処理ループを呼び出す部分をC言語のプログラムとして書いてやる必
+要があります．図\ref{prcmain}に，そのようなプログラムのリストを示しま
+す．
+\begin{figure}[t]
+  \setbox0\vbox{
+    \begin{tabular}{rl}
+  1: & \verb@#include "prcrt.h"@\\
+  2: & \verb@int main(void) {@\\
+  3: & \verb@    return prc_main(); /* Preccsのメインルーチンを呼び出す */@\\
+  4: & \verb@}@
+  \end{tabular}}\centerline{\fbox{\box0}}
+  \caption{Preccsの呼び出し部分}
+  \label{prcmain}
+\end{figure}%
+1行目ではprcrt.hをインクルードして，Preccsの処理に必要な宣言を取り込ん
+でおきます．main関数の中では\verb|prc_main()|関数を呼び出しているだ
+けです．これによって，Precssの処理ループが呼び出されます．
+
+\subsection{実行ファイルの作成}
+これらのファイルをCコンパイラで処理することによって，実行ファイルが作
+成されます．注意するのは，Preccsの実行時ライブラリ（libprcrt.a）をリン
+クしてやる点です．
+\begin{verbatim}
+% gcc main.c prcc.out.c -lprcrt 
+\end{verbatim}
+これで，実行ファイルが作成されます．では，実際に実行してみましょう．
+\begin{verbatim}
+% ./a.out
+Hello, world!
+%
+\end{verbatim}
+\subsection{コンパイル方法のまとめ}
+\begin{figure}[t]
+  \includegraphics[width=\linewidth]{images/cmpl.eps}
+  \caption{実行ファイル作成までの流れ}
+  \label{fig:cmpl}
+\end{figure}%
+ここで，Preccsのソースプログラムから実行ファイルを作成するまでの流れを
+まとめておきます（図\ref{fig:cmpl}）．まず，Preccsのソースファイル（.
+prcファイル）を作成し，これをPreccsコンパイラで処理して，prcc.out.c ファ
+イルを作成します．これとは別に，Preccs の実行ループ
+\verb|preccs_main()|を呼び出すCのプログラムを作成します．最後に，これ
+らのCのファイルをCコンパイラでコンパイルし，Preccs実行時ライブラリ
+（libprcrt.a）とリンクすると実行ファイルが出来上がります．
+\section{Echoプログラム}\label{ExEcho}
+ここでは，もう少しだけプログラムらしい例を見ながら，Preccsに慣れていく
+ことにします．標準入力から何か入力があると，それを標準出力に表示すると
+いうEchoプログラムを題材にします．プログラムリストは図\ref{echo1}のよ
+うになります．
+\begin{figure}[h]
+  \setbox0\vbox{
+    \begin{tabular}{rl}
+ 1: & \verb$/* Mainプロセスの定義 */$\\
+ 2: & \verb$proc Main() = EchoProc()  // EchoProcの生成$\\
+ 3: & \verb$/* EchoProcプロセスの定義 */$\\
+ 4: & \verb$proc EchoProc() =$\\
+ 5: & \verb$    stdout!"> ";        // プロンプトの表示$\\
+ 6: & \verb$    stdin?msg;          // 標準入力からメッセージを待つ$\\
+ 7: & \verb$    stdout!msg          // 標準出力にメッセージを表示$\\
+  \end{tabular}}\centerline{\fbox{\box0}}
+  \caption{Echoプログラム（その1）}
+  \label{echo1}
+\end{figure}%
+以下は実行例です．
+\begin{verbatim}
+% ./echo1
+> hogehoge
+hogehoge
+%
+\end{verbatim}
+それでは，プログラムの内容について詳しく見ていくことにしましょう．
+
+
+一行目の
+\begin{verbatim}
+/* Mainプロセスの定義 */
+\end{verbatim}
+はコメントです．コメントはブロックコメント（\verb|/*|～\verb|*/|）と行
+末までの1行コメント（\verb|//|）が使えます．
+
+2行目はMainプロセスを定義しています．
+\begin{verbatim}
+proc Main() = EchoProc()  // EchoProcの生成
+\end{verbatim}
+「Hello, world」プログラムでも説明しましたが，Mainプロセスは，Preccsの
+処理が開始されて一番初めに実行されるプロセスです．プロセス定義の一般的
+な形式は，
+\begin{center}
+\setbox0\vbox{
+\begin{verbatim}
+  proc プロセス名(＜パラメータリスト＞) = ＜プロセス本体＞ ;
+\end{verbatim}}\centerline{\fbox{\box0}}
+\end{center}
+となります．ここで定義したMainプロセスのパラメータリストは空リストとなっ
+ています．プロセス本体は，一般的には複数のプロセス動作の列から構成され
+ます．ここではEchoProcプロセスの生成を行っています．プロセス生成の形式
+はCの関数呼び出しに似ています．Cの関数呼び出しと異なるのは，関数呼び出
+しの場合は，関数の実行から戻るまで，呼び出し側の処理が待たされますが，
+Preccsの場合はプロセスを生成するだけで，プロセスの完了を待ちません．
+MainプロセスはEchoProcプロセスを生成すると，このまま終了します．
+
+
+5行目から7行目までは，EchoProcプロセス定義の本体部分です.
+\begin{verbatim}
+    stdout!"> ";        // プロンプトの表示
+    stdin?msg;          // 標準入力からメッセージを待つ
+    stdout!msg          // 標準出力にメッセージを表示
+\end{verbatim}
+ここでは各動作を１つずつ逐次に実行していきます．逐次実行の形式は，以下
+のように各動作をセミコロン（\verb|;|）でつなげることによって表現します．
+\begin{center}
+\setbox0\vbox{
+\begin{verbatim}
+  ＜動作1＞; ＜動作2＞; …; ＜動作n＞
+\end{verbatim}}\centerline{\fbox{\box0}}
+\end{center}
+
+
+EchoProcプロセスの最初の動作は，チャネルに対してデータを出力する動作で
+す．チャネル出力動作は次のような形式で記述します．
+\begin{center}
+\setbox0\vbox{
+\begin{verbatim}
+  チャネル名 ! ＜値式＞
+\end{verbatim}}\centerline{\fbox{\box0}}
+\end{center}
+5行目では，\verb|stdout|チャネルに対して，文字列の値を表す\verb|"> "|
+を出力しています．\verb|stdout|チャネルは標準出力を意味する組み込みチャネルで
+いつでも使うことができます．
+
+
+次に標準入力を表す\verb|stdin|チャネルから入力データを待ちます．チャネ
+ルからの入力待ち動作は次のような形式で記述します．
+\begin{center}
+\setbox0\vbox{
+\begin{verbatim}
+  チャネル名 ? 変数名 : ＜型式＞
+\end{verbatim}}\centerline{\fbox{\box0}}
+\end{center}
+変数名にはチャネルから受け取るデータを入れておくための新しい変数を定義
+します．型式は，チャネルから受け取るデータの型を指定します．
+\verb|stdin| チャネルは文字列型のデータを扱うチャネルなので，この場合
+は\verb|string|を指定しています．EchoProcプロセスの例では受け取ったデー
+タは，変数\verb|msg|に束縛されます．そして，最後に変数\verb|msg|の内容，
+すなわち受け取った入力データを再び標準出力に出力してEchoProcプロセスは
+終了します．
+
+\subsection{再帰プロセスによる繰り返し}
+さきほど紹介したEchoProcは，一度入出力動作をしたら終了してしまいました．
+こんどは，これを改造して入出力動作を何度も繰り返すようにしましょう．C 
+やJavaなどの一般的な命令型言語では，forやwhileなどの構文を用いて繰り返
+しを記述しますが，Preccsでは再帰的にプロセスを生成することで繰り返しを
+実現します．具体的には，EchoProc本体の最後にEchoProcプロセスの生成を一
+行追加するだけです．プログラムは図\ref{echo2}のようになります．
+\begin{figure}[t]
+  \setbox0\vbox{
+    \begin{tabular}{rl}
+ 3: & \verb$/* EchoProcプロセスの定義 */$\\
+ 4: & \verb$proc EchoProc() =$\\
+ 5: & \verb$    stdout!"> ";        // プロンプトの表示$\\
+ 6: & \verb$    stdin?msg;          // 標準入力からメッセージを待つ$\\
+ 7: & \verb$    stdout!msg;         // 標準出力にメッセージを表示$\\
+ 8: & \verb$    EchoProc()          // 再帰的にEchoProcを生成$\\
+  \end{tabular}}\centerline{\fbox{\box0}}
+  \caption{Echoプログラム（その2）}
+  \label{echo2}
+\end{figure}%
+これで，再びEchoProcの先頭から処理が繰り返されます．さっそく実行してみ
+ましょう．
+\begin{verbatim}
+% ./echo2
+> hogehoge
+hogehoge
+> hello
+hello
+Ctrl-C
+%
+\end{verbatim}
+終了するときはCtrl-Cでプログラムを強制終了させます．
+\subsection{パタンマッチ}
+さて，プログラムをCtrl-Cで終了させるのはあんまりですので，ここはお行儀
+よく"quit"というコマンドが入力されたら自分から終了するように改造しましょ
+う．方針としては，\verb|stdin|チャネルから入力されたデータを比較して，
+"quit" とマッチしたら，プロセスを終了するようにします．プログラムは図
+\ref{echo3}のようになります．
+
+\begin{figure}[t]
+  \setbox0\vbox{
+    \begin{tabular}{rl}
+ 3: & \verb$/* EchoProcプロセスの定義 */$\\
+ 4: & \verb$proc EchoProc() =$\\
+ 5: & \verb$    stdout!"> ";          // プロンプトの表示$\\
+ 6: & \verb$    stdin?msg;            // 標準入力からメッセージを待つ$\\
+ 7: & \verb$    ( msg @ "quit\n" -> stop // パタンマッチ$\\
+ 8: & \verb$          | _        -> stdout!msg; EchoProc() )$
+  \end{tabular}}\centerline{\fbox{\box0}}
+  \caption{Echoプログラム（その3）}
+  \label{echo3}
+\end{figure}%
+7～9行目がパタンマッチの部分です．8行目は変数\verb|msg|の値が
+\verb|"quit\n"|とマッチしたら，\verb|stop|動作を行うという意味です．
+\verb|stop|動作は，プロセスの終了を意味します．9行目の「\verb|_|」はワ
+イルドカードであらゆるパタンとマッチします．パタンマッチは先頭から順に
+試みられるので，8行目でマッチしなかった場合には，この行が実行されるこ
+とになります．ここでは，標準出力に\verb|msg|の値を出力して，再び
+EchoProcプロセスを生成しています．
+
+
+実行結果は，以下のようになります．
+\begin{verbatim}
+% ./echo3
+> hogehoge
+hogehoge
+> foo
+foo
+> quit
+%    
+\end{verbatim}
+このように，Preccsではデータが特定のパタンとマッチしたら処理を行う，と
+いうような動作を簡単に記述することができます．この例では，単純な文字列
+とのマッチングでしたが，後のほうで説明するように，正規表現のパタンマッ
+チもサポートしています．パタンマッチの構文は以下のとおりです．
+\begin{center}
+\setbox0\vbox{
+\begin{verbatim}
+変数名 @
+    ＜パタン式1＞ -> ＜プロセス動作式1＞
+  | ＜パタン式2＞ -> ＜プロセス動作式2＞
+  ...
+  | ＜パタン式n＞ -> ＜プロセス動作式n＞
+\end{verbatim}}\centerline{\fbox{\box0}}
+\end{center}
+
+\chapter{プロセスとチャネル}
+Preccsでは\textgt{チャネル}(\textbf{Channel})を通じて互いに通信しあう
+複数の\textgt{プロセス}(\textbf{Process})によって，システムの計算が進
+行していきます．例えば，キーボードから入力した数値を2倍した結果を，画
+面に表示する動作をPreccsで実現するには，3つのプロセスを考えます(図
+\ref{simple1})．1つ目はキーボードから値を読み込むプロセス．2つ目は受け
+取った値を2倍するプロセス．最後は受け取った結果を画面に表示するプロセ
+スです．これらのプロセスをチャネルによってパイプライン的に接続すること
+で，該当する処理を実現することができます．このようにプロセスとチャネル
+はPreccs の概念の中心的な役割を果たすものです．本章では，具体的な例を
+まじえながら，プロセスとチャネルを用いたプログラミングの方法について説
+明していくことにします．
+\begin{figure}[t]
+  \includegraphics[width=\linewidth]{images/simple1.eps}
+  \caption{プロセスの例}
+  \label{simple1}
+\end{figure}%
+
+\section{プロセスとは}
+「プロセス」というとUnixなどのOSにおけるいわゆるプロセスを思い浮かべる
+かもしれません．Preccsにおけるプロセスはもっと抽象的なもの
+\footnote{Preccsのプロセスはオブジェクト指向プログラミングにおけるオブ
+ジェクトのようなものです．}で，データと通信路を備えた計算主体と考える
+ことができます．プロセスは自ら計算を行ったり，他のプロセスとチャネルを
+通して通信を行うことができます．
+\subsection{単純なプロセス}
+まずは，以下に示すようなもっとも単純なプロセスから見ていきましょう．
+\begin{verbatim}
+    proc DoNothing() = skip
+\end{verbatim}
+このプロセスは生成されると，すぐに\verb|skip|動作を行います．すなわち，
+このプロセスは何もしません．\verb|skip|は何もしない動作を意味する予約
+語です．この動作(実際には何もしませんが)を実行し終えると，プロセスは終
+了します\footnote{終了したプロセスのメモリ領域はシステムによって自動的
+に回収されます．}．
+\subsection{プロセスの基本動作}
+プロセスの基本動作とは，プロセスの動作を構成するもっとも基本的な要素で
+す．プロセスはいくつかの基本動作を組み合わせることで，さまざまな処理を
+行うことができます．表\ref{action}にプロセスの基本動作の一覧を示します．
+前に紹介した\verb|skip|も基本動作の一つですし，チャネルの入出力や生成，
+プロセスの生成なども基本動作です．
+\begin{table}[h]
+  \caption{プロセスの基本動作}
+  \label{action}
+  \begin{center}
+    \begin{tabular}{lll} \toprule
+基本動作     & 記述例                         & 意味 \\ \hline
+チャネル入力 & \verb|ch?x，ch?msg| & チャネルからデータを受け取る．\\
+チャネル出力 & \verb|ch!123，ch!n*2+3|        & チャネルにデータを出力する．\\
+チャネル生成 & \verb|var ch:<int>，var ch:<string>|&新しくチャネルを生成する．\\
+オブジェクト生成&\verb|var val:int，var msg:string|&新しくオブジェクトを生成する．\\
+プロセス生成 & \verb|HelloProc()，ProcA(ch, 3+4)|& プロセスを生成して実行させる．\\
+インラインC & \verb|C{ printf("Hello, world\n\"); C}| & Cのプログラムを実行する．\\
+プロセス終了 & \verb|stop| & プロセスを終了する．\\
+スキップ     & \verb|skip| & 何もしない．        \\ \bottomrule
+    \end{tabular}
+  \end{center}
+\end{table}
+\subsection{チャネルによる通信}
+プロセスは他のプロセスとチャネルを用いて通信を行うことができます．次に
+示すプロセスはチャネルchに123という値を送信するプロセスです．
+\begin{verbatim}
+    proc Sender(ch:<int>) = ch!"123"
+\end{verbatim}
+Senderプロセスではチャネルをプロセスのパラメータとして受け取り，そのチャ
+ネルに対して値を送信しています．
+一方，チャネルから値を受信するプロセスは，以下のように書くことができます．
+\begin{verbatim}
+    proc Receiver(ch:<int>) = ch?n:int
+\end{verbatim}
+Receiverプロセスはチャネル\verb|ch|から整数値を受け取り，それを変数
+\verb|n|に束縛します．SenderプロセスとReceiverプロセスが実際に通信する
+ためには，チャネルを共有する必要があります．そのためには，新しく
+\verb|int|型のチャネルを生成し，そのチャネルを，生成したSenderと
+Receriverプロセスに引数として渡してやればうまく行きます．
+\begin{verbatim}
+    proc ParentProc() = var ch:<int>; Sender(ch); Receiver(ch)
+\end{verbatim}
+ParentProcプロセスは(1)チャネルの生成，(2)Senderプロセスの生成，
+(3)Receiverプロセスの生成という3つの基本動作を逐次的に実行します．
+\section{式とデータ}
+ここでは，Preccsで扱うことのできる値（データ）や式，型について説明して
+いきいます．
+\subsection{基本型}
+Preccsは静的に型付けされた言語ですから，すべての式や値には型があります．
+Preccsで扱うことのできる基本型は表\ref{btype}に示すとおりです．
+\begin{table}[h]
+  \caption{Preccsの基本型}
+  \label{btype}
+  \begin{center}
+    \begin{tabular}{lll} \toprule
+      型名          & 型           & 意味              \\ \hline
+      \verb|bool|   & 真偽型       & trueかfalseを表す \\
+      \verb|char|   & 文字型       & ASCII文字の1文字文を表す\\
+      \verb|int|    & 整数型       & 32ビットの整数を表す\\
+      \verb|string| & 文字列型     & 0個以上の連続する文字を表現する\\ \bottomrule
+    \end{tabular}
+  \end{center}
+\end{table}
+octet型とchar型は実際には同じ型の別名に過ぎません．以下のように定義さ
+れている\footnote{後の章で説明しますが，これは型を定義するための構文で
+す．プロセスの定義と似ていますが，注意してください．}と考えて下さい．
+\begin{verbatim}
+    type char = {octet}
+\end{verbatim}
+文字列型はoctet型(char型)の0個以上の並びです．これは，
+\begin{verbatim}
+    type string = {octet*}
+\end{verbatim}
+のように定義されていると考えることができます．アスタリスク「\verb|*|」
+は\ref{msgdef}章で詳しく説明しますが，型構成子の一つで，\verb|octet|型
+が0個以上繰り返されることを意味しています．Preccsの\verb|string|型はC
+言語の文字列と異なり文字列の最後は\verb|NUL|文字(\verb|'\0'|)で終わる
+というような規約はありません．
+
+\subsection{定数}
+\verb|1234|のような整数定数は\verb|int|型です．\verb|octet|型の定数は
+\verb|'a'|，\verb|'\n'|などのようにC言語の文字型と同じ表記法を用います．
+bool型の定数は真を表す\verb|true|と偽を表す\verb|false|のみです．文字
+列定数は，ASCII文字列表記と16進表記を利用することができ，それぞれ，次
+のように表すことができます．
+\begin{flushleft}
+  \begin{tabular}{ll}
+    ASCII表記 & \verb|"hogehoge"|, \verb|"hello, world"| \\
+    16進表記  & \verb|"04ef32"h|, \verb|"FF123400"h| \\
+  \end{tabular}
+\end{flushleft}
+
+\subsection{変数}
+Preccsの変数は\verb|var|によるオブジェクト生成，チャネル入力，パタンマッ
+チ，または，プロセスの引数として宣言されます．例えば，\verb|int|型の変
+数\verb|n|は\verb|var|を用いて以下のように生成することができます．
+\begin{verbatim}
+    var n : int
+\end{verbatim}
+ここで，変数\verb|n|は，\verb|int|型のデフォルト値である0で初期化され
+ます．チャネル\verb|ch|が\verb|int|型のチャネルとすると，以下のように
+書くことで，変数\verb|n|が宣言されたことになります．
+\begin{verbatim}
+    ch?n
+\end{verbatim}
+ここで，\verb|n|は，チャネルから受け取った値で初期化されます．変数
+\verb|n|が以下のようにプロセスのパラメータとして宣言された場合は，プロ
+セスを生成したときに渡された引数によってその変数が初期化されます．
+\begin{verbatim}
+    proc Proc(n : int) = ...
+\end{verbatim}
+
+\subsection{式と演算子}
+Preccsでも一般的なプログラミング言語と同じように変数や定数を演算子と組
+み合わせて式を書くことができます．もっとも単純な式は変数や定数そのもの
+です．
+
+\subsubsection{■ 算術演算子}
+算術演算子は二項算術演算子の\verb|+|，\verb|-|，\verb|*|，\verb|/|と剰
+余演算子\verb|%|です．また単項演算子の\verb|-|もあります．基本的には
+\verb|int|型の演算を行いますが，\verb|+|は文字列同士の連結にも利用する
+ことができます．
+\begin{verbatim}
+    ch!"This is " + "a pen" + "."
+\end{verbatim}
+とすると，チャネル\verb|ch|には\verb|"This is a pen."|という文字列が出
+力されます．
+\subsubsection{■ 関係演算子}
+関係演算子は\verb|=|，\verb|!=|，\verb|>|，\verb|>=|，\verb|<|，
+\verb|<=|があります．C言語とちがって等価判定は\verb|==|ではなく
+\verb|=|であることに注意してください．
+\subsubsection{■ 論理演算子}
+論理演算子は，論理積\verb|&&|，論理和\verb$||$，否定\verb|!|を使用する
+ことができます．
+
+\section{プロセスの動作}
+Preccsのプロセスは複数の基本動作を組み合わせることによって，より高度な
+処理を行うことが可能です．ここでは，プロセスの動作を組み合わせる方法に
+ついて説明します．
+
+\subsection{逐次動作}
+たいていのプロセスは，複数の基本的な処理を一つ一つの逐次的に実行してい
+きます．例えば\ref{ExEcho}節では，以下のようなEchoProcプロセスの例を示
+しました．
+\begin{verbatim}
+  proc EchoProc() =
+      stdout!"> "; stdin?msg:string; stdout!msg
+\end{verbatim}
+このプロセスは，(1)標準出力にプロンプトを表示し，(2)標準入力から文字列
+を受け取った後に，(3)受け取ったメッセージをそのまま標準出力に表示する
+という3つの動作を逐次的に実行します．それぞれの動作は前の動作が完了す
+るまで実行されません．
+
+逐次動作は以下のような形式で記述します．
+\begin{center}
+\setbox0\vbox{
+\begin{verbatim}
+    ＜プロセス動作式1＞; ＜プロセス動作式2＞; ...  ;＜プロセス動作式n＞
+\end{verbatim}}\centerline{\fbox{\box0}}
+\end{center}
+プロセス動作式1から順番に処理が実行されていきます．
+\subsection{選択動作}
+複数のチャネルから入力や出力を同時に待っていて，いずれかのチャネル上で
+何か入出力処理が発生した場合に，それに対応する処理を実行したい場合があ
+ります．例えば，\verb|stdin|チャネルからの入力と\verb|sockin|チャネル
+からの入力を同時に待つようなEchoプロセスは以下のように書くことができま
+す．
+
+\begin{verbatim}
+proc EchoProc() =
+      stdin?msg  -> stdout!msg
+    | sockin?msg -> sockout!msg
+\end{verbatim}
+
+このプロセスは，\verb|stdin|チャネルから入力があった場合には，
+\verb|stdout|チャネルに受け取ったメッセージを出力し，\verb|sockin|チャ
+ネルから入力があった場合には，\verb|sockout|チャネルに受け取ったメッセー
+ジを出力する，という選択的な動作を行います．
+
+選択動作の形式は以下のとおりです．
+
+\begin{center}
+\setbox0\vbox{
+\begin{verbatim}
+    ＜ガード1＞ -> ＜プロセス動作式1＞
+  | ＜ガード2＞ -> ＜プロセス動作式2＞
+  ...
+  | ＜ガードn＞ -> ＜プロセス動作式n＞
+\end{verbatim}}\centerline{\fbox{\box0}}
+\end{center}
+
+ガードとははチャネル入出力動作のことです．いずれかのガードが実行可能状
+態（チャネルに対するデータの入出力が可能）になると，それに対応するプロ
+セス動作式の処理が引き続き実行されます．
+
+\subsection{条件分岐動作}
+変数の値や式の結果などによってプロセスの動作を変えたい場合には，以
+下に示す条件分岐の構文を使用します．
+\begin{center}
+\setbox0\vbox{
+\begin{verbatim}
+＜値式＞ @
+    ＜値1＞ -> ＜プロセス動作式1＞
+  | ＜値2＞ -> ＜プロセス動作式2＞
+  ...
+  | ＜値n＞ -> ＜プロセス動作式n＞
+\end{verbatim}}\centerline{\fbox{\box0}}
+\end{center}
+値式は，\verb|x = 3|や\verb|x + y > z|，\verb|true|など，評価した結
+果が真偽型となるような式です．条件式は1つ目から順番に評価され，その値
+が真となった場合に，その節に対応するプロセス動作式が実行されます．複数
+の条件式が同時に真になる場合には，最初に真となるプロセス動作式のみが実
+行されます．どの条件式も真にならなかった場合は，どのプロセス動作式も実
+行ません．
+
+条件分岐の例として，整数の絶対値を返すようなプロセスを示します．
+\begin{verbatim}
+proc AbsProc(n:int, ch:<int>) =
+  n >= 0 @ true  -> ch!n
+         | false -> ch!-n
+\end{verbatim}
+
+AbsProcプロセスは引数nの値によって異なる動作を行います．\verb|n >= 0| 
+ならば\verb|n|の値をそのままチャネル\verb|ch|に送信し、それ以外なら符
+号を反転した値を送信します．
+
+\section{プロセスの生成}
+定義したプロセスを実行するには，プロセスを生成する必要があります．ただ
+し，Mainプロセスだけは，Preccsの起動時に一つだけ自動的に生成されます．
+プロセス生成の形式は以下のようになります．
+\begin{center}
+\setbox0\vbox{
+\begin{verbatim}
+  ＜プロセス名＞ ( ＜引数リスト＞ )
+\end{verbatim}}\centerline{\fbox{\box0}}
+\end{center}
+
+Preccsのプロセスは並行的に動作するので，いくつものプロセスを生成するこ
+とが可能です．例えば，以下のプログラムは，"Hello, world."を出力するプ
+ロセスを3つ生成し，実行します．
+
+\begin{verbatim}
+  proc Main() = HelloProc(); HelloProc(); HelloProc()
+  pro cHelloProc() = stdout!"Hello, world.\n"
+\end{verbatim}
+
+\section{チャネル入出力}
+Preccsではチャネルを用いて，複数のプロセス間で通信を行うことができます．
+
+\subsection{チャネルの生成}
+チャネルは，プロセス間でデータをやり取りするための通信路です．新しくチャ
+ネルを生成する場合には以下の構文を使います．
+\begin{center}
+\setbox0\vbox{
+\begin{verbatim}
+  var ＜チャネル名＞ : < ＜型式＞ > 
+\end{verbatim}}\centerline{\fbox{\box0}}
+\end{center}
+
+型式で指定された型のデータをやり取りできるチャネルが新しく生成されます．
+例えば整数型のデータをやり取りするためのチャネル\verb|ch|を作成するに
+は以下のようにします．
+\begin{verbatim}
+  var ch : <int>
+\end{verbatim}
+
+\subsection{ランデブー通信}
+チャネルを通した入出力はすべて同期的に行われます．すなわち，チャネルの
+通信相手となるプロセスの準備がまだできてないときには，相手のプロセスが
+通信可能状態になるまで待ちます．このような通信をランデブー通信と呼びま
+す．
+
+
+例として，以下のような二つのプロセスProcPとProcQを考えてみましょう．
+
+\begin{verbatim}
+  proc ProcP(ch:<int>) = ch!3; stdout!"sent\n"
+  proc ProcQ(ch:<int>) = ch?n; stdout!"rcvd\n"
+\end{verbatim}
+
+プロセスProcPとProcQが同じチャネルを引数として生成されたとします．この
+場合，この二つのプロセスは同一のチャネルを共有して通信を行います．
+ProcPは，チャネルverb|ch|に対して整数値3を送信(\verb|ch!3|)した後で，
+標準出力に\verb|"sent"|を表示します．一方のProcQはチャネル\verb|ch|か
+ら値を受け取った(verb|ch?n|)後に，標準出力に\verb|"rcvd"|を表示し
+ます．ProcPが先に\verb|"ch!3"|に到達すると，ProcQが\verb|"ch?n:int"|に
+到達するまで待ちます．逆にProcQが先に到達した場合にはProcPを待ちます．
+そして両者が送受信可能状態になると，値3がProcPからProcQへと送信されま
+す．
+
+\subsection{デッドロック}
+チャネルによる通信は同期的に行われるため，複数のプロセスが複数のチャネ
+ルを共有しながら送受信を行うと，プロセス同士がデッドロックに陥ることが
+あります．以下にデッドロックを引き起こす二つのプロセスの例を示します．
+
+\begin{verbatim}
+  proc Foo(ch1:<int>, ch2:<string>) = ch1!3; ch2?msg
+  proc Bar(ch1:<int>, ch2:<string>) = ch2!"OK"; ch1?n
+\end{verbatim}
+
+プロセスFooとBarはチャネル\verb|ch1|と\verb|ch2|を共有しているものとし
+ます．プロセスFooは\verb|ch1|に対して値3を送信しようとしますが，一方の
+プロセスBarは，チャネル\verb|ch2|からのデータ到着を待ちます．
+
+
+複数のチャネルに対して逐次的に送受信を行う際には，チャネルを利用する順
+番を決めておくことで，デッドロックの発生を防ぐことができます．例えば，
+先ほどのプロセスFooとBarの例では，以下のように\verb|ch1|の後で
+\verb|ch2|を使用するように統一しておけば，デッドロックは発生しません．
+
+\begin{verbatim}
+  proc Foo(ch1:<int>, ch2:<string>) = ch1!3; ch2?msg
+  proc Bar(ch1:<int>, ch2:<string>) = ch1?n; ch2!"OK"
+\end{verbatim}
+
+\subsection{組み込みチャネル}
+Preccsのプロセスが標準入出力やソケット入出力を行う場合には，組み込みチャ
+ネルと呼ばれる特別なチャネルを使用します．これらの組み込みチャネルによっ
+て，Preccsのプロセスが外の世界と通信を行うことが可能となります．
+
+\begin{table}[h]
+  \caption{組み込みチャネルの一覧}
+  \label{chan}
+  \begin{center}
+    \begin{tabular}{lll} \toprule
+チャネル名     & 型              & 説明                       \\ \hline
+\verb|stdin|   & \verb|<string>| & 標準出力に文字列を出力する \\
+\verb|stdout|  & \verb|<string>| & 標準入力から文字列を受け取る \\
+\verb|timer|   & \verb|<int>|    & 指定された秒数だけプロセスを停止する \\ \bottomrule
+    \end{tabular}
+  \end{center}
+\end{table}
+
+
+\subsection{タイムアウト処理}
+タイムアウト処理を実現する場合には，特別な組み込みチャネルである
+\verb|timer|チャネルを使用します．\verb|timer|チャネルに対して，整数値
+を出力すると，与えられた秒数だけプロセスの処理がブロックされます．例え
+ば，以下のプロセスは起動されてから10秒後に\verb|"Hello, world"|と出力
+します．
+
+\begin{verbatim}
+proc DelayHello() =
+       timer!10; stdout!"Hello, world"
+\end{verbatim}
+
+\verb|timer|チャネルを他の入出力チャネルとともに使用することで，タイム
+アウト処理を簡単に実現することができます．例えば，キーボードからの入力
+を最大30秒間待つようなプロセスは以下のように実現できます．
+
+\begin{verbatim}
+proc KeyInput() =
+        stdin?msg -> stdout!("Key Input: " ^ msg)
+      | timer!30  -> stdout!"Timeout"
+\end{verbatim}
+
+\section{インラインC}
+PreccsではC言語のコードをプロセスの動作式として実行することができます．
+以下のように
+\begin{center}
+\setbox0\vbox{
+\begin{verbatim}
+  C{ ＜Cのコード＞ C}
+\end{verbatim}}\centerline{\fbox{\box0}}
+\end{center}
+Cのコード部分を\verb|C{～C}|で囲みます．
+
+\subsection{変数の参照}
+インラインCにおけるC言語のコード部分から，Preccsの変数の内容を参照する
+場合には，変数名を\verb|$|で囲みます．例えば，Preccsのプロセス中の変数
+\verb|n|を参照する場合には，\verb|$n$|と書きます．
+
+整数の値を画面に出力するプロセスはインラインCの機能を使って，以下のよ
+うに定義することができます．
+
+\begin{verbatim}
+proc PrintInt(n : int) =
+    C{
+        printf("%d", TOCINT($n$));
+    C}
+\end{verbatim}
+
+この例にある\verb|TOCINT|マクロは，Preccsにおける\verb|int|型の値の表
+現をCの\verb|int|型の表現に変換するためのものです．これとは逆にCの
+\verb|int| 型からPreccsの\verb|int|型へ変換するには\verb|TOPINT|マクロ
+を利用します．
+
+\chapter{メッセージ形式の定義}\label{msgdef}
+通信プロトコルで用いるメッセージ形式は，あるパタンを備えたバイト（ビッ
+ト）列と考えることができます．これらは，意味のあるまとまりであるフィー
+ルドで区切られています．いくつかのフィールドは繰り返し現れたり，さらに
+あるフィールドは，複数のフィールドから構成されるといったように階層構造
+を持つものもあります．このように様々な構造を持ったメッセージの形式を，
+Preccsでは正規表現に基づいて定義することが可能です．この章では，メッセー
+ジ形式の定義の仕方について説明していきます．
+
+\section{型の定義}
+基本的に，メッセージ形式はメッセージの持つ構造のパタンを指定することに
+よって定義します．Preccsでは，パタン定義の構文は以下のようになります．
+\begin{center}
+\setbox0\vbox{
+\begin{verbatim}
+type ＜型名＞ = ＜型式＞
+\end{verbatim}}\centerline{\fbox{\box0}}
+\end{center}
+
+\verb|「=」|の左辺には，新しく定義するメッセージ形式の名前（型名）
+を指定し，右辺にはそのメッセージが持つパタン式を記述します．
+
+
+以下の各節では，Preccsで表現できるパタンについて説明していきます．
+\section{基本的なパタン}
+\subsection{定数パタン}
+もっとも簡単なメッセージのパタンは定数パタン，すなわち，固定のバイト列
+を持つようなメッセージです．たとえば，1オクテット分の0x00というバイト
+列を持つようなメッセージ形式は，以下のように定義することができます．
+
+\begin{verbatim}
+ proc ZeroMsg = { "00"h }
+\end{verbatim}
+
+定数パタンには16進による表記のほかにもASCII文字列による表記方法を用い
+ることも可能です．表\ref{ptnlit}に，定数パタンの表記方法の例を示します．
+
+\begin{table}[h]
+  \caption{定数パタンの表記例}
+  \label{ptnlit}
+  \begin{center}
+    \begin{tabular}{ll} \toprule
+      表記法       & 例              \\ \hline
+      16進表記     & \verb|"01AB"h|, \verb|"deadbeef"h|, \verb|"0123abcd"h|   \\
+      ASCII文字列  & \verb|"hogehogeb"|, \verb|"foo"|, \verb|"Hello, world!"| \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+\end{table}
+
+\subsection{固定長パタン}
+もう一つ基本的なメッセージパタンとして，固定長パタンがあります．固定長
+パタンは１オクテット分の長さを意味する\verb|octet|というパタンのみ用意
+されています．以下に例を示します．
+\begin{verbatim}
+  type OctMsg = { octet }    // OctMsgは1オクテットの長さを持つ
+\end{verbatim}
+１オクテットより長いパタンを指定したい場合には，後で説明する連結パタン
+や繰り返しパタンと組み合わせて定義します．
+
+\section{連結パタン}
+複数のパタンをカンマ（\verb|,|）で連結することによって，より複雑なパタ
+ンを表現することができます．例えば，２オクテットの固定長データの後に
+0x0001が続くようなパタンは以下のように定義できます．
+\begin{verbatim}
+  type FooMsg = { octet;octet;"0001"h }
+\end{verbatim}
+
+\section{ラベル付きパタン}
+Preccsではメッセージを構成するパタンにラベルを付けることができます．こ
+のラベルはプロセス動作の式の中で参照したり，後で説明する繰り返しパタン
+の回数としても参照することができます．ラベル定義の構文は以下のようにな
+ります．
+
+\begin{center}
+\setbox0\vbox{
+\begin{verbatim}
+    ＜ラベル名＞ : ＜パタン式＞
+\end{verbatim}}\centerline{\fbox{\box0}}
+\end{center}
+
+例えば，先ほど定義したメッセージFooMsgに対して，以下のようにラベルを付
+けることができます．
+\begin{verbatim}
+type FooMsg2 = {{
+      field : (octet;octet);
+      end   : "0001"h
+))
+\end{verbatim}
+ここでは，最初の２オクテットに「\verb|field|」，最後の0x0001には
+「\verb|end|」というラベルをつけています．
+
+\section{選択パタン}
+選択パタンは，複数のパタンのうち，どれか一つだけマッチするようなパタン
+のことをさします\footnote{正規表現における集合和に相当します．}．パタ
+ン\verb|A|とパタン\verb|B|の選択パタンは，「\verb$A|B$」のように縦棒
+「\verb$|$」を用いて記述します．以下に例を示します．
+\begin{verbatim}
+type FooMsg3 = {{
+      kind  : ("01"h|"02"h);
+      field : (octet;octet);
+      end   : "0001"h
+}}
+\end{verbatim}
+
+FooMsg3では，kindラベルが付けられている最初のパタンは，0x01か0x02であ
+ることを示しています．したがって，FooMsg3の構造は，最初が0x01か0x02で
+始まり，その後に２オクテット分の任意のデータがあり，最後が0x0001で終わ
+るというものです．具体的には0x01abcd0001や0x0200ff0001などは，FooMsg3
+に含まれますが，0x0012340001などはFooMsg3には含まれません．
+
+\section{繰り返しパタン}
+同じパタンがいくつか連結しているような場合には，繰り返しパタンを使用し
+ます．繰り返しパタンによって，１オクテット以上の長さを持つフィールドや
+可変長のフィールドなども定義することができます．繰り返しパタンには，繰
+り返しの回数を指定する方法と，指定しない方法があります．
+
+\subsection{繰り返し回数の指定}
+回数指定による繰り返しパタンの構文は以下のようになります．
+\begin{center}
+\setbox0\vbox{
+\begin{verbatim}
+    ＜パタン式＞ [ ＜繰り返し回数＞ ]
+\end{verbatim}}\centerline{\fbox{\box0}}
+\end{center}
+
+繰り返し回数には，1や4などの正定数を指定する他に，ラベルの参照を指定す
+ることも可能です．
+
+\subsubsection{■ 定数回の繰り返し}
+あらかじめ繰り返しの回数が決まっている場合は，パタンの後に定数を指定し
+ます．例えば，４オクテット分の長さを持つパタンは，octetの４つの繰り返
+しなので，次のように定義することができます．
+\begin{verbatim}
+type FourOct = { octet[4] }
+\end{verbatim}
+
+\subsubsection{■ ラベル参照による繰り返し}
+以下に示すように，繰り返しの回数を指定する部分で，ラベル名を指定するこ
+とも可能です．
+\begin{verbatim}
+type SimpleMsg = {{
+        len  : octet;
+        data : octet[len]
+}}
+\end{verbatim}
+
+この場合，\verb|octet[len]|の\verb|len|は，直前に定義されている
+\verb|len|ラベルの内容を参照します．ここで，参照元となる\verb|len|ラベ
+ルは，１オクテット分のフィールドを指していますが，例えば，この値が0x02 
+の場合には\verb|octet[len]|は２オクテット長，0xFFの場合には255オクテッ
+トの長さを持つことになります．
+
+ラベルの参照は，前方参照のみ可能です．例えば，以下のように，参照してい
+る箇所よりも後方で定義されているラベルを参照することはできません
+\footnote{この他にも，選択パタンや繰り返しパタンの中で定義されたラベル
+をその外側で用いることはできない，といった制限もあります．}．
+
+\begin{verbatim}
+type BadMsg = {{
+        data : octet[len];
+        len  : octet
+}}
+\end{verbatim}
+
+\subsection{不定回の繰り返し}
+パタン式の後に，\verb|*|や\verb|+|を付けることによって，不定回の繰り返
+しを表現することができます．例として，先ほど定義したSimpleMsgを0個以上
+含むような構造を持つメッセージは，以下のように定義することができます．
+
+\begin{verbatim}
+type SomeMsg = {{
+      field  : octet[2];
+      opts   : SimpleMsg*;
+      end    : "00"h
+}
+\end{verbatim}
+
+繰り返しを指定する記号としては，\verb|*|以外にも，表\ref{iter}に示すよ
+うな記号を使用することが可能です．
+
+\begin{table}[h]
+  \caption{繰り返し記号}
+  \label{iter}
+  \begin{center}
+    \begin{tabular}{ll} \toprule
+      記号 & 意味 \\ \hline
+      \verb|*| & 0回以上の繰り返し \\
+      \verb|+| & 1回以上の繰り返し \\
+      \verb|?| & 0か1回の出現 \\ \bottomrule
+    \end{tabular}
+  \end{center}
+\end{table}
+
+\section{パタンの派生}
+Preccsにおけるパタンは，そのパタンとマッチするメッセージの集合と考える
+ことができます．定義済みのパタンから，そのパタンが表すメッセージ集合の
+部分集合を定義することをパタンの派生と呼びます．これは，パタン中のある
+フィールド（部分的なパタン）をより限定したパタンに置き換えることによっ
+て行います．派生パタンの構文は以下のようになります．
+\begin{center}
+\setbox0\vbox{
+\begin{verbatim}
+    ＜パタン式1＞ { ＜ラベル参照＞ = ＜パタン式2＞ }
+\end{verbatim}}\centerline{\fbox{\box0}}
+\end{center}
+パタン式1は派生元となるパタンで，ラベル参照はパタン式1中の置き換え対象
+となる部分への参照です．上の構文はラベル参照が示す派生パタンの一部分を
+パタン式2で表現されるパタンに置き換えることを意味します．派生元のパタ
+ンを親パタン，親パタンから派生したパタンを子パタンと呼びます．
+
+
+ここで，派生パタンの例を見てみましょう．以下で定義ししてるParentPktは
+親パタンで，ChildPktが子パタンとなります．
+
+\begin{verbatim}
+type ParentPkt = {{                          // 親パタンを定義
+      field1 : octet;
+      field2 : octet[2]
+}}
+type ChildPkt = ParentPkt{field2={"0001"h}}  // 子パタンを定義
+\end{verbatim}
+
+ParentPktは，それぞれ1 octetと2 octetの長さを持つフィールドfield1，
+field2から構成される全長3 octetのパケットです．ChildPktは，同じように
+フィールドfield1とfield2から構成されますが，field2は0x0001というパタン
+に置き換わっています．例えば，0xab00000というメッセージは，ParentPktに
+マッチしますが，ChildPktにはマッチしません．また，0xff0001はParentPkt 
+とChildPktの両方にマッチします．ここで注意する点は，派生パタンによる置
+き換えは，よりパタンを限定する方向でのみ可能だとういことです．これによっ
+て子パタンは必ず親パタンの部分集合となります(図\ref{derivptn})．
+\begin{figure}[t]
+  \includegraphics[width=\linewidth]{images/derivptn.eps}
+  \caption{派生パタンの包含関係}
+  \label{derivptn}
+\end{figure}%
+例えば，
+\begin{verbatim}
+type ChildPkt = ParentPkt{field2={octet*}}
+\end{verbatim}
+というような派生パタンを定義することはできません\footnote{コンパイルエ
+ラーとなります．}．
+
+
+派生パタンをうまく利用すれば，同じような構造を持ったメッセージの形式を
+簡潔に定義することができます．以下に，派生パタンを用いたオプション種別
+の定義例を示します．
+\begin{verbatim}
+type Option = {{              // オプション形式を定義
+      kind : octet;
+      len  : octet;
+      data : octet[len]
+}}
+type RequestOption = Option{kind="01"h}  // Requestオプションの定義
+type ReplyOption   = Option{kind="02"h}  // Replyオプションの定義
+\end{verbatim}
+
+\chapter{その他の話題} 
+\section{Preccsの初期化処理}
+一般に，Preccsの処理はC言語のmain関数の中から呼び出されることによって
+開始されます．具体的には，main関数の中から\verb|prc_main()|関数を呼び
+出します．\verb|prc_main()|は，呼び出されるとPreccsの処理を開始し，正
+常に処理が終了すると，0を返し，異常終了した場合にはそれ以外の値を返し
+ます．
+
+最も簡単なmain関数の構造は，以下のようになると思います．
+\begin{verbatim}
+#include "prcrt.h"
+
+int main(void) {
+    /* Preccs処理の開始 */
+    return prc_main();
+}
+\end{verbatim}
+\section{ソケット入出力とチャネル}
+ここでは，Preccsの中でソケット入出力を行う方法について説明します．
+\subsection{ソケットライブラリの初期化}
+Preccsのプロセス中で，ソケット入出力を行う場合には，
+\verb|prc_main()|を呼び出す前に，\verb|prc_SockStart()|を呼び出して，
+ソケットライブラリの初期化
+\footnote{Preccsの内部ではWindowsのWinSock APIを利用しているため，その
+ための初期化が必要なのです．}を行う必要があります．また，終了時には，
+\verb|prc_SockFinish()|を呼び出してください．したがって，ソケット入出
+力を行う場合のmain関数は以下のようになります．
+
+\begin{verbatim}
+#include "prcrt.h"
+
+int main(void) {
+    int ret;
+
+    /* ソケットの初期化 */
+    prc_SockStart();    // ソケットライブラリの初期化
+    ret = prc_main();   // Preccs処理の開始
+    prc_SockFinish();   // ソケットライブラリの終了処理
+
+    return ret;
+}
+\end{verbatim}
+\subsection{ソケットの使用}
+Preccsプログラムの中で実際にソケット入出力を行うためには，新しく作成し
+たチャネルをソケットとバインドし，そのチャネルに対して送受信を行います．
+以下で，具体的な例を見ていきましょう．
+\subsubsection{TCPクライアントソケット}
+まずは，TCPのクライアントソケットを作成する例です．Preccsのランタイム
+には\verb|prc_SockTcpClient|というCの関数が用意されているので，それを
+利用すると，クライアントソケットの作成とチャネルとのバインドを一括して
+行うことができます．以下に例を示します．
+\begin{verbatim}
+    var so_in:<string>;    // 入力用のソケットチャネル
+    var so_out:<string>;   // 出力用のソケットチャネル
+    C{
+        prc_SockTcpClient($so_in$, $so_out$, STRPTR("localhost"), 1000);
+    C};
+    so_in!"HELLO";         // 文字列を送信
+    so_out?msg             // 文字列を受信
+\end{verbatim}
+このプログラム（の断片）は，ソケット用のチャネルを作成して，そのチャネ
+ルに対して文字列の送受信を行います．\verb|prc_SockTcpClient|関数の第1，
+第2引数には，ソケットとバインドする入力チャネルと出力チャネルをそれぞ
+れ指定します．第3引数には接続先のホスト名を，第4引数にはポート番号を指
+定します．\verb|prc_SockTcpClient|関数は指定された接続先へのTCPクライ
+アントソケットを作成し，与えられたチャネルとバインドします
+\footnote{この関数はサーバへの接続が成功するまでブロックされます．この
+問題へ対応するために，現在，新しい接続の方法を検討中です．}．以後，バ
+インドされたチャネルに対する送受信がそのままソケットに対する送受信（す
+なわちネットワークへの入出力）となります．
+
+\subsubsection{TCPサーバソケット}
+TCPサーバソケットの場合は，接続待ちのためのソケットとバインドされたチャ
+ネルを作成する\verb|prc_SockTcpServer|関数を用います．以下にプログラム
+例を示します．
+\begin{verbatim}
+    var lsock:<{in:<string>,out:<string>}>;  // 接続待ちチャネル作成
+    C{
+        prc_SockTcpServer($lsock$, 1000);  // 接続待ちソケットとのバインド
+    C};
+    lsock?csock;      // 接続待ち
+    csock.in?msg;     // 受信待ち
+    csock.out!"RECVD" // 文字列送信
+\end{verbatim}
+このプログラムは，サーバソケット用のチャネルを作成して，クライアントか
+らの接続を待ち，クライアントからの接続要求があるとそれを受け付けて，ク
+ライアントからのデータを受信します．データが受信されると，"RECVD"とい
+う文字列を返します．
+
+\verb|prc_SockTcpServer|関数の第1引数には，サーバソケットとバインドす
+る接続待ちチャネルを渡します．接続待ちチャネルは，
+\verb|{in:<string,out:<string>}|型のチャネルです．これは，クライアント
+からの接続があると，そのクライアントとの送受信用のチャネルの組を返すか
+らです．
+
+\subsection{UDPソケット}
+UDPソケットを作成するには，\verb|prc_SockUdpClient|関数を使います．以
+下に例を示します．
+\begin{verbatim}
+    var so_in:<string>;    // 入力用のソケットチャネル
+    var so_out:<string>;   // 出力用のソケットチャネル
+    C{
+        prc_SockUdpClient($so_in$, $so_out$, STRPTR("localhost"), 1000);
+    C};
+    so_in!"HELLO";         // 文字列を送信
+    so_out?msg             // 文字列を受信
+\end{verbatim}
+TCPサーバソケットの生成方法とほとんど同じです．UDPソケットはホストと接
+続を行わず，送信時にアドレスとポートを指定するのが一般的ですが，現在の
+Preccsでは，チャネル送信時に相手先を指定する枠組みが用意されていないの
+で，ここでは，ソケット生成と同時に接続先を指定しています．将来的にはこ
+の問題は解決されるでしょう．
+
+\section{ファイル入出力}
+ファイル入出力も，ソケット入出力と同様に，入出力用のチャネルをファイル
+と関連付けることによって処理します．
+
+\subsection{ファイルの作成}
+ファイルの作成には，\verb|prc_FileCreate|関数を使用します．以下に例を
+示します．
+\begin{verbatim}
+    var fout:<string>;    // ファイル出力用のチャネル
+    C{
+        prc_FileCreate($fout$,"new_file");
+    C};
+    fout!"Hello"
+\end{verbatim}
+このプログラムは，"new\_file"という名前を持つファイルを新しく作成し，そ
+のファイルに対して，"Hello"という文字列を書き込みます．
+\verb|prc_FileCreate|関数の第1引数には，ファイルと関連付けたい出力チャ
+ネルを指定し，第2引数には作成するファイル名を指定します．
+
+\subsection{ファイルの読み込み}
+ファイルの読み込みには，\verb|prc_FileOpenR|関数を使用します．第1引数
+には入力チャネルを指定し，第2引数には，オープンするファイルを指定しま
+す．以下にプログラム例を示します．
+\begin{verbatim}
+    var fin:<string>;
+    C{
+        prc_FileOpenR($fin$,"foo.txt");
+     C};
+     fin?data
+\end{verbatim}
+
+\chapter{SNTPクライアントの実装}
+本章では，通信プロトコルの実装例として，実際にPreccsでSNTPプロトコルを
+記述した例を紹介します．
+\section{SNTP (Simple Network Time Protocol)とは}
+ネットワークで結ばれたコンピュータ同士で時刻を同期させるためにNTPとい
+うプロトコルがありますが，SNTPはこれをクライアントの時計合わせ用途に向
+けて軽量化したものです．SNTPプロトコルは，RFC2030で定義されています．
+
+\section{メッセージの定義}
+まずは，SNTPプロトコルのメッセージ形式を定義していくことにしましょう．
+Preccsによる記述は，図\ref{sntpmsg}のようになります．
+
+
+SNTPメッセージには，8オクテット(64ビット)のタイムスタンプフィールドが
+いくつか含まれていますが，これをTimeStamp形式として定義しておきます（6～
+9行目）．タイムスタンプの前半4オクテットは秒数を表し，後半の4オクテッ
+トは小数点以下を表します．SNTPメッセージの本体部分は，モードや精度，タ
+イムスタンプなどの固定長のフィールドが並び，最後にはオプションとして鍵
+IDやメッセージダイジェストなどが含まれます．ここで示す例ではオプション
+は実際には使用しません．
+
+
+さらに，SNTPメッセージから送信（クライアント）用と受信（サーバ）用の
+SNTPメッセージを派生させます．この場合，モードフィールド\footnote{実際
+には閏秒指示子(Leap Indicator):2-bit，バージョン番号:3-bit，モード:
+3-bitから構成される．} が送信用は0x0B，受信用は閏秒指示子を考慮に入れ
+て0x0Cか0xCCの値を持つようになります．
+
+\begin{figure}[t]
+  \setbox0\vbox{
+    \begin{tabular}{rl}
+  1: & \verb@//@\\
+  2: & \verb@// SNTPメッセージ形式の定義@\\
+  3: & \verb@//@\\
+  4: & \\
+  5: & \verb@// タイムスタンプ形式@\\
+  6: & \verb@type TimeStamp = {{@\\
+  7: & \verb@    second  : octet[4];    // 秒数@\\
+  8: & \verb@    decimal : octet[4]     // 小数点以下@\\
+  9: & \verb@}}@\\
+ 10: & \\
+ 11: & \verb@// SNTPメッセージ形式@\\
+ 12: & \verb@type SntpPacket = {{@\\
+ 13: & \verb@    mode  : octet;           // モード(LI/VN/MODE)@\\
+ 14: & \verb@    stratum:octet;           // 階層@\\
+ 15: & \verb@    poll  : octet;           // ポーリング間隔@\\
+ 16: & \verb@    precs : octet;           // 精度@\\
+ 17: & \verb@    rtdel : octet[4];        // ルート遅延@\\
+ 18: & \verb@    rtdisp: octet[4];        // ルート拡散@\\
+ 19: & \verb@    refid : octet[4];        // 参照識別子@\\
+ 20: & \verb@    refts : TimeStamp;       // 参照タイムスタンプ@\\
+ 21: & \verb@    orgts : TimeStamp;       // 開始タイムスタンプ@\\
+ 22: & \verb@    rcvts : TimeStamp;       // 受信タイムスタンプ@\\
+ 23: & \verb@    trsts : TimeStamp;       // 送信タイムスタンプ@\\
+ 24: & \verb@    opt   : {@\\
+ 25: & \verb@        keyid : octet[32];   // 鍵識別子(オプション)@\\
+ 26: & \verb@        msgdgs: octet[128]   // メッセージダイジェスト(オプション)@\\
+ 27: & \verb@    }?@\\
+ 28: & \verb@}}@\\
+ 29: & \verb@type SntpSndPkt = SntpPacket{mode={"0B"h}}        // 送信SNTPメッセージ@\\
+ 30: & \verb@type SntpRcvPkt = SntpPacket{mode={"CC"h|"0C"h}}  // 受信SNTPメッセージ@\\
+  \end{tabular}}\centerline{\fbox{\box0}}
+  \caption{SNTPメッセージ形式の定義 : sntpc.prc(その1)}
+  \label{sntpmsg}
+\end{figure}%
+
+\section{通信手順の記述}
+
+次に，SNTPクライアントの通信手順を定義していきましょう．SNTPの通信手順
+は単純で，クライアントは起動時にSNTP送信メッセージをサーバに送信し，サー
+バから応答が返るのを待つだけです．SNTPのメッセージはUDPパケットとして
+送られるので，途中で失われる可能性もあります．そこで，タイマーを使って
+10秒間待っても応答が返らない場合には，タイムアウトするようにしておきま
+しょう．図\ref{sntpprc}にPreccsの記述例を示します．
+\begin{figure}[t]
+  \setbox0\vbox{
+    \begin{tabular}{rl}
+ 31: & \verb@// ソケットチャネルの組を定義@\\
+ 32: & \verb@type SocketPair = {in:<string>;out:<string>}@\\
+ 33: & \\
+ 34: & \verb@//@\\
+ 35: & \verb@// SNTPクライアントプロセスの定義@\\
+ 36: & \verb@//@\\
+ 37: & \verb@proc Main() =@\\
+ 38: & \verb@    var ret:<SocketPair>;@\\
+ 39: & \verb@    SockUdpCreate(ret,"ntp-server.com",123);@\\
+ 40: & \verb@    ret?sp;@\\
+ 41: & \verb@    SntpProcInit(sp)@\\
+ 42: & \\
+ 43: & \verb@// SNTPパケット送信@\\
+ 44: & \verb@proc SntpProcInit(sp:SocketPair) =@\\
+ 45: & \verb@    var pkt:SntpSndPkt;@\\
+ 46: & \verb@    sp.out!pkt;@\\
+ 47: & \verb@    SntpProcWait(sp)@\\
+ 48: & \\
+ 49: & \verb@// 応答パケット待ち@\\
+ 50: & \verb@proc SntpProcWait(sp:SocketPair) =@\\
+ 51: & \verb@    timer!10  -> stdout!"Timeout\n"@\\
+ 52: & \verb$  | sp.in?msg -> ( msg @ pkt:SntpRcvPkt ->$\\
+ 53: & \verb@                         C{@\\
+ 54: & \verb@                             extern void print_ntp_time(char *msg);@\\
+
+ 55: & \verb@                             print_ntp_time(STRPTR($pkt.trsts.second$));@\\
+ 56: & \verb@                         C}@\\
+ 57: & \verb@                       | _ -> stdout!"Error packet recvd\n" );@\\
+ 58: & \\
+ 59: & \verb@// UDPソケットチャネル作成@\\
+ 60: & \verb@proc SockUdpCreate(ret:<SocketPair>,host:string,port:int) =@\\
+ 61: & \verb@    var sin:<string>;@\\
+ 62: & \verb@    var sout:<string>;@\\
+ 63: & \verb@    C{@\\
+ 64: & \verb@	       prc_SockUdpClient($sin$, $sout$, STRPTR($host$), TOCINT($port$));@\\
+ 65: & \verb@    C};@\\
+ 66: & \verb@    ret!{in=sin;out=sout}@
+  \end{tabular}}\centerline{\fbox{\box0}}
+  \caption{SNTP通信手順の記述 : sntpc.prc(その2)}
+  \label{sntpprc}
+\end{figure}%
+
+まずはじめに，UDPソケット用のチャネルの組を\verb|SocketPair|型として定
+義しているのが31 行目です．37行目以降で定義されている\verb|Main|プロセ
+スでは，まず\verb|SocketPair|型のチャネルを定義しています．次にここで
+定義したチャネルと，接続先のホスト名，ポート番号を引数として，
+\verb|SockUdpCreate|プロセスを生成します．\verb|SockUdpCreate|プロセス
+(60～66行目)は，\verb|prc_SockUdpClient|関数のラッパプロセスで，UDPソ
+ケットチャネルの組を作成して，引数として与えられたチャネルに送信します．
+\verb|Main|プロセスは，\verb|SockUdpCreate|プロセスからソケットチャネ
+ルの組を受信し，それを引数として，\verb|SntpProcInit|プロセスを生成します．
+
+\verb|SntpProcInit|プロセスでは，受け取ったソケットを使って，SNTPメッ
+セージを送信(46行目)します．次に，応答メッセージの待ち状態に入るために，
+\verb|SntpProcWait|プロセスを呼び出します．
+
+\verb|SntpProcWait|プロセスでは，タイマーチャネルと，チャネル受信の選
+択処理によって，サーバから応答メッセージが到着するのを最大で10秒間待ち
+ます．タイムアウトした場合にはタイムアウトメッセージを標準出力に表示し
+ます．また，サーバから応答メッセージを受信したら，そのメッセージのフォー
+マットをチェックします．正しければ，メッセージに含まれるタイムスタンプ
+フィールドの秒数の値を取り出し，時刻に変換して画面に出力する処理を行い
+ます．この処理はC 言語の関数\verb|print_ntp_time()|を呼び出すので，Cイ
+ンラインプロセスとして記述します(54～55行目)．
+
+\section{その他の処理}
+残りはmain関数や取得した時刻を表示する関数などを定義していきます．図
+\ref{sntpc1}の5行目から13行目までがmain関数の定義です．ここでは，単純
+にソケットライブラリの初期化（8行目）を行った後に，Preccsの処理ループ
+を呼び出している（9行目）だけです．
+
+\begin{figure}[t]
+  \setbox0\vbox{
+    \begin{tabular}{rl}
+  1: & \verb@#include "prcrt.h"@\\
+  2: & \verb@#include <stdio.h>@\\
+  3: & \verb@#include <time.h>@\\
+  4: & \\
+  6: & \verb@/*@\\
+  7: & \verb@ * SNTPクライアントのmain関数@\\
+  8: & \verb@ */@\\
+  5: & \verb@int main(void) {@\\
+  6: & \verb@    int ret;@\\
+  7: & \\
+  8: & \verb@    prc_SockStart();@\\
+  9: & \verb@    ret = prc_main();@\\
+ 10: & \verb@    prc_SockFinish();@\\
+ 11: & \\
+ 12: & \verb@    return ret;@\\
+ 13: & \verb@}@\\
+ 14: & \\
+ 15: & \verb@/*@\\
+ 16: & \verb@ * 時刻の表示（Preccsのプロセス部から呼ばれる）@\\
+ 17: & \verb@ */@\\
+ 18: & \verb@void print_ntp_time(char *msg) {@\\
+ 19: & \verb@    time_t ntp_time;		/* NTPサーバから取得した時刻 */@\\
+ 20: & \verb@    /* 1970/01/01 からの秒数に変換 */@\\
+ 21: & \verb@    ntp_time = ntohl(*(int *)msg) - 2208988800U;@\\
+ 22: & \verb@    printf("Now: %s\n", ctime(&ntp_time));@\\
+ 23: & \verb@    fflush(stdout);@\\
+ 24: & \verb@}@
+  \end{tabular}}\centerline{\fbox{\box0}}
+  \caption{その他の処理 : sntpc.c}
+  \label{sntpc1}
+\end{figure}%
+
+18行目から24行目までは，時刻表示のための\verb|print_ntp_time|関数を定
+義している部分です．この関数はPreccsのプロセスから呼び出されます．
+
+\section{実行例}
+これらのファイルをコンパイルする手順は以下のとおりです．
+\begin{verbatim}
+% prcc sntpc.prc >> sntpc.out.c 
+% gcc -o sntpc sntpc.out.c sntpc.c
+\end{verbatim}
+
+それでは，実際にSNTPクライアントを実行してみましょう．以下のような実行
+結果が得られれば成功です．
+\begin{verbatim}
+% ./sntpc
+Now: Tue Oct 11 18:00:36 2005
+%
+\end{verbatim}
+
+\end{document}
