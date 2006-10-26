@@ -17,7 +17,7 @@ tut/tut.pdf : tut/tut.dvi
 	cd tut && ${DVIPDFM} tut
 
 tut/tut.dvi : tut/tut.tex
-	cd tut && ../${TEX} tut
+	cd tut && ../${TEX} tut && ../${TEX} tut
 
 clean	:
 	rm tut/tut.dvi tut/tut.pdf
