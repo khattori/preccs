@@ -88,6 +88,11 @@ p.policy {
 	padding-bottom	: 5px;
 }
 
+p.backto {
+	font-size		: 0.75em;
+	margin-left		: 10px;
+}
+
 /* ƒƒjƒ…[‚Ìİ’è */
 p.menu {
 	font-size		: 0.75em;
