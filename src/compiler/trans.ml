@@ -179,7 +179,6 @@ and trans_proc env cont = function
         | P.Select(r,i) ->
             trans_exp env (
               fun x ->
-                let t = C.genid "t" in
                   trans_exp_list env (
                     fun vs ->
                       C.Prim(C.Update,vs@[x],[],[trans_proc env cont p]),ref []

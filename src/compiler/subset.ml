@@ -83,7 +83,6 @@ let subset r1 r2 =
   let follow2 = N.followpos r2' in
   let ltbl = Ht.create(13) in  (* Pos.t -> Ls.t のテーブル *)
   let marked = ref [] in
-  let states = Stack.create() in
     (** CPs.t -> C.t -> Ps.t *) 
   let rec check lm = function
       [] -> ()

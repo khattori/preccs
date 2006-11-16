@@ -701,8 +701,8 @@ let generate2_ t ts =
     ) ps fs in
   let re = List.fold_left (fun r' r -> R.ALT(r',r)) (List.hd rs') (List.tl rs') in
   let re' = R.SEQ(R.posify (T.regexify t),R.CHARS(Pos.create Cset.fin)) in
-  let init,(ps_map,ls_map) as dfa1 = gendfa re in   (* パタンマッチのDFA *)
-  let init',(ps_map',ls_map') as dfa2 = gendfa re' in (* マッチ済みのDFA *)
+  let init,(ps_map,ls_map) = gendfa re in   (* パタンマッチのDFA *)
+  let init',(ps_map',ls_map') = gendfa re' in (* マッチ済みのDFA *)
   let init'',ps_map'',ls_map'',chkd = prod_dfa (init,ps_map,ls_map) (init',ps_map') in
 (* DFAの構造
  *           init   : PosSet.t    --- 初期状態

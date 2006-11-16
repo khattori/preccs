@@ -1,4 +1,4 @@
-type Sockets = {h:int;in:<string>;out:<string>}
+type Sockets = {in:<string>;out:<string>}
 
 //
 // Echoサーバー
@@ -15,6 +15,7 @@ proc EchoSrv(lsock:<Sockets>) =
 		         EchoSrv(lsock) )
 
 proc EchoProc(s:Sockets) =
-    s.in?msg;
+    stdout!"Echo\n";
+    s.in?msg; stdout!"recvd\n";
     ( msg @ "" -> stdout!"closed\n"; stop
           | _  -> s.out!msg; EchoProc(s) )

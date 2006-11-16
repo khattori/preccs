@@ -122,18 +122,17 @@ let getStr () = String.sub (!strBuf) 0 (!strEnd)
 (** 16進文字列からバイト列へ変換 *)
 let string_of_hex s = 
   let len = String.length s in
-  let check = if (len mod 2) <> 0 then raise (Invalid_argument "s") else true in
   let buf = Buffer.create (len/2) in
   let rec next_char s p =
-    if p >= len then
-      ()
-    else
+    if p < len then
       let ch = String.sub s p 2 in
       let c = Char.chr (Scanf.sscanf ch "%x" (fun i -> i)) in
-      let () = Buffer.add_char buf c in
-	next_char s (p+2)
+        Buffer.add_char buf c;
+        next_char s (p+2)
   in
-  let () = next_char s 0 in
+    if (len mod 2) <> 0 then
+      raise (Invalid_argument "s");
+    next_char s 0;
     Buffer.contents buf
 
 }

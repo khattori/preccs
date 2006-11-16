@@ -37,10 +37,9 @@ OBJS =	symbol.cmo	\
 	main.cmo
 
 DEPEND += lexer.ml parser.ml
+INCLUDE=
 
 all: $(DEPEND) $(OBJS) $(TARGET)
-
-include .depend
 
 # Build an executable typechecker
 $(TARGET):	$(OBJS)
@@ -75,3 +74,5 @@ clean::
 # Rebuild intermodule dependencies
 depend:: $(DEPEND)
 	ocamldep $(INCLUDE) *.mli *.ml > .depend
+
+include .depend
