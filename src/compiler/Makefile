@@ -26,6 +26,10 @@ OBJS =	symbol.cmo	\
 	parser.cmo	\
 	syntax.cmo	\
 	check.cmo	\
+	tcond.cmo	\
+	dstate.cmo	\
+	dtrans.cmo	\
+	dtable.cmo	\
 	dfa.cmo	\
 	pi.cmo		\
 	cps.cmo	\
@@ -34,6 +38,7 @@ OBJS =	symbol.cmo	\
 	emit.cmo	\
 	trans.cmo	\
 	semant.cmo	\
+	version.cmo	\
 	main.cmo
 
 DEPEND += lexer.ml parser.ml

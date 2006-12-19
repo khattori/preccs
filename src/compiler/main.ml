@@ -14,11 +14,6 @@ let debugMode  = ref false   (* デバッグ出力フラグ     *)
 let error s =
   print_string (Sys.executable_name ^ ": " ^ s); raise (Exit 1)
 
-(* バージョン情報の定義 *)
-let version = "0.2.0a1"
-let verMsg  = "Preccs Compiler Ver." ^ version ^ ".\n" ^
-  "Copyright (C) 2006 Kenta Hattori\n"
-
 (* 使用法 *)
 let usageMsg = "Usage: prcc <options> <source-files>\n" ^
   "Options:"
@@ -27,7 +22,7 @@ let usageMsg = "Usage: prcc <options> <source-files>\n" ^
 let argDefs = [
   ( (* バージョン情報を表示 *)
     "-v",
-    Arg.Unit(fun () -> print_string verMsg; raise (Exit 0)),
+    Arg.Unit(fun () -> print_string Version.message; raise (Exit 0)),
     "Display version."
   );
   ( (* デバッグ情報を追加 *)

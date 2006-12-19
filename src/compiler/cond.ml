@@ -5,7 +5,6 @@
    @version $Id: cond.ml,v 1.2 2006/06/21 00:14:14 hattori Exp $
 *)
 module P = Prop
-module PosSet = Set.Make(Pos)
 module Lm = Map.Make(Label)
 
 (* 遷移条件の型定義 *)
@@ -34,7 +33,6 @@ let is_true = function
     Const(b) -> b
   | Prop(p)  -> P.taut p
 
-
 (*
  * 遷移条件のラベルのα変換を行う
  * 
@@ -51,22 +49,11 @@ let alpha lm = function
                         | v -> v
                     ) p)
 
-(*
- * 遷移条件リストから命題論理式の組み合わせを抽出
- * 
- *   引　数：cs : Cond.t list --- 遷移条件の組のリスト
- * 
- *   戻り値：生成した論理式のリスト：Cond.t list
- *)
-let get_vars cs = 
-  let ps = List.fold_left (                      (* 命題変数を抽出 *)
-    fun ps -> function
-        Const true -> ps
-      | Prop p     -> P.get_vars p @ ps
-      | _          -> assert false (* Const false は除去済み *)
-  ) [] cs in
-  let ps' = List.fold_left (                     (* 重複を取り除く *)
-    fun r p -> if List.mem p r then r else p::r
-  ) [] ps
-  in List.map (fun p -> Prop p) (P.gen_comb ps') (* 組み合わせを生成 *)
+let print_var = function
+    Counter l -> Printf.printf "C(%d" l; print_string ")"
+  | Value l   -> Printf.printf "V(%d" l; print_string ")"
 
+let show = function
+    Const true -> print_string "T"
+  | Const false -> print_string "F"
+  | Prop p -> Prop.show print_var p

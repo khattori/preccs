@@ -7,7 +7,7 @@
 # $Id$
 #
 
-prc_version=0.2.0a1
+prc_version=0.2.1
 prc_blddir=build
 prc_pkglist=pkglist
 
@@ -28,40 +28,51 @@ for i in sample/*; do
 done
 (cd test; make clean-all)
 
-# パッケージリストを作成
-echo "create package list..."
-cat<<EOF|grep -v '*' >"$prc_blddir/$prc_pkglist"
-$prc_pkgname/README
-$prc_pkgname/Makefile
-$prc_pkgname/src/compiler/Makefile
-`for i in src/compiler/*.ml src/compiler/*.mly src/compiler/*.mll; do
-   echo $prc_pkgname/$i
- done`
-$prc_pkgname/src/runtime/Makefile
-`for i in src/runtime/*.c src/runtime/*.h src/runtime/*.def; do
-   echo $prc_pkgname/$i
- done`
-$prc_pkgname/test/Makefile
-`for i in test/*.prc test/*.c test/*.h; do
-   echo $prc_pkgname/$i
- done`
-`for i in sample/*; do
-   echo $prc_pkgname/$i/Makefile
-   for j in $i/*.prc $i/*.c $i/*.h; do
-     echo "$prc_pkgname/$j"
-   done
-done`
-EOF
+# ファイルをコピー
+echo "copy files..."
+mkdir $prc_pkgdir/src
+mkdir $prc_pkgdir/src/compiler
+mkdir $prc_pkgdir/src/runtime
+mkdir $prc_pkgdir/sample
+for i in sample/*; do
+    mkdir $prc_pkgdir/$i
+done
+mkdir $prc_pkgdir/test
 
-# パッケージ作成用のシンボリックリンクを生成
-echo "create symbolic link..."
-ln -s src $prc_pkgdir/src
-ln -s sample $prc_pkgdir/sample
-ln -s test $prc_pkgdir/test
-ln -s README $prc_pkgdir/README
-ln -s Makefile $prc_pkgdir/Makefile
+cp README   $prc_pkgdir/README
+cp Makefile $prc_pkgdir/Makefile
+
+for i in \
+    src/compiler/Makefile \
+    src/compiler/*.ml src/compiler/*.mly \
+    src/compiler/*.mll \
+    src/runtime/Makefile \
+    src/runtime/*.c \
+    src/runtime/*.h \
+    src/runtime/*.def \
+    test/Makefile \
+    test/*.prc \
+    test/*.c \
+    test/*.h
+  do
+  if test -f $i; then
+      cp $i $prc_pkgdir/$i
+  fi
+done
+
+sed -e "s/x.x.x/$prc_version/" src/compiler/version.ml \
+    > $prc_pkgdir/src/compiler/version.ml
+
+for i in sample/*; do
+    for j in $i/Makefile $i/*.prc $i/*.c $i/*.h; do
+	if test -f $j; then
+	    cp $j $prc_pkgdir/$j
+	fi
+    done
+done
 
 # パッケージ作成
 echo "create package..."
-(cd $prc_blddir; tar zcvf $prc_pkgname.tar.gz -T $prc_pkglist)
+(cd $prc_blddir; tar zcvf $prc_pkgname.tar.gz $prc_pkgname)
+
 echo "done."

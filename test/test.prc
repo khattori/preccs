@@ -4,7 +4,8 @@ C}
 
 import "test1.prc"
 import "test2.prc"
-import "test3.prc"
+//import "test3.prc"
+//import "test4.prc"
 
 var ok:<int>
 var ng:<int>
@@ -15,7 +16,8 @@ proc Main() =
     var end:<bool>;
     Test1(end,ok,ng); end?x;
     Test2(end,ok,ng); end?x;
-    Test3(end,ok,ng); end?x;
+//    Test3(end,ok,ng); end?x;
+//    Test4(end,ok,ng); end?x;
     res!true;
     stop
 

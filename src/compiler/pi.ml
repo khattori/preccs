@@ -244,7 +244,7 @@ and trans_patns ty v patns =
     ) patns ) in
     match ty with
         T.STRING  -> Prim(Match,[v;Int (Dfa.generate rs)]),binds
-      | T.REGEX r -> Prim(Match,[v;Int (Dfa.generate2 r rs)]),binds
+      | T.REGEX r -> Prim(Match,[v;Int (Dfa.generate2 rs r)]),binds
       | _ -> assert false
 
 and trans_case v patns =

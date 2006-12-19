@@ -81,6 +81,10 @@ let rec array r n =
   else if n==1 then r
   else              SEQ(r,array r (n-1))
 
+(** 正規表現リストの要素をALTで連結する *)
+let concat rs =
+  List.fold_left (fun r' r -> ALT(r',r)) (List.hd rs) (List.tl rs)
+
 (** 位置情報を付加したものを取得する *)
 let rec posify = function
     EPS        -> EPS

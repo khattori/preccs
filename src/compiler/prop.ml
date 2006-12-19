@@ -56,36 +56,42 @@ let taut p =
   in
     wang ([],[],[p],[])
 
-(*
- * 命題変数のリストから，すべての組合せの命題論理式を生成する
- * 
- *   引　数：---: 'a list --- 命題変数のリスト
- * 
- *   戻り値：生成した命題論理式のリスト
- * 
- *)
-let rec gen_comb = function
-    []    -> []
-  | [x]   -> [Atom x;Neg(Atom x)]
-  | x::xs ->
-      let ps = gen_comb xs in
-        List.map (fun p -> Conj(Atom x,p)) ps
-        @ List.map (fun p -> Conj(Neg(Atom x),p)) ps
 
 (*
- * 命題変数のリストを取得する
- * 
- *   引　数：p: Prop.t --- 命題論理式
- * 
- *   戻り値：命題変数のリスト
- * 
+ * Negation Normal Formに変換する
  *)
-let get_vars p =
-  let rec trav vs = function
-      Atom v      -> v::vs
-    | Neg p       -> trav vs p
-    | Conj(p1,p2) -> trav (trav vs p1) p2
-    | Disj(p1,p2) -> trav (trav vs p1) p2
+let rec nnf = function
+    Atom a -> Atom a
+  | Neg(Atom a) -> Neg(Atom a)
+  | Neg(Neg p) -> nnf p
+  | Neg(Conj(p,q)) -> nnf (Disj(Neg p,Neg q))
+  | Neg(Disj(p,q)) -> nnf (Conj(Neg p,Neg q))
+  | Conj(p,q) -> Conj(nnf p, nnf q)
+  | Disj(p,q) -> Disj(nnf p, nnf q)
+      
+(*
+ * 積和標準形(Disjunctive Normal Form)に変換する
+ *)
+let dnf p = 
+  let rec distrib = function
+      p,Disj(q,r)  -> Disj(distrib(p,q),distrib(p,r))
+    | Disj(q,r),p  -> Disj(distrib(q,p),distrib(r,p))
+    | p,q -> Conj(p,q) in
+  let rec dnf_ = function
+      Conj(p,q) -> distrib(dnf_ p,dnf_ q)
+    | Disj(p,q) -> Disj(dnf_ p,dnf_ q)
+    | p -> p
   in
-    trav [] p
-
+    dnf_ (nnf p)
+    
+let rec show f = function
+    Atom a -> f a
+  | Neg p  -> print_string "~("; show f p; print_string ")"
+  | Conj(p,q) ->
+      print_string "(";
+      show f p; print_string "^"; show f q;
+      print_string ")"
+  | Disj(p,q) ->
+      print_string "(";
+      show f p; print_string "|"; show f q;
+      print_string ")"

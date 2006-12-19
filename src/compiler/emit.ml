@@ -77,7 +77,7 @@ let rec emit rmap (cexp,fv) =
         emitPrim rm (p,ops,rs,cs)
   | C.Fix(bs,c) ->
       emitHeader();
-      Dfa.emit();
+      Dtable.emit();
       (* 関数宣言出力 *)
       List.iter (fun (f,_,_) -> emitFndecl (Symbol.name f)) bs;
       List.iter emitFbind bs;  (* 各関数定義の出力 *)

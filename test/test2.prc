@@ -57,7 +57,7 @@ proc Test2(end:<bool>,ok:<int>,ng:<int>) =
     var x:{{l:octet;m:octet[l]}};
     ( x @ y:{l:octet;m:octet*} -> ok!1
 	 | _ -> ng!1 );
-
+/*
     var x:{{l:octet;m:octet[l]}};
     ( x @ y:octet* -> ok!1 );
 
@@ -114,5 +114,34 @@ proc Test2(end:<bool>,ok:<int>,ng:<int>) =
     ( x @ "h" -> ng!1
         | _ -> ok!1 );
 
+    var x="";
+    ( x @ y:"a"* -> ok!1
+        | _ -> ng!1 );
+    ( x @ y:{a:"a"*} -> ok!1;
+          ( y.a @ "" -> ok!1
+                | _  -> ng!1 )
+        | _ -> ng!1);
+
+    var x="aaaabbb";
+    ( x @ y:{a:"a"*;b:"b"*} ->
+          ( y.a @ "aaaa" -> ok!1
+                | _ -> ng!1 );
+          ( y.b @ "bbb" -> ok!1
+                | _ -> ng!1 )
+        | _ -> ng!1 );
+
+    var x="";
+    ( x @ y:{a:"a"*;b:"b"*} ->
+          ( y.a @ "" -> ok!1
+                | _ -> ng!1 );
+          ( y.b @ "" -> ok!1
+                | _ -> ng!1 )
+        | _ -> ng!1 );
+
+    var x="0105FF"h;
+    ( x @ y:{l:octet;m:octet;n:(octet[l]|octet[m])} -> ok!1
+        | _ -> ng!1 );
+
+*/
     end!true
 

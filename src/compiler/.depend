@@ -3,14 +3,22 @@ check.cmo: types.cmo syntax.cmo regex.cmo error.cmo env.cmo
 check.cmx: types.cmx syntax.cmx regex.cmx error.cmx env.cmx 
 closure.cmo: symbol.cmo cps.cmo 
 closure.cmx: symbol.cmx cps.cmx 
-cond.cmo: prop.cmo pos.cmo label.cmo 
-cond.cmx: prop.cmx pos.cmx label.cmx 
+cond.cmo: prop.cmo label.cmo 
+cond.cmx: prop.cmx label.cmx 
 cps.cmo: symbol.cmo 
 cps.cmx: symbol.cmx 
-dfa.cmo: types.cmo subset.cmo regex.cmo prop.cmo pos.cmo nfa.cmo label.cmo \
-    cset.cmo cond.cmo 
-dfa.cmx: types.cmx subset.cmx regex.cmx prop.cmx pos.cmx nfa.cmx label.cmx \
-    cset.cmx cond.cmx 
+dfa.cmo: types.cmo tcond.cmo subset.cmo regex.cmo prop.cmo pos.cmo nfa.cmo \
+    label.cmo dtrans.cmo dtable.cmo dstate.cmo cset.cmo cond.cmo 
+dfa.cmx: types.cmx tcond.cmx subset.cmx regex.cmx prop.cmx pos.cmx nfa.cmx \
+    label.cmx dtrans.cmx dtable.cmx dstate.cmx cset.cmx cond.cmx 
+dstate.cmo: pos.cmo 
+dstate.cmx: pos.cmx 
+dtable.cmo: types.cmo tcond.cmo pos.cmo label.cmo dtrans.cmo dstate.cmo \
+    cset.cmo 
+dtable.cmx: types.cmx tcond.cmx pos.cmx label.cmx dtrans.cmx dstate.cmx \
+    cset.cmx 
+dtrans.cmo: tcond.cmo pos.cmo label.cmo dstate.cmo cset.cmo 
+dtrans.cmx: tcond.cmx pos.cmx label.cmx dstate.cmx cset.cmx 
 emit.cmo: symbol.cmo rmap.cmo dfa.cmo cps.cmo 
 emit.cmx: symbol.cmx rmap.cmx dfa.cmx cps.cmx 
 env.cmo: types.cmo symbol.cmo regex.cmo 
@@ -19,10 +27,10 @@ error.cmo: types.cmo symbol.cmo
 error.cmx: types.cmx symbol.cmx 
 lexer.cmo: symbol.cmo parser.cmi error.cmo 
 lexer.cmx: symbol.cmx parser.cmx error.cmx 
-main.cmo: semant.cmo parser.cmi lexer.cmo error.cmo dfa.cmo 
-main.cmx: semant.cmx parser.cmx lexer.cmx error.cmx dfa.cmx 
-nfa.cmo: regex.cmo prop.cmo pos.cmo cset.cmo cond.cmo 
-nfa.cmx: regex.cmx prop.cmx pos.cmx cset.cmx cond.cmx 
+main.cmo: version.cmo semant.cmo parser.cmi lexer.cmo error.cmo dfa.cmo 
+main.cmx: version.cmx semant.cmx parser.cmx lexer.cmx error.cmx dfa.cmx 
+nfa.cmo: regex.cmo prop.cmo pos.cmo label.cmo cset.cmo cond.cmo 
+nfa.cmx: regex.cmx prop.cmx pos.cmx label.cmx cset.cmx cond.cmx 
 parser.cmo: types.cmo syntax.cmo symbol.cmo regex.cmo error.cmo parser.cmi 
 parser.cmx: types.cmx syntax.cmx symbol.cmx regex.cmx error.cmx parser.cmi 
 pi.cmo: types.cmo syntax.cmo symbol.cmo regex.cmo error.cmo dfa.cmo 
@@ -39,6 +47,8 @@ subset.cmo: regex.cmo pos.cmo nfa.cmo label.cmo cset.cmo
 subset.cmx: regex.cmx pos.cmx nfa.cmx label.cmx cset.cmx 
 syntax.cmo: types.cmo symbol.cmo error.cmo 
 syntax.cmx: types.cmx symbol.cmx error.cmx 
+tcond.cmo: prop.cmo label.cmo cond.cmo 
+tcond.cmx: prop.cmx label.cmx cond.cmx 
 trans.cmo: types.cmo symbol.cmo pi.cmo env.cmo cps.cmo 
 trans.cmx: types.cmx symbol.cmx pi.cmx env.cmx cps.cmx 
 types.cmo: symbol.cmo subset.cmo regex.cmo label.cmo cset.cmo 

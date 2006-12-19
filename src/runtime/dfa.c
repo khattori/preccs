@@ -41,7 +41,13 @@ int __dmatch__(int val, u_int st) {
 
     p      = STRPTR(val);              /* データ   */
     ep     = STRPTR(val)+STRLEN(val);  /* 終了位置 */
+
     if (p==ep) {
+        if (act == ACT_RECORD) {
+            ract_t *ract = &__prc__ract_table[idx];
+            __prc__lbl_ptr[ract->lid] = p;
+        }
+
         act = ACT_FINAL;
         idx = state->fidx;
     }
@@ -57,12 +63,12 @@ int __dmatch__(int val, u_int st) {
         }
         act = mact->nact;
         idx = mact->nidx;
-        
+        p++;          /* 文字ポインタの位置を進める */
         break;
     }
     case ACT_TRANS: { /* 遷移処理 */
         state = &__prc__state_table[idx];
-        p++;          /* 文字ポインタの位置を進める */
+/*        p++;          /* 文字ポインタの位置を進める */
         if (p==ep) {
             act = ACT_FINAL;
             idx = state->fidx;
@@ -92,13 +98,11 @@ int __dmatch__(int val, u_int st) {
         u_char lid = ract->lid;
         int i;
 
-        if (__prc__lbl_ptr[lid] == NULL) { /* 初回のみ記録 */
-            __prc__lbl_value[lid] = 0;
-            __prc__lbl_ptr[lid] = p;
-            for (i = 0; i < ract->lsiz; i++) {
-                __prc__lbl_value[lid]
-                    = (__prc__lbl_value[lid]<<8) + __prc__lbl_ptr[lid][i];
-            }
+        __prc__lbl_value[lid] = 0;
+        __prc__lbl_ptr[lid] = p;
+        for (i = 0; i < ract->lsiz; i++) {
+            __prc__lbl_value[lid]
+                = (__prc__lbl_value[lid]<<8) + __prc__lbl_ptr[lid][i];
         }
         act = ract->nact;
         idx = ract->nidx;
