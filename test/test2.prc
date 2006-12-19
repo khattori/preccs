@@ -57,7 +57,7 @@ proc Test2(end:<bool>,ok:<int>,ng:<int>) =
     var x:{{l:octet;m:octet[l]}};
     ( x @ y:{l:octet;m:octet*} -> ok!1
 	 | _ -> ng!1 );
-/*
+
     var x:{{l:octet;m:octet[l]}};
     ( x @ y:octet* -> ok!1 );
 
@@ -142,6 +142,5 @@ proc Test2(end:<bool>,ok:<int>,ng:<int>) =
     ( x @ y:{l:octet;m:octet;n:(octet[l]|octet[m])} -> ok!1
         | _ -> ng!1 );
 
-*/
     end!true
 

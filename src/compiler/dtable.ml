@@ -176,22 +176,17 @@ let create init_st init_ls st_map =
     let num,field_list = Accept.find (Dstate.to_posset st) in
       fact_table#add (T.encode_field_list label_map field_list,num)
   in
-  let init = ref (state_index init_st) in
+  let next = create_rcd_next (ACT_TRANS,state_index init_st) init_ls in
+  let init_st' = Dstate.create() in
     DstateMap.iter (
       fun st tm ->
         let next = create_next tm in
         let fidx = create_final st in
           create_stent st (next,fidx);
     ) st_map;
-    if not (LabelSet.is_empty init_ls) then begin
-      let next,_ = Ht.find state_table (state_index init_st) in
-      let next' = create_rcd_next next init_ls in
-      let init_st' = Dstate.create() in
-        create_stent init_st' (next',0);
-        init := state_index init_st';
-    end;
+    create_stent init_st' (next,0);
     update_max_label (Label.map_size label_map);
-    !init
+    state_index init_st'
 
 (*
  * DFA‚Ìo—Í

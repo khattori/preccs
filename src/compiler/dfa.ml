@@ -161,7 +161,7 @@ let skipdfa (init_st1,init_ls1,st_map1) (init_st2,init_ls2,st_map2) =
         let dt1 = DstateMap.find s1 st_map1 in  (* 遷移テーブル *)
         let dt2 = DstateMap.find s2 st_map2 in
         let dt',lm',pairs' = Dtrans.skip dt1 dt2 lm in
-          if Dtrans.is_empty dt' then
+          if Dtrans.is_empty dt' && DstateMap.mem s1 st_map then
             make st_map lm ((s1,s2)::chkd) pairs
           else
             make (DstateMap.add s1 dt' st_map) lm' ((s1,s2)::chkd) (pairs'@pairs)
