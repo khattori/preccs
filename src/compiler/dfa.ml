@@ -87,12 +87,6 @@ let decomp clps =
   ) [] clps in
   (* 遷移条件リストから命題論理式の組み合わせを抽出 *)
   let cs = C.gen_conds vs in
-(*
-    if cs = [] then 
-      [List.fold_left (
-         fun (ts,ls,ps) (_,ls',p) -> ts,LabelSet.union ls ls',PosSet.add p ps
-       ) (TcondSet.empty,LabelSet.empty,PosSet.empty) clps];
-*)
     (* 各遷移条件をチェック *)
     List.filter (fun (ts,ls,ps) -> not (PosSet.is_empty ps)) (
       List.fold_left (
@@ -167,7 +161,10 @@ let skipdfa (init_st1,init_ls1,st_map1) (init_st2,init_ls2,st_map2) =
         let dt1 = DstateMap.find s1 st_map1 in  (* 遷移テーブル *)
         let dt2 = DstateMap.find s2 st_map2 in
         let dt',lm',pairs' = Dtrans.skip dt1 dt2 lm in
-          make (DstateMap.add s1 dt' st_map) lm' ((s1,s2)::chkd) (pairs'@pairs)
+          if Dtrans.is_empty dt' then
+            make st_map lm ((s1,s2)::chkd) pairs
+          else
+            make (DstateMap.add s1 dt' st_map) lm' ((s1,s2)::chkd) (pairs'@pairs)
   in
     init_st1,init_ls1,make DstateMap.empty init_lm [] [init_st1,init_st2]
 
@@ -189,8 +186,6 @@ let generate ts =
   let re = R.concat rs' in
   let init,init_ls,st_map = gendfa re
   in
-    show (init,st_map);
-    assert false;
     Dtable.Accept.register ps fs;
     Dtable.create init init_ls st_map
 

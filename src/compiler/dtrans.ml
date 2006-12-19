@@ -28,6 +28,7 @@ module S = Set.Make(E)
 
 type t = S.t
 let empty = S.empty
+let is_empty = S.is_empty
 let create cs ts ls st = S.add (cs,ts,ls,st) S.empty
 
 let tmap f s =
@@ -61,8 +62,10 @@ let cset_list s =
 
 (* 遷移可能かどうかの判定 *)
 let transable (cs1,ts1,ls1,ns1) (cs2,ts2,ls2,ns2) lm =
-  not (Cset.is_empty (Cset.inter cs1 cs2))
-  && TcondSet.subset (tmap (Tcond.alpha lm) ts2) (tmap (Tcond.alpha lm) ts1)
+  let ts1' = tmap (Tcond.alpha lm) ts1 in
+  let ts2' = tmap (Tcond.alpha lm) ts2 in
+    not (Cset.is_empty (Cset.inter cs1 cs2))
+    && (TcondSet.subset ts1' ts2' || TcondSet.subset ts2' ts1')
     
 (*
  * スキップ処理を施す
