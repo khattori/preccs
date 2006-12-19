@@ -65,49 +65,7 @@ module TM = Map.Make(TS)
  * 
  *)
 let decomp clps =
-  if clps = [] then [];
-  (* 遷移条件リストから命題論理式の組み合わせを抽出 *)
-  let cs = C.get_vars clps in
-    if cs = [] then 
-      [List.fold_left (
-         fun (ts,ls,ps) (_,ls',p) -> ts,LabelSet.union ls ls',PosSet.add p ps
-       ) (TcondSet.empty,LabelSet.empty,PosSet.empty) clps];
-    (* 各遷移条件をチェック *)
-    List.filter (fun (_,(ps,ls)) -> not (PosSet.is_empty ps)) (
-
-      List.fold_left (
-        fun tlps c ->
-          List.fold_left (
-            fun (ts,ls,ps) (c',ls',p) ->
-              if C.is_true(C.impl c c') then
-                ts,LabelSet.union ls ls',PosSet.add p ps
-              else
-                ts,ls,ps
-          ) (to_tcondset c,LabelSet.empty,PosSet.empty) clps)
-
-
-  let 
-  (* {<A1,Q1>,...}に論理式<B1,q1>を分配していく *)
-  let dist cs (c,ls,p) =
-    List.fold_left (
-      fun cs' (c',ls',ps') ->
-        let cs'' = Nfa.normalize
-          [
-            (Cond.conj(c',c),LabelSet.union ls' ls,PosSet.add p ps');
-            (Cond.conj(c',(Cond.neg c)),ls',ps');
-            (Cond.conj((Cond.neg c'),c),ls,PosSet.singleton p)
-          ] in
-          cs''@cs'
-    ) [] cs in
-  let to_stmap sm (c,ls,ps) =
-    let st = Dstate.of_posset ps in
-      if DstateMap.mem st sm then
-        let c',ls' = DstateMap.find st sm in
-          DstateMap.add st (Cond.disj(c,c'),LabelSet.union ls ls') sm
-      else
-        DstateMap.add st (c,ls) sm
-  in
-  let to_tslist = function
+  let to_tcondset = function
       C.Prop(p) ->
         let rec trav ts = function
             P.Atom(C.Counter(l)) -> TS.add (Tcond.CntZero l) ts
@@ -116,32 +74,38 @@ let decomp clps =
           | P.Neg(P.Atom(C.Value(l)))   -> TS.add (Tcond.ValNonz l) ts
           | P.Conj(p1,p2) -> trav (trav ts p1) p2
           | _ -> assert false
-        in let rec disj = function
-          | P.Disj(p1,p2) -> disj p1 @ disj p2
-          | p -> [trav TS.empty p]
         in
-          disj (P.dnf p)
-    | C.Const(true) -> [TS.empty]
+	  trav TS.empty p
+    | C.Const(true) -> TS.empty
     | _             -> assert false
   in
-  let to_tclist st (c,ls) tls =
-    let tls' = List.map (fun ts -> ts,ls,st) (to_tslist c) in
-      tls' @ tls
-  in
-    match cs with
-        [] -> []
-      | (c,ls,p)::cs' ->
-          let cs = List.fold_left dist [c,ls,PosSet.singleton p] cs' in
-            List.iter (fun (c,ls,ps) -> Cond.show c; print_newline()) cs;
-          let sm = List.fold_left to_stmap DstateMap.empty cs in
-          let ret = DstateMap.fold to_tclist sm [] in
-            List.iter (
-              fun (ts,ls,st) ->
-                Dstate.show st;
-                TS.iter (fun tc -> Tcond.show tc) ts;
-                print_newline() ) ret;
-            print_string "-----\n";
-            ret
+  let vs = List.fold_left (
+    fun vs (c,_,_) ->
+      List.fold_left
+	(fun vs' v -> if List.mem v vs' then vs' else v::vs')
+	vs (C.get_vars c)
+  ) [] clps in
+  (* 遷移条件リストから命題論理式の組み合わせを抽出 *)
+  let cs = C.gen_conds vs in
+(*
+    if cs = [] then 
+      [List.fold_left (
+         fun (ts,ls,ps) (_,ls',p) -> ts,LabelSet.union ls ls',PosSet.add p ps
+       ) (TcondSet.empty,LabelSet.empty,PosSet.empty) clps];
+*)
+    (* 各遷移条件をチェック *)
+    List.filter (fun (ts,ls,ps) -> not (PosSet.is_empty ps)) (
+      List.fold_left (
+        fun tlps c ->
+          (List.fold_left (
+            fun (ts,ls,ps) (c',ls',p) ->
+              if C.is_true(C.impl c c') then
+                ts,LabelSet.union ls ls',PosSet.add p ps
+              else
+                ts,ls,ps
+	  ) (to_tcondset c,LabelSet.empty,PosSet.empty) clps)::tlps
+      ) [] cs)
+
 
 (*
  * 正規表現からDFAを構成する
@@ -169,8 +133,8 @@ let gendfa re =
             let nexts = PosSet.fold (f follow) (Dstate.to_posset st) []
             in
               List.fold_left (
-                fun tm (ts,ls,st) ->
-                  Dtrans.add (Cset.create a) ts ls st tm
+                fun tm (ts,ls,ps) ->
+                  Dtrans.add (Cset.create a) ts ls (Dstate.of_posset ps) tm
               ) tm (decomp nexts)
         ) Dtrans.empty (N.ps2cset (Dstate.to_posset st)) in
         make

@@ -33,6 +33,18 @@ let is_true = function
     Const(b) -> b
   | Prop(p)  -> P.taut p
 
+let get_vars = function
+    Const _ -> []
+  | Prop p  -> P.get_atoms p
+
+let rec gen_conds = function
+    [] -> [Const true]
+  | v::vs ->
+      let cs  = gen_conds vs in
+      let vs1 = List.map (fun c -> conj(Prop(P.Atom v),c)) cs in
+      let vs2 = List.map (fun c -> conj(Prop(P.Neg (P.Atom v)),c)) cs in
+	vs1 @ vs2
+
 (*
  * 遷移条件のラベルのα変換を行う
  * 

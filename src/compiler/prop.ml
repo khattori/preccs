@@ -56,6 +56,16 @@ let taut p =
   in
     wang ([],[],[p],[])
 
+(*
+ * 原子命題のリストを取得する
+ *)
+let get_atoms p =
+  let rec trav atoms = function
+      Atom a -> if List.mem a atoms then atoms else a::atoms
+    | Neg p  -> trav atoms p
+    | Conj(p1,p2) | Disj(p1,p2) -> trav (trav atoms p1) p2
+  in
+    trav [] p
 
 (*
  * Negation Normal Formに変換する
