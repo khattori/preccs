@@ -46,11 +46,21 @@ int __dmatch__(int val, u_int st) {
     case ACT_MATCH: { /* 文字列マッチ */
         int n = *p >> 5;
         u_int b = 0x1 << (*p % 32);
+        mact_t *mact;
+        u_int *cset;
 
-        mact_t *mact = &__prc__mact_table[idx++];
-        while (!(mact->cset[n] & b)) {
-            mact = &__prc__mact_table[idx++];
-        }
+        do {
+            mact = &__prc__mact_table[idx];
+            cset = __prc__cset_table[mact->cidx];
+            idx = mact->midx;
+        } while (!(cset[n] & b));
+        act = mact->nact;
+        idx = mact->nidx;
+        p++;          /* 文字ポインタの位置を進める */
+        break;
+    }
+    case ACT_SKIP: { /* 文字スキップ */
+        mact_t *mact = &__prc__mact_table[idx];
         act = mact->nact;
         idx = mact->nidx;
         p++;          /* 文字ポインタの位置を進める */
@@ -72,6 +82,7 @@ int __dmatch__(int val, u_int st) {
         fact_t *fact = &__prc__fact_table[idx];
         int *retval;
 
+        assert(idx >= 0);
         retval = (int*)__record__(2, TOPINT(fact->sel), 0);
         val = (int)gc_forward((int*)val);
         if (fact->cons) {

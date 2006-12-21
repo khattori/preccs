@@ -186,6 +186,7 @@ let generate ts =
   let re = R.concat rs' in
   let init,init_ls,st_map = gendfa re
   in
+    if not (Subset.subset R.any (R.concat rs)) then raise Not_exhaustive;
     Dtable.Accept.register ps fs;
     Dtable.create init init_ls st_map
 

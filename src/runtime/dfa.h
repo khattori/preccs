@@ -20,6 +20,7 @@ typedef unsigned char u_char;
 typedef enum {
     ACT_NULL,          /* 無処理 */
     ACT_MATCH,         /* 文字集合マッチ処理 */
+    ACT_SKIP,          /* スキップ処理 */
     ACT_TRANS,         /* 状態遷移 */
     ACT_FINAL,         /* 終了処理 */
     ACT_RECORD,        /* ラベル記録処理 */
@@ -53,8 +54,11 @@ typedef struct fact_ {
 typedef struct mact_ {
     act_t nact;      /* 次処理         */
     int   nidx;      /* 次インデックス */
-    u_int cset[8];   /* 文字集合       */
+    int   midx;      /* マッチ失敗時 */
+    int   cidx;      /* 文字集合インデックス */
 } mact_t;
+typedef u_int cset_t[8];
+
 /*
  * ラベル記録処理テーブル
  */
@@ -86,6 +90,7 @@ typedef struct cact_ {
 extern state_t __prc__state_table[];
 extern fact_t __prc__fact_table[];
 extern mact_t __prc__mact_table[];
+extern cset_t __prc__cset_table[];
 extern ract_t __prc__ract_table[];
 extern cond_t __prc__cond_table[];
 extern cact_t __prc__cact_table[];

@@ -30,20 +30,22 @@ module Accept = struct
         
   (* 最小の受理番号とフィールドリストを探す *)
   let find ps =
-    PosSet.fold (
-      fun p (n,fs) ->
-        let n',fs' = try Ht.find table p with Not_found -> n,fs in
-          if n < n' then n,fs else n',fs'
-    ) ps (max_int,[]) 
+    let num,fs =
+      PosSet.fold (
+        fun p (n,fs) ->
+          let n',fs' = try Ht.find table p with Not_found -> n,fs in
+            if n < n' then n,fs else n',fs'
+      ) ps (max_int,[]) in
+      if num == max_int then raise Not_found else num,fs
 end
 
 type act =
     ACT_NULL          (* 無処理 *)
   | ACT_MATCH         (* 文字集合マッチ処理 *)
+  | ACT_SKIP          (* スキップ処理 *)
   | ACT_TRANS         (* 状態遷移 *)
   | ACT_FINAL         (* 終了処理 *)
   | ACT_RECORD        (* ラベル記録処理 *)
-
   | ACT_COND_VALZERO  (* 条件判定(V_l==0) *)
   | ACT_COND_VALNONZ  (* 条件判定(V_l!=0) *)
   | ACT_COND_CNTZERO  (* 条件判定(C_l==0) *)
@@ -53,6 +55,7 @@ type act =
 let act_string = function
     ACT_NULL          -> "ACT_NULL        "
   | ACT_MATCH         -> "ACT_MATCH       "
+  | ACT_SKIP          -> "ACT_SKIP        "
   | ACT_TRANS         -> "ACT_TRANS       "
   | ACT_FINAL         -> "ACT_FINAL       "
   | ACT_RECORD        -> "ACT_RECORD      "
@@ -66,20 +69,27 @@ let act_string = function
 type next  = act  * int
 type stent = next * int
 type fent  = string * int
-type ment  = next * Cset.t
+type ment  = next * int * int  (* 次処理 * 非マッチ時エントリ * Csetエントリ *)
+type csent = Cset.t
 type rent  = next * int * int  (* 次処理 * ラベルID * サイズ *)
 type cond  = next * next * int (* TRUE時処理 * FALSE時処理 * ラベルID *)
 type cact  = next * int        (* 次処理 * ラベルID *)
 
+(* テーブル *)
 class ['a] table =
 object
   val tbl = (Ht.create(29) : (int,'a) Ht.t)
+  val tbl' = (Ht.create(29) : ('a,int) Ht.t)
   val mutable num = -1
   method num = num
   method add ent =
-    num <- num + 1;
-    Ht.add tbl num ent;
-    num
+    try
+      Ht.find tbl' ent 
+    with Not_found ->
+      num <- num + 1;
+      Ht.add tbl num ent;
+      Ht.add tbl' ent num;
+      num
   method find idx = Ht.find tbl idx
 end
 
@@ -100,6 +110,7 @@ let create_stent st (next,fidx) =
 
 let fact_table = new table
 let mact_table = new table
+let cset_table = new table
 let ract_table = new table
 let cond_table = new table
 let cact_table = new table
@@ -120,18 +131,17 @@ let create init_st init_ls st_map =
   let label_map = Label.map_create() in (* ラベルID -> ラベル番号（ローカル） *)
   let rec create_next tm =
     let cset_list = Dtrans.cset_list tm in (* Cset.tのリストを取得 *)
-      if (cset_list == []) then
-        ACT_NULL,0        (* 次状態が無い *)
-      else
-        let next = create_cset_next (List.hd cset_list) tm in
-          List.iter (fun cs -> ignore(create_cset_next cs tm)) (List.tl cset_list);
-          next
-  and create_cset_next cs tm =
+      List.fold_left
+        (fun next cs -> create_cset_next next cs tm) (ACT_NULL,0) cset_list
+  and create_cset_next (nact,nidx) cs tm =
     let tlp_list = Dtrans.next_list cs tm in
-    let next = List.fold_left (
+    let next' = List.fold_left (
       fun nxt (ts,ls,st) -> create_trans_next nxt (ts,ls,st)
     ) (create_trans_next (ACT_NULL,0) (List.hd tlp_list)) (List.tl tlp_list) in
-      ACT_MATCH,mact_table#add (next,cs)
+      if Cset.all = cs then
+        ACT_SKIP,mact_table#add (next',0,0)
+      else
+        ACT_MATCH,mact_table#add (next',nidx,cset_table#add cs)
   and create_trans_next next (ts,ls,st) =
     let idx = state_index st in
     let nxt = ACT_TRANS,idx in
@@ -173,8 +183,10 @@ let create init_st init_ls st_map =
     ) tcset next in
       next'
   and create_final st =
-    let num,field_list = Accept.find (Dstate.to_posset st) in
-      fact_table#add (T.encode_field_list label_map field_list,num)
+    try
+      let num,field_list = Accept.find (Dstate.to_posset st) in
+        fact_table#add (T.encode_field_list label_map field_list,num)
+    with Not_found -> -1
   in
   let next = create_rcd_next (ACT_TRANS,state_index init_st) init_ls in
   let init_st' = Dstate.create() in
@@ -213,12 +225,19 @@ let emit () =
         Printf.printf "/* [%03d] */ { %2d, \"%s\" },\n" i num cons
   done;
   Printf.printf "};\n";
-  (* 文字集合テーブル *)
+  (* マッチテーブル *)
   Printf.printf "mact_t __prc__mact_table[] = {\n";
   for i = 0 to mact_table#num do
-    let (act,nidx),cs = mact_table#find i in
-      Printf.printf "/* [%03d] */ { %s,%4d,%s },\n"
-        i (act_string act) nidx (Cset.encode cs)
+    let (act,nidx),midx,cidx = mact_table#find i in
+      Printf.printf "/* [%03d] */ { %s,%4d,%4d,%4d },\n"
+        i (act_string act) nidx midx cidx
+  done;
+  Printf.printf "};\n";
+  (* 文字集合テーブル *)
+  Printf.printf "cset_t __prc__cset_table[] = {\n";
+  for i = 0 to cset_table#num do
+    let cs = cset_table#find i in
+      Printf.printf "/* [%03d] */ %s,\n" i (Cset.encode cs);
   done;
   Printf.printf "};\n";
   (* ラベル記録処理テーブル *)

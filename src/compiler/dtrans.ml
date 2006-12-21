@@ -66,6 +66,15 @@ let transable (cs1,ts1,ls1,ns1) (cs2,ts2,ls2,ns2) lm =
   let ts2' = tmap (Tcond.alpha lm) ts2 in
     not (Cset.is_empty (Cset.inter cs1 cs2))
     && (TcondSet.subset ts1' ts2' || TcondSet.subset ts2' ts1')
+
+let show dt =
+  S.iter (
+    fun (cs,ts,ls,ns)
+      -> Cset.show cs;
+        TcondSet.iter (fun tc -> Tcond.show tc) ts;
+        Dstate.show ns;
+        print_newline()
+  ) dt
     
 (*
  * スキップ処理を施す
@@ -91,17 +100,8 @@ let skip dt1 dt2 lm =
     ) dt1 (empty,LabelSet.empty,[]) in
   let dt' =
     if List.length (cset_list dt) == 1 then
-      S.fold (fun (cs,ts,ls,ns) dt -> S.add (Cset.all,ts,ls,ns) dt) S.empty dt
+      S.fold (fun (_,ts,ls,ns) dt -> S.add (Cset.all,ts,ls,ns) dt) dt S.empty
     else
       dt
   in
     dt',(Nfa.add_lblmap ls lm),pairs
-
-let show dt =
-  S.iter (
-    fun (cs,ts,ls,ns)
-      -> Cset.show cs;
-        TcondSet.iter (fun tc -> Tcond.show tc) ts;
-        Dstate.show ns;
-        print_newline()
-  ) dt
