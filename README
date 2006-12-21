@@ -13,8 +13,10 @@ Preccsコンパイラは通信プロトコルの仕様記述から，C言語の�
 パッケージを展開すると，以下に示すようなディレクトリ構成となります．
 
 preccs-x.x.x/
-	+-  README
+	+-  ChangeLog
 	+-  Makefile
+	+-  README
+	+-  TODO
 	+-  src/ 		--- 各ソースコード
 		+- compiler/	--- Preccsコンパイラ
 		+- runtime/	--- 実行時ライブラリ

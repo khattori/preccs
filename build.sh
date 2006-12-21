@@ -38,9 +38,12 @@ for i in sample/*; do
     mkdir $prc_pkgdir/$i
 done
 mkdir $prc_pkgdir/test
+mkdir $prc_pkgdir/test/error
 
-cp README   $prc_pkgdir/README
-cp Makefile $prc_pkgdir/Makefile
+cp README    $prc_pkgdir/README
+cp Makefile  $prc_pkgdir/Makefile
+cp ChangeLog $prc_pkgdir/ChangeLog
+cp TODO      $prc_pkgdir/TODO
 
 for i in \
     src/compiler/Makefile \
@@ -53,7 +56,8 @@ for i in \
     test/Makefile \
     test/*.prc \
     test/*.c \
-    test/*.h
+    test/*.h \
+    test/error/*.prc
   do
   if test -f $i; then
       cp $i $prc_pkgdir/$i
