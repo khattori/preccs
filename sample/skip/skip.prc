@@ -1,3 +1,8 @@
+//
+// SKIP処理のテスト
+//     --- make "PFALGS=-s"でmakeするとパタンマッチが少しだけ高速になる
+// 
+
 C{
 #include <stdio.h>
 C}

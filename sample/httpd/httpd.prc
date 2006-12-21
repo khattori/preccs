@@ -42,7 +42,8 @@ proc HttpSrv(lsock:<SocketPair>) =
     | lsock?csock -> HttpOnAcc(csock); HttpSrv(lsock)
 proc HttpOnAcc(sp:SocketPair) =
     sp.in?msg;
-    ( msg @ x:HttpRequestGet -> stdout!x.start.sp2; HttpOnRead(sp, x.start.path)
+    stdout!"REQEST\n";
+    ( msg @ x:HttpRequestGet -> stdout!x.start.path; HttpOnRead(sp, x.start.path)
           | _ -> stdout!"unknown request: "^msg; sp.out!"" )
 proc HttpOnRead(sp:SocketPair, path:string) =
     var ret:<FileIn>;

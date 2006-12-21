@@ -2,6 +2,8 @@ type Sockets = {in:<string>;out:<string>}
 
 //
 // Echoクライアント
+//   --- 10007番ポートに接続し，標準入力からのデータを送信する．
+//   --- 受信データを標準出力に表示する．
 //
 proc Main() =
     var so1:<string>;

@@ -1,5 +1,7 @@
 //
 // Memoコマンド
+//   --- tempファイルに標準入力からの入力を書き出す
+//   --- qかQで終了する
 //
 type FileOut = {ok:bool;out:<string>}
 

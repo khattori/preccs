@@ -14,7 +14,7 @@ $(TARGET)	: $(OBJS)
 	$(CC) -g -o $@ $(OBJS) $(LIBS) 
 
 skip.out.c	: skip.prc
-	$(PRCC) $< > $@
+	$(PRCC) $(PFLAGS) $< > $@
 
 clean	:
 	rm -fr $(OBJS) $(TARGET)

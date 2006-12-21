@@ -1,5 +1,6 @@
 //
 // Catコマンド
+//    --- 自分自身のファイル（cat.prc）を標準出力に表示する
 //
 type FileIn = {ok:bool;in:<string>}
 

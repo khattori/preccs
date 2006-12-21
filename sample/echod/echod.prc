@@ -1,7 +1,11 @@
 type Sockets = {in:<string>;out:<string>}
 
 //
-// Echoサーバー
+// Echoサーバ
+//   --- 10007番ポートを使用したechoサーバ
+//   --- 標準入力から入力があると終了
+//       ※ただし，クライアントからの接続がある場合には，
+//         接続が切れるまで終了しない
 //
 proc Main() =
     var lsock:<Sockets>;
