@@ -1,6 +1,10 @@
 #ifndef __INC_PRCRT_H__
 #define __INC_PRCRT_H__
+
+#ifdef WIN32
 #include <windows.h>
+#endif
+
 #include <assert.h>
 #include "chan.h"
 #include "dfa.h"
