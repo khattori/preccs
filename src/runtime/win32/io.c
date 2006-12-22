@@ -7,7 +7,6 @@
  * $Id: io.c,v 1.8 2006/08/07 09:07:51 hattori Exp $
  */
 #include <stdio.h>
-#include <windows.h>
 #include "prcrt.h"
 #include "timer.h"
 #include "perr.h"

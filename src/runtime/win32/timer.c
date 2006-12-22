@@ -6,12 +6,12 @@
  * @date   2006/04/24
  * $Id: timer.c,v 1.2 2006/06/21 00:13:06 hattori Exp $
  */
-#include <windows.h>
+#include "prcrt.h"
 #include "queue.h"
 #include "event.h"
 #include "timer.h"
 #include "gc.h"
-#include "prcrt.h"
+
 
 tmrq_t *__prc__tmrq;
 

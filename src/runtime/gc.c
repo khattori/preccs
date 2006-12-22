@@ -8,10 +8,9 @@
  */
 #include <stdlib.h>
 #include <stdio.h>
-#include "gc.h"
+#include "prcrt.h"
 #include "proc.h"
 #include "timer.h"
-#include "prcrt.h"
 #include "perr.h"
 
 static int *heap_top;

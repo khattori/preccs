@@ -9,6 +9,7 @@
 #include "chan.h"
 #include "dfa.h"
 #include "gc.h"
+#include "io.h"
 #include "sock.h"
 #include "file.h"
 #include "wave.h"

@@ -49,15 +49,15 @@ all: $(DEPEND) $(OBJS) $(TARGET)
 # Build an executable typechecker
 $(TARGET):	$(OBJS)
 	@echo Linking $@
-	ocamlc -o $@ $(COMMONOBJS) $(OBJS)
+	ocamlc -g -o $@ $(COMMONOBJS) $(OBJS)
 
 # Compile an ML module interface
 %.cmi : %.mli
-	ocamlc -c $<
+	ocamlc -g -c $<
 
 # Compile an ML module implementation
 %.cmo : %.ml
-	ocamlc -c $<
+	ocamlc -g -c $<
 
 # Generate ML files from a parser definition file
 parser.ml parser.mli: parser.mly

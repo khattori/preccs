@@ -7,26 +7,27 @@
 INSTALLDIR = /usr/local
 CC	= gcc
 SHELL	= /bin/sh
-INCLUDES= -I../../inc
+INCLUDES= -I`pwd`
 CFLAGS	= -Wall -g $(INCLUDES)
 LIBS	= /mingw/lib/libws2_32.a /mingw/lib/libwinmm.a
 
 TARGET	= libprcrt.a
 SRCS	=		\
 	perr.c		\
-	alloc.c	\
+	alloc.c		\
 	gc.c		\
 	chan.c		\
-	timer.c	\
 	proc.c		\
 	exec.c		\
-	event.c	\
-	io.c		\
+	event.c		\
 	dfa.c		\
-	sock.c		\
-	file.c		\
-	wave.c		\
 	prcrt.c
+SRCS	+=		\
+	unix/timer.c	\
+	unix/io.c	\
+	file.c	\
+	sock.c	\
+	wave.c
 
 OBJS	= $(SRCS:.c=.o)
 

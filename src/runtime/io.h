@@ -9,8 +9,6 @@
 #ifndef __INC_IO_H__
 #define __INC_IO_H__
 
-#include <windows.h>
-
 void io_init(void);
 int io_exec(void);
 

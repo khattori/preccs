@@ -8,7 +8,6 @@
  */
 #include <stdlib.h>
 #include <stdio.h>
-#include <windows.h>
 #include "prcrt.h"
 #include "perr.h"
 #include "queue.h"
