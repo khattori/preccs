@@ -116,10 +116,7 @@ and trans_exp_list env ctxt vs =
  *)
 and trans_proc env cont = function
     P.End        -> cont
-  | P.Guard g    ->
-      let t = C.genid "t" in (* トランザクション管理用 *)
-        C.Prim(C.Record,[C.Bool false],[t],
-               [trans_guard env (C.Var t) cont C.disp g]),ref []
+  | P.Guard g    -> trans_guard env cont g
   | P.New(v,p)   ->
       let c = C.genid "c" in
         C.Prim(C.New,[],[c],[trans_proc (Sm.add v (C.Var c) env) cont p]),ref []
@@ -196,30 +193,46 @@ and trans_proc env cont = function
               ) bs,trans_proc env cont p),ref []
 
 (* プロセス式の変換(ガード式版) *)
-and trans_guard env t c1 c2 = function
+and trans_guard env cont = function
+    P.Send(e1,e2,p) ->
+      let k = C.genid "k" in
+        trans_exp env (fun x ->
+          trans_exp env (fun y ->
+            C.Fix([k,[],trans_proc env cont p],
+                 (C.App(C.Label (Symbol.symbol "send"),
+		       [x;y;C.Var k]),ref [])),ref []) e2) e1
+  | P.Recv(e,v,p) ->
+      let k = C.genid "k" in
+        trans_exp env (fun x ->
+          C.Fix([k,[v],trans_proc (Sm.add v (C.Var v) env) cont p],
+               (C.App(C.Label(Symbol.symbol "recv"),
+		     [x;C.Var k]),ref [])),ref []) e
+  | P.Alt(g1,g2) ->
+      let t = C.genid "t" in (* トランザクション管理用 *)
+        C.Prim(C.Record,[C.Bool false],[t],
+              [trans_alt env (C.Var t) cont 
+		  (trans_alt env (C.Var t) cont C.disp g2) g1]),ref []
+
+and trans_alt env t c1 c2 = function
     P.Send(e1,e2,p) ->
       let k1 = C.genid "k" in
       let k2 = C.genid "k" in
-        trans_exp env (
-          fun x ->
-            trans_exp env (
-              fun y ->
-                C.Fix([(k1,[],trans_proc env c1 p);(k2,[],c2)],
-                      (* (C.Prim(C.Send,[x;y;C.Var k;t],[],[c2]),ref [])),ref [] *)
-                      (C.App(C.Label (Symbol.symbol "send"),[C.Var k2;x;y;C.Var k1;t]),ref [])),ref []
-            ) e2) e1
+	trans_exp env (fun x ->
+	  trans_exp env (fun y ->
+	    C.Fix([(k1,[],trans_proc env c1 p);(k2,[],c2)],
+		 (C.App(C.Label (Symbol.symbol "send_t"),
+		       [C.Var k2;x;y;C.Var k1;t]),ref [])),ref []
+	  ) e2) e1
   | P.Recv(e,v,p) ->
       let k1 = C.genid "k" in
       let k2 = C.genid "k" in
-        trans_exp env (
-          fun x ->
-            C.Fix([(k1,[v],trans_proc (Sm.add v (C.Var v) env) c1 p);(k2,[],c2)],
-                  (* (C.Prim(C.Recv,[x;C.Var k;t],[],[c2]),ref [])),ref [] *)
-                  (C.App(C.Label(Symbol.symbol "recv"),[C.Var k2;x;C.Var k1;t]),ref [])),ref []
-        ) e
-  | P.Alt(g1,g2) ->
-      trans_guard env t c1 (trans_guard env t c1 c2 g2) g1
-
+	trans_exp env (fun x ->
+	  C.Fix([(k1,[v],trans_proc (Sm.add v (C.Var v) env) c1 p);(k2,[],c2)],
+	       (C.App(C.Label(Symbol.symbol "recv_t"),
+		     [C.Var k2;x;C.Var k1;t]),ref [])),ref []
+	) e
+  | P.Alt(g1,g2) -> trans_alt env t c1 (trans_alt env t c1 c2 g2) g1
+      
 let base_env = Env.fold (
   fun k ent e -> match ent with
       Env.VarEntry _ -> Sm.add k (C.Label k) e
