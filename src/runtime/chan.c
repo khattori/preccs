@@ -65,14 +65,11 @@ event_t *chout_next(chan_t *ch) {
 /**
  * チャネルの送信処理(受信待ちプロセスのキャンセル)
  */
-//int chan_send(int ch, char *buf, int len) {
 int chan_send(int ch, int val) {
     __prc__regs[0] = __prc__send;
-    __prc__regs[1] = __prc__disp;
-    __prc__regs[2] = ch;
-    __prc__regs[3] = val;
-    __prc__regs[4] = __prc__disp;
-    __prc__regs[5] = __record__(1,0);
+    __prc__regs[1] = ch;
+    __prc__regs[2] = val;
+    __prc__regs[3] = __prc__disp;
 
     return (int)__send__;
 }
@@ -82,10 +79,8 @@ int chan_send(int ch, int val) {
  */
 int chan_recv(int ch) {
     __prc__regs[0] = __prc__recv;
-    __prc__regs[1] = __prc__disp;
-    __prc__regs[2] = ch;
-    __prc__regs[3] = __prc__disp;
-    __prc__regs[4] = __record__(1,0);
+    __prc__regs[1] = ch;
+    __prc__regs[2] = __prc__disp;
 
     return (int)__recv__;
 }

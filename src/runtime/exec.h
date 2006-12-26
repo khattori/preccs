@@ -11,6 +11,8 @@
 
 int __send__(void);
 int __recv__(void);
+int __send_t__(void);
+int __recv_t__(void);
 int __run__(void);
 
 #endif /* __INC_EXEC_H__ */

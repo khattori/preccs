@@ -27,20 +27,3 @@ event_t *event(int val, int clos, int trans) {
     return evt;
 }
 
-/**
- * イベントオブジェクト解放
- */
-/*
-void evt_free(event_t *evt) {
-
-}
-*/
-
-/**
- * イベントのキャンセル処理
- */
-/*
-void evt_cancel(event_t *evt) {
-    ((int *)evt->trans)[0] = ~0;
-}
-*/

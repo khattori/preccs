@@ -28,8 +28,8 @@ event_t *event(int val, int clos, int trans);
 /* void evt_free(event_t *evt); */
 /* void evt_cancel(event_t *evt); */
 
-#define EV_IS_CANCELLED(evt) (((int*)(evt)->trans)[0] == ~0)
-#define EV_SET_CANCEL(evt) (((int*)(evt)->trans)[0] = ~0)
+#define EV_IS_CANCELLED(evt) ((evt)->trans!=0&&((int*)(evt)->trans)[0] == ~0)
+#define EV_SET_CANCEL(evt) ((evt)->trans!=0&&(((int*)(evt)->trans)[0] = ~0))
 #define TR_SET_CANCEL(tr) (((int*)tr)[0] = ~0)
 
 #endif /* __INC_EVENT_H__ */

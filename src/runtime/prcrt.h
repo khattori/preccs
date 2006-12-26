@@ -34,6 +34,8 @@ extern int __prc__rnum;
 extern int __prc__disp;
 extern int __prc__send;
 extern int __prc__recv;
+extern int __prc__send_t;
+extern int __prc__recv_t;
 extern int __prc__run;
 
 /* 組込み関数 */
