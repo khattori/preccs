@@ -24,6 +24,7 @@ chan_t *__chan__(void) {
     /* イベントキュー初期化 */
     TAILQ_INIT(&ch->inq);
     TAILQ_INIT(&ch->outq);
+    ch->ioent = NULL;
 
     return ch;
 }
@@ -51,7 +52,7 @@ event_t *chin_next(chan_t *ch) {
 event_t *chout_next(chan_t *ch) {
     event_t *evt;
 
-    for (evt = ch->outq.tqh_first; evt != NULL; evt = evt->link.tqe_next) {
+    while ((evt = ch->outq.tqh_first) != NULL) {
         if (!EV_IS_CANCELLED(evt)) {
             break;
         }

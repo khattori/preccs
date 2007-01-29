@@ -14,7 +14,7 @@ void timer_add(event_t *evt);
 #ifdef WIN32
 DWORD timer_next(void);
 #else
-int timer_next(void);
+const struct timespec *timer_next(void);
 #endif
 
 event_t *timer_take(void);

@@ -9,13 +9,37 @@
 #ifndef __INC_IO_H__
 #define __INC_IO_H__
 
-void io_init(void);
-int io_exec(void);
+#include <aio.h>
+#include "type.h"
+#include "queue.h"
 
-typedef enum { IOT_STDIN, IOT_SOCK, IOT_FILE, IOT_WAVE } io_t;
-typedef struct ioent_ {
-    io_t type;      /* IO種別 */
-    int  handle;
-} ioent_t;
+typedef enum {
+    IO_TYPE_IN,
+    IO_TYPE_OUT,
+    IO_TYPE_TIMER,
+    IO_TYPE_ACCEPT,
+    IO_TYPE_CONNECT
+} iotype_t;
+
+struct ioent_ {
+    TAILQ_ENTRY(ioent_) link;  /* リンク */
+    TAILQ_ENTRY(ioent_) mlink; /* 多重IO用リンク */
+    iotype_t type;             /* IO種別 */
+    int      desc;             /* ディスクリプタ */
+    chan_t *chan;
+    struct aiocb aiocb;
+    size_t offset;
+    size_t bufsz;
+    char buf[1];
+};
+
+typedef TAILQ_HEAD(ioq_, ioent_) ioq_t;
+
+void io_init(void);
+int  io_exec(void);
+void io_chout(ioent_t *io, event_t *evt);
+void io_chin(ioent_t *io, event_t *evt);
+
+void ioent_create(chan_t *ch, int desc, iotype_t type, size_t size);
 
 #endif /* __INC_IO_H__ */

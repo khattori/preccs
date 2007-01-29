@@ -51,6 +51,7 @@ from_space --> |                |
 static void flip(void);
 static int *copy(int *p);
 
+extern ioq_t *__prc__ioq;
 /**
  * GCの初期化
  */
@@ -132,20 +133,8 @@ int *gc_forward(int *p) {
     return p;
 }
 
-extern int sock_used;
-extern int ich_array[];
-extern int och_array[];
-extern int sock_next[];
-extern int sock_inited;
-
-extern int wave_och;
-extern int wave_ich;
-
-extern int file_used;
-extern int file_next[];
-extern int file_ch_array[];
-
 static void flip(void) {
+    ioent_t *io;
     int *scan;
     int *t;
     int i;
@@ -170,20 +159,10 @@ static void flip(void) {
     __prc__timer  = (int)copy((int*)__prc__timer);
 
     /* ハンドルの走査 */
-    for (i = file_used; i >= 0; i = file_next[i]) {
-        file_ch_array[i] = (int)copy((int*)file_ch_array[i]);
+    for (io = __prc__ioq->tqh_first; io != NULL; io = io->link.tqe_next) {
+        io->chan = (chan_t *)copy((int*)io->chan);
     }
-    if (sock_inited)
-        for (i = sock_used; i >= 0; i = sock_next[i]) {
-            ich_array[i] = (int)copy((int*)ich_array[i]);
-            och_array[i] = (int)copy((int*)och_array[i]);
-        }
-    if (wave_och) {
-        wave_och = (int)copy((int*)wave_och);
-    }
-    if (wave_ich) {
-        wave_ich = (int)copy((int*)wave_ich);
-    }
+
     while (scan < heap_free) {
         int *p;
         if (!IS_ARRY(scan))

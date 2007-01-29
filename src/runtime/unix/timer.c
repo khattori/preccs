@@ -67,25 +67,29 @@ static event_t *tmrq_next(void) {
 }
 
 /**
- * 次の発火までの時間をmsec単位で取得する
+ * 次の発火までの時間をsec単位で取得する
  */
-int timer_next(void) {
+const struct timespec *timer_next(void) {
+    static struct timespec ts_zero = {0,0};
+    static struct timespec ts;
     event_t *evt;
     time_t now;
 
     /* タイマー待ちプロセスが無い場合 */
     if ((evt = tmrq_next()) == NULL) {
-        return -1;
+        return NULL;
     }
 
     if (time(&now) == (time_t)-1) {
         perr(PERR_SYSTEM, "time()", errno, __FILE__, __LINE__);
     }
     if (now > evt->val) {
-        return 0;  /* 既に発火時刻を過ぎた場合 */
+        return &ts_zero;  /* 既に発火時刻を過ぎた場合 */
     }
+    ts.tv_sec  = evt->val - now;
+    ts.tv_nsec = 0;
 
-    return evt->val - now;
+    return &ts;
 }
 
 /**

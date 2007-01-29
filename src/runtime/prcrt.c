@@ -33,11 +33,6 @@ int prc_main(void) {
     proc_init();
     timer_init();
 
-    /* グローバルチャネルの初期化 */
-    __prc__stdout = (int)__chan__();
-    __prc__stdin  = (int)__chan__();
-    __prc__timer  = (int)__chan__();
-
     /* プロセスループ */
     start = __prc__init;
     for (;;) {

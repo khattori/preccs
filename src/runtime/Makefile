@@ -7,11 +7,11 @@
 INSTALLDIR = /usr/local
 CC	= gcc
 SHELL	= /bin/sh
-INCLUDES= -I`pwd`
+INCLUDES= -I`pwd` -fPIC
 CFLAGS	= -Wall -g $(INCLUDES)
-LIBS	= /mingw/lib/libws2_32.a /mingw/lib/libwinmm.a
+LIBS	= -lrt
 
-TARGET	= libprcrt.a
+TARGET	= libprcrt.so
 SRCS	=		\
 	perr.c		\
 	alloc.c		\
@@ -25,22 +25,13 @@ SRCS	=		\
 SRCS	+=		\
 	unix/timer.c	\
 	unix/io.c	\
-	file.c	\
-	sock.c	\
-	wave.c
+	unix/file.c	\
+	unix/sock.c
 
 OBJS	= $(SRCS:.c=.o)
 
 $(TARGET)	: $(OBJS)
-	@if [ ! -d .libs ]; then \
-		mkdir .libs; \
-	fi
-	cd .libs && \
-	for i in $(LIBS); \
-	do \
-		$(AR) x $$i; \
-	done
-	$(AR) rcs $@ $(OBJS) .libs/*.o
+	$(CC) -g -shared -o $@ $(OBJS) $(LIBS)
 
 clean	:
 	rm -fr $(OBJS) $(TARGET)

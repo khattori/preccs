@@ -10,16 +10,19 @@
 #ifndef __INC_CHAN_H__
 #define __INC_CHAN_H__
 
+#include "type.h"
 #include "queue.h"
 #include "event.h"
+#include "io.h"
 
 /*
  * チャネル構造体の定義
  */
-typedef struct chan_ {
+struct chan_ {
     TAILQ_HEAD(inq_,  event_) inq;    /* 入力イベントキュー */
     TAILQ_HEAD(outq_, event_) outq;   /* 出力イベントキュー */
-} chan_t;
+    ioent_t *ioent;                   /* I/Oエントリ */
+};
 
 chan_t *__chan__(void);
 event_t *chin_next(chan_t *ch);

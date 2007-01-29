@@ -61,9 +61,18 @@ int __prc__run    = (int)run_clos;
 */
 int __send__(void) {
     if ((__prc__regs[0] = (int)chin_next((chan_t *)__prc__regs[1])) == (int)NULL) {
-        __prc__regs[0] = (int)event(__prc__regs[2], __prc__regs[3], 0);
-        TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[1])->outq, (event_t *)__prc__regs[0], link);
+	ioent_t *io;
+	event_t *evt;
+
+	/* 新規イベント追加 */
+        evt = event(__prc__regs[2], __prc__regs[3], 0);
+	if ((io = ((chan_t *)__prc__regs[1])->ioent) != NULL) {
+	    io_chout(io, evt);
+	} else {
+	    TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[1])->outq, evt, link);
+	}
     } else {
+	/* 受信プロセスあり */
         proc_t *prc;
 
         /* 受信プロセスを取り出して実行待ちキューに入れる */
@@ -92,8 +101,16 @@ int __send__(void) {
 */
 int __send_t__(void) {
     if ((__prc__regs[0] = (int)chin_next((chan_t *)__prc__regs[2])) == (int)NULL) {
-        __prc__regs[0] = (int)event(__prc__regs[3], __prc__regs[4], __prc__regs[5]);
-        TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[2])->outq, (event_t *)__prc__regs[0], link);
+	ioent_t *io;
+	event_t *evt;
+
+	/* 新規イベント追加 */
+        evt = event(__prc__regs[3], __prc__regs[4], __prc__regs[5]);
+	if ((io = ((chan_t *)__prc__regs[2])->ioent) != NULL) {
+	    io_chout(io, evt);
+	} else {
+	    TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[2])->outq, evt, link);
+	}
     } else {
         proc_t *prc;
 
@@ -126,13 +143,19 @@ int __send_t__(void) {
   r2 : clos
 */
 int __recv__(void) {
-    proc_t *prc;
-
     if ((__prc__regs[0] = (int)chout_next((chan_t *)__prc__regs[1])) == (int)NULL) {
-        /* 送信プロセスが無い場合はブロックキューに入れる */
-        __prc__regs[0] = (int)event(0, __prc__regs[2], 0);
-        TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[1])->inq, (event_t *)__prc__regs[0], link);
+	ioent_t *io;
+	event_t *evt;
+
+	/* 新規イベント追加 */
+        evt = event(0, __prc__regs[2], 0);
+	if ((io = ((chan_t *)__prc__regs[1])->ioent) != NULL) {
+	    io_chin(io, evt);
+	}
+        TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[1])->inq, evt, link);
     } else {
+	proc_t *prc;
+
         /* 送信プロセスを取り出して実行待ちキューに入れる */
         prc = proc();
         prc->clos = ((event_t *)__prc__regs[0])->clos;
@@ -157,13 +180,19 @@ int __recv__(void) {
   r4 : trans
 */
 int __recv_t__(void) {
-    proc_t *prc;
-
     if ((__prc__regs[0] = (int)chout_next((chan_t *)__prc__regs[2])) == (int)NULL) {
-        /* 送信プロセスが無い場合はブロックキューに入れる */
-        __prc__regs[0] = (int)event(0, __prc__regs[3], __prc__regs[4]);
-        TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[2])->inq, (event_t *)__prc__regs[0], link);
+	ioent_t *io;
+	event_t *evt;
+
+	/* 新規イベント追加 */
+        evt = event(0, __prc__regs[3], __prc__regs[4]);
+	if ((io = ((chan_t *)__prc__regs[2])->ioent) != NULL) {
+	    io_chin(io, evt);
+	}
+        TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[2])->inq, evt, link);
     } else {
+	proc_t *prc;
+
         /* 送信プロセスを取り出して実行待ちキューに入れる */
         prc = proc();
         prc->clos = ((event_t *)__prc__regs[0])->clos;

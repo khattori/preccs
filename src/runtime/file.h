@@ -15,7 +15,6 @@ int file_io(HANDLE handles[], ioent_t io_table[], int *io_count);
 #else
 int file_io(int handles[], ioent_t io_table[], int *io_count);
 #endif
-int file_clos(int h);
 
 int prc_FileOpenR(int ich, char *fname);
 int prc_FileCreate(int och, char *fname);
