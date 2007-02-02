@@ -20,7 +20,7 @@ module R = Regex
 %token <Error.info> SKIP
 %token <Error.info> STOP
 %token <Error.info> RUN
-%token <Error.info> NULL
+/* %token <Error.info> NULL */
 %token <Error.info> IMPORT
 
 /* 識別子と定数値のトークン */
@@ -211,6 +211,7 @@ atomicExpression
   | STRV  { ExpConst(ConStr($1.i,$1.v)) }
   | TRUE  { ExpConst(ConBool($1,true))  }
   | FALSE { ExpConst(ConBool($1,false)) }
+  | LPAREN RPAREN { ExpConst(ConUnit($1)) }
 ;
 
 varExpression

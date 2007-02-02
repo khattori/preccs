@@ -83,7 +83,8 @@ let type_of_chan info = function
 
 (* 定数の型を返す *)
 let type_of_const = function
-    A.ConBool(_,b) -> T.BOOL
+    A.ConUnit _    -> T.UNIT	
+  | A.ConBool(_,b) -> T.BOOL
   | A.ConInt(_,n)  -> T.INT
   | A.ConStr(_,s)  -> T.STRING
 

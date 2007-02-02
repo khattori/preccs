@@ -79,6 +79,7 @@ and const =
     ConBool  of info * bool
   | ConInt   of info * int
   | ConStr   of info * string
+  | ConUnit  of info
 
 (** 変数 *)
 and var =
@@ -96,7 +97,7 @@ and binop =
 (** 単項演算子 *)
 and monop = MopNeg | MopNot
 
-let info_of_const = function  ConBool(i,_) | ConInt(i,_) | ConStr(i,_) -> i
+let info_of_const = function  ConUnit(i) | ConBool(i,_) | ConInt(i,_) | ConStr(i,_) -> i
 
 type toplevel = def list
 

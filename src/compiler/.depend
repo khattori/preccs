@@ -17,10 +17,10 @@ dtable.cmo: types.cmo tcond.cmo pos.cmo label.cmo dtrans.cmo dstate.cmo \
     cset.cmo 
 dtable.cmx: types.cmx tcond.cmx pos.cmx label.cmx dtrans.cmx dstate.cmx \
     cset.cmx 
-dtrans.cmo: tcond.cmo pos.cmo label.cmo dstate.cmo cset.cmo 
-dtrans.cmx: tcond.cmx pos.cmx label.cmx dstate.cmx cset.cmx 
-emit.cmo: symbol.cmo rmap.cmo dfa.cmo cps.cmo 
-emit.cmx: symbol.cmx rmap.cmx dfa.cmx cps.cmx 
+dtrans.cmo: tcond.cmo pos.cmo nfa.cmo label.cmo dstate.cmo cset.cmo 
+dtrans.cmx: tcond.cmx pos.cmx nfa.cmx label.cmx dstate.cmx cset.cmx 
+emit.cmo: symbol.cmo rmap.cmo dtable.cmo cps.cmo 
+emit.cmx: symbol.cmx rmap.cmx dtable.cmx cps.cmx 
 env.cmo: types.cmo symbol.cmo regex.cmo 
 env.cmx: types.cmx symbol.cmx regex.cmx 
 error.cmo: types.cmo symbol.cmo 

@@ -17,6 +17,7 @@ let _ =
       ( "octet",  fun i -> Parser.OCTET i   );
       ( "int",    fun i -> Parser.INT i     );
       ( "bool",   fun i -> Parser.BOOL i    );
+      ( "unit",   fun i -> Parser.UNIT i    );
       ( "string", fun i -> Parser.STRING i  );
 *)
       ( "true",   fun i -> Parser.TRUE i    );
@@ -27,7 +28,7 @@ let _ =
       ( "run",    fun i -> Parser.RUN i     );
       ( "skip",   fun i -> Parser.SKIP i    );
       ( "stop",   fun i -> Parser.STOP i    );
-      ( "null",   fun i -> Parser.NULL i    );
+(*      ( "null",   fun i -> Parser.NULL i    ); *)
       ( "import", fun i -> Parser.IMPORT i  );
       (* 特殊記号 *)
       ( "@",      fun i -> Parser.AT i      );

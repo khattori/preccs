@@ -71,7 +71,8 @@ let genid s =
   Symbol.symbol (Printf.sprintf "%s%d" s !counter)
 
 let trans_const = function
-    A.ConBool(_,b) -> Bool b
+    A.ConUnit _    -> Unit
+  | A.ConBool(_,b) -> Bool b
   | A.ConInt(_,n)  -> Int n
   | A.ConStr(_,s)  -> String s
 let trans_bop = function
@@ -172,11 +173,13 @@ and trans_proc env nxt = function
       let proc = List.hd ps in
       let g = fst proc in
       let p = snd proc in
-        Guard(
-          List.fold_left (
-            fun proc (g,p) ->
-              Alt(trans_gproc env (trans_proc env nxt p) g,proc)
-          ) (trans_gproc env (trans_proc env nxt p) g) ps)
+      let v_nprc = genid "nprc" in
+	Fix([v_nprc,[],nxt],
+           Guard(
+             List.fold_left (
+               fun proc (g,p) ->
+		 Alt(trans_gproc env (trans_proc env (Call(v_nprc,[])) p) g,proc)
+             ) (trans_gproc env (trans_proc env (Call(v_nprc,[])) p) g) (List.tl ps)))
   | A.ProcMatch(i,e,ps,t) -> (
       try 
         trans_match env nxt (!t) e ps

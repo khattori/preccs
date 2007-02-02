@@ -31,9 +31,11 @@ let base_env =
       ("timer",  VarEntry(T.CHAN T.INT));
       ("utimer", VarEntry(T.CHAN T.INT));
       ("cond",   VarEntry(T.CHAN T.BOOL));
+      ("null",   VarEntry(T.CHAN T.UNIT));
       (* 予約済み型名 *)
       ("int",    TypeEntry(T.INT));
       ("bool",   TypeEntry(T.BOOL));
+      ("unit",   TypeEntry(T.UNIT));
       ("string", TypeEntry(T.STRING));
       ("octet",  TypeEntry(T.REGEX(T.REXP Regex.oct)));
     ]

@@ -49,7 +49,7 @@ let rec trans_exp env ctxt = function
       try ctxt (Sm.find v env) with
           Not_found -> Printf.printf "%s\n" (Symbol.name v);assert false
     )
-  | P.Unit     -> ctxt (C.Int 0)
+  | P.Unit     -> ctxt (C.Cint 0)
   | P.Bool b   -> ctxt (C.Bool b)
   | P.Int i    -> ctxt (C.Int i)
   | P.Cint i   -> ctxt (C.Cint i)
@@ -200,13 +200,13 @@ and trans_guard env cont = function
           trans_exp env (fun y ->
             C.Fix([k,[],trans_proc env cont p],
                  (C.App(C.Label (Symbol.symbol "send"),
-		       [x;y;C.Var k]),ref [])),ref []) e2) e1
+		       [C.Label (Symbol.symbol "disp");x;y;C.Var k;C.Cint 0]),ref [])),ref []) e2) e1
   | P.Recv(e,v,p) ->
       let k = C.genid "k" in
         trans_exp env (fun x ->
           C.Fix([k,[v],trans_proc (Sm.add v (C.Var v) env) cont p],
                (C.App(C.Label(Symbol.symbol "recv"),
-		     [x;C.Var k]),ref [])),ref []) e
+		     [C.Label(Symbol.symbol "disp");x;C.Var k;C.Cint 0]),ref [])),ref []) e
   | P.Alt(g1,g2) ->
       let t = C.genid "t" in (* トランザクション管理用 *)
         C.Prim(C.Record,[C.Bool false],[t],
@@ -220,7 +220,7 @@ and trans_alt env t c1 c2 = function
 	trans_exp env (fun x ->
 	  trans_exp env (fun y ->
 	    C.Fix([(k1,[],trans_proc env c1 p);(k2,[],c2)],
-		 (C.App(C.Label (Symbol.symbol "send_t"),
+		 (C.App(C.Label (Symbol.symbol "send"),
 		       [C.Var k2;x;y;C.Var k1;t]),ref [])),ref []
 	  ) e2) e1
   | P.Recv(e,v,p) ->
@@ -228,7 +228,7 @@ and trans_alt env t c1 c2 = function
       let k2 = C.genid "k" in
 	trans_exp env (fun x ->
 	  C.Fix([(k1,[v],trans_proc (Sm.add v (C.Var v) env) c1 p);(k2,[],c2)],
-	       (C.App(C.Label(Symbol.symbol "recv_t"),
+	       (C.App(C.Label(Symbol.symbol "recv"),
 		     [C.Var k2;x;C.Var k1;t]),ref [])),ref []
 	) e
   | P.Alt(g1,g2) -> trans_alt env t c1 (trans_alt env t c1 c2 g2) g1

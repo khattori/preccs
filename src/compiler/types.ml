@@ -14,7 +14,7 @@ exception Ill_deriv
 
 (** 型情報の定義 *)
 type t =
-    BOOL | INT | STRING              (* 基本型     *)
+    UNIT | BOOL | INT | STRING       (* 基本型     *)
   | CHAN   of t                      (* チャネル型 *)
   | ARRAY  of t * int                (* 配列型     *)
   | RECORD of (Symbol.t * t) list    (* レコード型 *)
@@ -157,7 +157,7 @@ let regexify2 rt =
 *)
 let rec subtype ty1 ty2 =
   match ty1,ty2 with
-      BOOL,BOOL | INT,INT | STRING,STRING -> true
+      UNIT,UNIT | BOOL,BOOL | INT,INT | STRING,STRING -> true
     | ARRAY(t1,n),ARRAY(t2,m) when n==m -> subtype t1 t2
     | RECORD(fs1),RECORD(fs2) when List.length fs1 = List.length fs2 -> 
         List.fold_left2
@@ -191,7 +191,7 @@ let deriv ty path ty2 =
   let rec trav ap t =
     if ap==[] then ty2
     else match t with
-        BOOL | INT | STRING | CHAN(_) | ARRAY(_,_) | TUPLE _ -> t
+        UNIT | BOOL | INT | STRING | CHAN(_) | ARRAY(_,_) | TUPLE _ -> t
       | RECORD(sts) -> RECORD(List.map (fun (s,t') ->
                                           if Symbol.equal (List.hd ap) s then
                                             s,trav (List.tl ap) t'
@@ -210,4 +210,3 @@ let deriv ty path ty2 =
           in REGEX(rtrav ap r1)
   in
     trav path ty 
-
