@@ -25,6 +25,8 @@ extern int __prc__init(void);
 extern int __prc__stdout;
 extern int __prc__stdin;
 extern int __prc__timer;
+extern int __prc__cond;
+extern int __prc__null;
 
 /* レジスタ宣言 */
 extern int __prc__treg;
@@ -34,8 +36,6 @@ extern int __prc__rnum;
 extern int __prc__disp;
 extern int __prc__send;
 extern int __prc__recv;
-extern int __prc__send_t;
-extern int __prc__recv_t;
 extern int __prc__run;
 
 /* 組込み関数 */

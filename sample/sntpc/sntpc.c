@@ -1,6 +1,7 @@
 #include "prcrt.h"
 #include <stdio.h>
 #include <time.h>
+#include <netinet/in.h>
 
 int main(void) {
     int ret;

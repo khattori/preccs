@@ -22,13 +22,13 @@ struct chan_ {
     TAILQ_HEAD(inq_,  event_) inq;    /* 入力イベントキュー */
     TAILQ_HEAD(outq_, event_) outq;   /* 出力イベントキュー */
     ioent_t *ioent;                   /* I/Oエントリ */
+    code_t   recvf;
+    code_t   sendf;
 };
 
+void chan_init(void);
 chan_t *__chan__(void);
 event_t *chin_next(chan_t *ch);
 event_t *chout_next(chan_t *ch);
-
-int chan_send(int ch, int val);
-int chan_recv(int ch);
 
 #endif /* __INC_CHAN_H__ */

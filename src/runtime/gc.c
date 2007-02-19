@@ -51,7 +51,7 @@ from_space --> |                |
 static void flip(void);
 static int *copy(int *p);
 
-extern ioq_t *__prc__ioq;
+extern ioq_t __prc__ioq;
 /**
  * GCの初期化
  */
@@ -140,7 +140,7 @@ static void flip(void) {
     int i;
     printf("GC started...\n");
     fflush(stdout);
-//    validate();
+    // validate();
     /* TOとFROMの入れ替え */
     t = from_space;
     from_space = to_space;
@@ -157,9 +157,11 @@ static void flip(void) {
     __prc__stdout = (int)copy((int*)__prc__stdout);
     __prc__stdin  = (int)copy((int*)__prc__stdin);
     __prc__timer  = (int)copy((int*)__prc__timer);
+    __prc__cond   = (int)copy((int*)__prc__cond);
+    __prc__null   = (int)copy((int*)__prc__null);
 
     /* ハンドルの走査 */
-    for (io = __prc__ioq->tqh_first; io != NULL; io = io->link.tqe_next) {
+    for (io = __prc__ioq.tqh_first; io != NULL; io = io->link.tqe_next) {
         io->chan = (chan_t *)copy((int*)io->chan);
     }
 
@@ -174,7 +176,7 @@ static void flip(void) {
         assert(GET_SIZE(scan) != 0);
         scan += GET_SIZE(scan);
     }
-//    validate();
+    // validate();
 
     printf("GC finished(%d reclaimed).\n", heap_top - heap_free);
     fflush(stdout);

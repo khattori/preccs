@@ -15,6 +15,18 @@
 #include "gc.h"
 
 /**
+ * 組み込みチャネル初期化
+ */
+void chan_init(void) {
+    __prc__cond = (int)__chan__();
+    ((chan_t *)__prc__cond)->sendf = __cond_send__;
+    ((chan_t *)__prc__cond)->recvf = NULL;
+    __prc__null = (int)__chan__();
+    ((chan_t *)__prc__null)->sendf = __null_send__;
+    ((chan_t *)__prc__null)->recvf = __null_recv__;
+}
+
+/**
  * チャネル生成
  */
 chan_t *__chan__(void) {
@@ -25,6 +37,8 @@ chan_t *__chan__(void) {
     TAILQ_INIT(&ch->inq);
     TAILQ_INIT(&ch->outq);
     ch->ioent = NULL;
+    ch->recvf = __recv__;
+    ch->sendf = __send__;
 
     return ch;
 }
@@ -63,26 +77,5 @@ event_t *chout_next(chan_t *ch) {
     return evt;
 }
 
-/**
- * チャネルの送信処理(受信待ちプロセスのキャンセル)
- */
-int chan_send(int ch, int val) {
-    __prc__regs[0] = __prc__send;
-    __prc__regs[1] = ch;
-    __prc__regs[2] = val;
-    __prc__regs[3] = __prc__disp;
 
-    return (int)__send__;
-}
-
-/**
- * チャネルの受信処理(送信待ちプロセスのキャンセル)
- */
-int chan_recv(int ch) {
-    __prc__regs[0] = __prc__recv;
-    __prc__regs[1] = ch;
-    __prc__regs[2] = __prc__disp;
-
-    return (int)__recv__;
-}
 

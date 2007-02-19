@@ -16,6 +16,8 @@
 int __prc__stdout;
 int __prc__stdin;
 int __prc__timer;
+int __prc__cond;
+int __prc__null;
 
 static int disp_clos[1] = { (int)__disp__ };
 int __prc__disp = (int)disp_clos;
@@ -29,6 +31,7 @@ int prc_main(void) {
     func_t start;
 
     gc_init();
+    chan_init();
     io_init();
     proc_init();
     timer_init();

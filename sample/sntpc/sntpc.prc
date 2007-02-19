@@ -32,6 +32,7 @@ type SntpPacket = {{
 	msgdgs	: octet[128]
     }?
 }}
+type TEXT =  { /"^\r\n"* }
 
 type SntpSndPkt = SntpPacket{mode={"0B"h}}
 type SntpRcvPkt = SntpPacket{mode={"CC"h|"0C"h}}
@@ -42,9 +43,11 @@ proc Main() =
     var ret:<SocketPair>;
     stdout!"Host> ";
     stdin?host;
-    SockUdpCreate(ret,host,123);
-    ret?sp;
-    SntpProcInit(sp)
+    ( host @ h:{ name: TEXT; x: ("\r"|"\n")* } ->
+              SockUdpCreate(ret,h.name,123);
+              ret?sp;
+              SntpProcInit(sp)
+           | _ -> skip )
 
 proc SntpProcInit(sp:SocketPair) =
     stdout!"Enter> ";
@@ -66,6 +69,7 @@ proc SockUdpCreate(ret:<SocketPair>,host:string,port:int) =
     var sin:<string>;
     var sout:<string>;
     C{
-	 prc_SockUdpClient($sin$, $sout$, STRPTR($host$), TOCINT($port$));
+	char *hname = (char *)__string__(STRLEN($host$),STRPTR($host$));
+	prc_SockUdpClient($sin$, $sout$, STRPTR(hname), TOCINT($port$));
     C};
     ret!{in=sin;out=sout}

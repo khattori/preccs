@@ -41,5 +41,6 @@ void io_chout(ioent_t *io, event_t *evt);
 void io_chin(ioent_t *io, event_t *evt);
 
 void ioent_create(chan_t *ch, int desc, iotype_t type, size_t size);
+void ioent_delete(ioent_t *ioent);
 
 #endif /* __INC_IO_H__ */

@@ -10,9 +10,10 @@
 #define __INC_EXEC_H__
 
 int __send__(void);
+int __null_send__(void);
+int __cond_send__(void);
 int __recv__(void);
-int __send_t__(void);
-int __recv_t__(void);
+int __null_recv__(void);
 int __run__(void);
 
 #endif /* __INC_EXEC_H__ */

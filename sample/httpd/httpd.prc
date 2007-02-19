@@ -35,10 +35,10 @@ type SocketPair = {in:<string>;out:<string>}
 type FileIn = {ok:bool;in:<string>}
 proc Main() =
     var lsock:<SocketPair>;
-    C{	prc_SockTcpServer($lsock$, 80); C};
+    C{	prc_SockTcpServer($lsock$, 8080); C};
     HttpSrv(lsock)
 proc HttpSrv(lsock:<SocketPair>) =
-      stdin?msg   -> stop
+      stdin?msg   -> stdout!"BYE\n"; stop
     | lsock?csock -> HttpOnAcc(csock); HttpSrv(lsock)
 proc HttpOnAcc(sp:SocketPair) =
     sp.in?msg;

@@ -39,58 +39,30 @@ int __disp__(void) {
     return ((int *)__prc__regs[0])[0];
 }
 
-static int send_clos[1]   = { (int)__send__ };
-static int recv_clos[1]   = { (int)__recv__ };
-static int send_t_clos[1] = { (int)__send_t__ };
-static int recv_t_clos[1] = { (int)__recv_t__ };
+static int __send0__(void) {
+    if (TR_IS_CANCELLED(__prc__regs[5])) {
+        return (int)__disp__;
+    }
+    return (int)((chan_t *)__prc__regs[2])->sendf;
+}
+static int __recv0__(void) {
+    if (TR_IS_CANCELLED(__prc__regs[4])) {
+        return (int)__disp__;
+    }
+    return (int)((chan_t *)__prc__regs[2])->recvf;
+}
+
+static int send_clos[1]   = { (int)__send0__ };
+static int recv_clos[1]   = { (int)__recv0__ };
 static int run_clos[1]    = { (int)__run__ };
 int __prc__send   = (int)send_clos;
 int __prc__recv   = (int)recv_clos;
-int __prc__send_t = (int)send_t_clos;
-int __prc__recv_t = (int)recv_t_clos;
 int __prc__run    = (int)run_clos;
+
 
 /*
  * チャネル送信：イベントとアクションをチャネルに登録
  */
-/*
-  r0 : send_clos
-  r1 : channel
-  r2 : val
-  r3 : clos
-*/
-int __send__(void) {
-    if ((__prc__regs[0] = (int)chin_next((chan_t *)__prc__regs[1])) == (int)NULL) {
-	ioent_t *io;
-	event_t *evt;
-
-	/* 新規イベント追加 */
-        evt = event(__prc__regs[2], __prc__regs[3], 0);
-	if ((io = ((chan_t *)__prc__regs[1])->ioent) != NULL) {
-	    io_chout(io, evt);
-	} else {
-	    TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[1])->outq, evt, link);
-	}
-    } else {
-	/* 受信プロセスあり */
-        proc_t *prc;
-
-        /* 受信プロセスを取り出して実行待ちキューに入れる */
-        prc = proc();
-        prc->clos = ((event_t *)__prc__regs[0])->clos;
-        prc->val  = __prc__regs[2];       /* 値の受け渡し */
-        TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
-
-        prc = proc();
-        prc->clos = __prc__regs[3];
-        prc->val  = 0;
-        TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
-
-        TAILQ_REMOVE(&((chan_t *)__prc__regs[1])->inq, (event_t *)__prc__regs[0], link);
-        EV_SET_CANCEL((event_t *)__prc__regs[0]);
-    }
-    return (int)__disp__;
-}
 /*
   r0 : send_clos
   r1 : continuation
@@ -99,7 +71,7 @@ int __send__(void) {
   r4 : clos
   r5 : trans
 */
-int __send_t__(void) {
+int __send__(void) {
     if ((__prc__regs[0] = (int)chin_next((chan_t *)__prc__regs[2])) == (int)NULL) {
 	ioent_t *io;
 	event_t *evt;
@@ -128,50 +100,46 @@ int __send_t__(void) {
         TAILQ_REMOVE(&((chan_t *)__prc__regs[2])->inq, (event_t *)__prc__regs[0], link);
         EV_SET_CANCEL((event_t *)__prc__regs[0]);
         /* transをキャンセルする(__prc__regs[5]) */
-        TR_SET_CANCEL(__prc__regs[5]);
+        if (__prc__regs[5]) TR_SET_CANCEL(__prc__regs[5]);
     }
     __prc__regs[0] = __prc__regs[1];
     return ((int*)__prc__regs[0])[0];
 }
+/*
+ * 組み込みチャネル送信
+ */
+int __cond_send__(void) {
+    if (__prc__regs[3] == ~0) { /* TRUE */
+        proc_t *prc;
+
+        prc = proc();
+        prc->clos = __prc__regs[4];
+        prc->val  = 0;
+        TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
+
+        /* transをキャンセルする(__prc__regs[5]) */
+        if (__prc__regs[5]) TR_SET_CANCEL(__prc__regs[5]);
+    }
+    __prc__regs[0] = __prc__regs[1];
+    return ((int*)__prc__regs[0])[0];
+}	
+int __null_send__(void) {
+    proc_t *prc;
+
+    prc = proc();
+    prc->clos = __prc__regs[4];
+    prc->val  = 0;
+    TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
+    /* transをキャンセルする(__prc__regs[5]) */
+    if (__prc__regs[5]) TR_SET_CANCEL(__prc__regs[5]);
+
+    __prc__regs[0] = __prc__regs[1];
+    return ((int*)__prc__regs[0])[0];
+}	
 
 /*
  * チャネル受信：イベントとアクションをチャネルに登録
  */
-/*
-  r0 : recv_clos
-  r1 : channel
-  r2 : clos
-*/
-int __recv__(void) {
-    if ((__prc__regs[0] = (int)chout_next((chan_t *)__prc__regs[1])) == (int)NULL) {
-	ioent_t *io;
-	event_t *evt;
-
-	/* 新規イベント追加 */
-        evt = event(0, __prc__regs[2], 0);
-	if ((io = ((chan_t *)__prc__regs[1])->ioent) != NULL) {
-	    io_chin(io, evt);
-	}
-        TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[1])->inq, evt, link);
-    } else {
-	proc_t *prc;
-
-        /* 送信プロセスを取り出して実行待ちキューに入れる */
-        prc = proc();
-        prc->clos = ((event_t *)__prc__regs[0])->clos;
-        prc->val  = 0;
-        TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
-
-        prc = proc();
-        prc->clos = __prc__regs[2];
-        prc->val  = ((event_t *)__prc__regs[0])->val;    /* 値の受け渡し */
-        TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
-
-        TAILQ_REMOVE(&((chan_t *)__prc__regs[1])->outq, (event_t *)__prc__regs[0], link);
-        EV_SET_CANCEL((event_t *)__prc__regs[0]);
-    }
-    return (int)__disp__;
-}
 /*
   r0 : recv_clos
   r1 : continuation
@@ -179,7 +147,7 @@ int __recv__(void) {
   r3 : clos
   r4 : trans
 */
-int __recv_t__(void) {
+int __recv__(void) {
     if ((__prc__regs[0] = (int)chout_next((chan_t *)__prc__regs[2])) == (int)NULL) {
 	ioent_t *io;
 	event_t *evt;
@@ -207,8 +175,23 @@ int __recv_t__(void) {
         TAILQ_REMOVE(&((chan_t *)__prc__regs[2])->outq, (event_t *)__prc__regs[0], link);
         EV_SET_CANCEL((event_t *)__prc__regs[0]);
         /* transをキャンセルする(__prc__regs[4]) */
-        TR_SET_CANCEL(__prc__regs[4]);
+        if (__prc__regs[4]) TR_SET_CANCEL(__prc__regs[4]);
     }
+    __prc__regs[0] = __prc__regs[1];
+    return ((int*)__prc__regs[0])[0];
+}
+/*
+ * 組み込みチャネル受信
+ */
+int __null_recv__(void) {
+    proc_t *prc;
+
+    prc = proc();
+    prc->clos = __prc__regs[3];
+    TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
+    /* transをキャンセルする(__prc__regs[4]) */
+    if (__prc__regs[4]) TR_SET_CANCEL(__prc__regs[4]);
+
     __prc__regs[0] = __prc__regs[1];
     return ((int*)__prc__regs[0])[0];
 }

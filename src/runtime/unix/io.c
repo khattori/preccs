@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/select.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <errno.h>
 #include <aio.h>
 #include "prcrt.h"
@@ -23,10 +25,10 @@
 #include "exec.h"
 #include "io.h"
 
-ioq_t __prc__ioq[1];
+ioq_t __prc__ioq;
 
-static ioq_t io_mrdq[1];
-static ioq_t io_mwrq[1];
+static ioq_t io_mrdq;
+static ioq_t io_mwrq;
 
 static ioent_t *aio_ioent;
 static int aio_errno;
@@ -46,7 +48,8 @@ static void io_send(ioent_t *io, int val) {
 
     /* 非同期IO要求を発行 */
     if ((len = STRLEN(val)) == 0) {
-	perr(PERR_INTERNAL, __FILE__, __LINE__);
+	ioent_delete(io);
+	return;
     }
     len -= io->offset;
     if (io->bufsz < len) {
@@ -55,8 +58,6 @@ static void io_send(ioent_t *io, int val) {
     memcpy(io->buf, STRPTR(val)+io->offset, len);
 
     io->aiocb.aio_nbytes = len;
-    io->aiocb.aio_offset = 0;
-
     aio_count++;
     if (aio_write(&io->aiocb) < 0) {
 	perr(PERR_SYSTEM, "aio_write", strerror(errno), __FILE__, __LINE__);
@@ -65,12 +66,35 @@ static void io_send(ioent_t *io, int val) {
 
 static void io_recv(ioent_t *io) {
     io->aiocb.aio_nbytes = io->bufsz;
-    io->aiocb.aio_offset = 0;
     aio_count++;
     if (aio_read(&io->aiocb) < 0) {
 	perr(PERR_SYSTEM, "aio_write", strerror(errno), __FILE__, __LINE__);
     }
 }
+
+static void io_accept(ioent_t *io) {
+    proc_t *prc;
+    event_t *evt;
+    int so;
+
+    if ((so = accept(io->desc, NULL, NULL)) < 0) {
+	perr(PERR_SYSTEM, "accept", strerror(errno), __FILE__, __LINE__);
+    }
+    __prc__regs[0] = (int)__chan__();
+    __prc__regs[1] = (int)__chan__();
+    ioent_create((chan_t *)__prc__regs[0], so, IO_TYPE_IN,  BUFSIZ);
+    ioent_create((chan_t *)__prc__regs[1], so, IO_TYPE_OUT, BUFSIZ);
+    __prc__regs[0] = __record__(2, __prc__regs[0], __prc__regs[1]);
+
+    /* 実行可能プロセスをセット */
+    prc = proc();
+    evt = chin_next(io->chan);
+    prc->clos = evt->clos;
+    prc->val  = __prc__regs[0];
+    TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
+    TAILQ_REMOVE(&io->chan->inq, evt, link);
+}
+
 
 static void aio_completion_handler(int signo, siginfo_t *info, void *context) {
     struct aiocb *req;
@@ -83,7 +107,10 @@ static void aio_completion_handler(int signo, siginfo_t *info, void *context) {
     req = &aio_ioent->aiocb;
     if ((aio_errno = aio_error(req)) == 0) {
 	aio_ret = aio_return(req);
+    } else {
+        perr(PERR_SYSTEM, "aio_error", strerror(aio_errno), __FILE__, __LINE__);
     }
+
     aio_completion_flag = 1;
 
     siglongjmp(sj_buf, 1);
@@ -95,9 +122,9 @@ static void aio_completion_handler(int signo, siginfo_t *info, void *context) {
 void io_init(void) {
     struct sigaction sig_act;
 
-    TAILQ_INIT(__prc__ioq);
-    TAILQ_INIT(io_mrdq);
-    TAILQ_INIT(io_mwrq);
+    TAILQ_INIT(&__prc__ioq);
+    TAILQ_INIT(&io_mrdq);
+    TAILQ_INIT(&io_mwrq);
 
     sigemptyset(&ss_sigio);
     sigaddset(&ss_sigio, SIGIO);
@@ -135,9 +162,11 @@ void ioent_create(chan_t *ch, int desc, iotype_t type, size_t size) {
     if (io == NULL) {
         perr(PERR_OUTOFMEM, __FILE__, __LINE__);
     }
-    io->bufsz = size;
-    io->chan = ch;
-    io->type = type;
+    io->bufsz  = size;
+    io->chan   = ch;
+    io->type   = type;
+    io->offset = 0;
+    io->mlink.tqe_prev = NULL;
     memset(&io->aiocb, 0, sizeof(struct aiocb));
     io->aiocb.aio_fildes = io->desc = desc;
     io->aiocb.aio_buf    = io->buf;
@@ -146,16 +175,46 @@ void ioent_create(chan_t *ch, int desc, iotype_t type, size_t size) {
     io->aiocb.aio_sigevent.sigev_signo  = SIGIO;
     io->aiocb.aio_sigevent.sigev_value.sival_ptr = io;
 
-    TAILQ_INSERT_TAIL(__prc__ioq, io, link);
+    TAILQ_INSERT_TAIL(&__prc__ioq, io, link);
 
     ch->ioent = io;
+}
+
+/**
+ * I/Oエントリの削除
+ */
+void ioent_delete(ioent_t *ioent) {
+    ioent_t *io;
+
+    TAILQ_REMOVE(&__prc__ioq, ioent, link);
+    ioent->chan->ioent = NULL;
+    close(ioent->desc);
+
+    for (io = io_mrdq.tqh_first; io != NULL; io = io->mlink.tqe_next) {
+	if (io == ioent) {
+	    TAILQ_REMOVE(&io_mrdq, ioent, mlink);
+	    free(ioent);
+	    return;
+	}
+    }
+    for (io = io_mwrq.tqh_first; io != NULL; io = io->mlink.tqe_next) {
+	if (io == ioent) {
+	    TAILQ_REMOVE(&io_mwrq, ioent, mlink);
+	    free(ioent);
+	    return;
+	}
+    }
 }
 
 /* 非同期I/O完了時の処理 */
 static void io_complete(ioent_t *ioent, ssize_t len) {
     event_t *evt;
     proc_t *prc;
-    
+
+    if (len < 0) {
+        perr(PERR_INTERNAL, __FILE__, __LINE__);
+    }
+
     aio_count--;
     switch (ioent->type) {
     case IO_TYPE_IN:
@@ -168,21 +227,26 @@ static void io_complete(ioent_t *ioent, ssize_t len) {
         TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
         TAILQ_REMOVE(&ioent->chan->inq, evt, link);
 
+	ioent->aiocb.aio_offset += len;
 	/* IO待ちプロセスが無ければ終了 */
 	if ((evt = chin_next(ioent->chan)) == NULL) {
+	    if (len == 0) {
+		ioent_delete(ioent);
+	    }
 	    return;
 	}
 
 	if (evt->trans == 0) {
 	    io_recv(ioent);
 	} else {
-	    TAILQ_INSERT_TAIL(io_mrdq, ioent, mlink);
+	    TAILQ_INSERT_TAIL(&io_mrdq, ioent, mlink);
 	}
 
 	break;
     case IO_TYPE_OUT:
 	/* 未送信データが残っていれば，再度，IO要求を発行 */
 	ioent->offset += len;
+	ioent->aiocb.aio_offset += len;
 	__prc__regs[0] = (int)chout_next(ioent->chan);
 	evt = (event_t *)__prc__regs[0];
 	if (STRLEN(evt->val) > ioent->offset) {
@@ -205,7 +269,7 @@ static void io_complete(ioent_t *ioent, ssize_t len) {
 	    ioent->offset = 0;
 	    io_send(ioent, evt->val);
 	} else {
-	    TAILQ_INSERT_TAIL(io_mwrq, ioent, mlink);
+	    TAILQ_INSERT_TAIL(&io_mwrq, ioent, mlink);
 	}
 	break;
     default:
@@ -223,27 +287,20 @@ static int io_set_fds(fd_set *rfds, fd_set *wfds) {
     FD_ZERO(rfds);
     FD_ZERO(wfds);
 
-    for (io = io_mrdq->tqh_first; io != NULL; io = io->mlink.tqe_next) {
-	if ((evt = chin_next(io->chan)) == NULL) {
-	    TAILQ_REMOVE(io_mrdq, io, mlink);
+    for (io = io_mrdq.tqh_first; io != NULL; io = io->mlink.tqe_next) {
+	if ((evt = chin_next(io->chan)) == NULL || (evt->trans == 0 && io->type == IO_TYPE_IN)) {
+	    TAILQ_REMOVE(&io_mrdq, io, mlink);
+            io->mlink.tqe_prev = NULL;
 	    continue;
 	}
-	if (evt->trans == 0) {
-	    TAILQ_REMOVE(io_mrdq, io, mlink);
-	    io_recv(io);
-	    continue;
-	}
+
 	FD_SET(io->desc, rfds);
 	max = PRC_MAX(max, io->desc);
     }
-    for (io = io_mwrq->tqh_first; io != NULL; io = io->mlink.tqe_next) {
-	if ((evt = chout_next(io->chan)) == NULL) {
-	    TAILQ_REMOVE(io_mwrq, io, mlink);
-	    continue;
-	}
-	if (evt->trans == 0) {
-	    TAILQ_REMOVE(io_mwrq, io, mlink);
-	    io_send(io, evt->val);
+    for (io = io_mwrq.tqh_first; io != NULL; io = io->mlink.tqe_next) {
+	if ((evt = chout_next(io->chan)) == NULL || evt->trans == 0) {
+	    TAILQ_REMOVE(&io_mwrq, io, mlink);
+            io->mlink.tqe_prev = NULL;
 	    continue;
 	}
 	FD_SET(io->desc, wfds);
@@ -289,24 +346,28 @@ int io_exec(void) {
 	    ioent_t *io;
 
 	    /* 多重IOの処理 */
-	    for (io = io_mrdq->tqh_first; io != NULL; io = io->mlink.tqe_next) {
+	    for (io = io_mrdq.tqh_first; io != NULL; io = io->mlink.tqe_next) {
 		if (FD_ISSET(io->desc, &rfds)) {
 		    if ((evt = chin_next(io->chan)) != NULL) {
-			EV_SET_CANCEL(evt);
-			evt->trans = 0;
-			io_recv(io);
+			if (io->type == IO_TYPE_ACCEPT) {
+			    io_accept(io);
+			    EV_SET_CANCEL(evt);
+			} else {
+			    EV_SET_CANCEL(evt);
+			    evt->trans = 0;
+			    io_recv(io);
+			}
 		    }
-		    TAILQ_REMOVE(io_mrdq, io, mlink);
 		}
 	    }
-	    for (io = io_mwrq->tqh_first; io != NULL; io = io->mlink.tqe_next) {
+	    for (io = io_mwrq.tqh_first; io != NULL; io = io->mlink.tqe_next) {
 		if (FD_ISSET(io->desc, &wfds)) {
 		    if ((evt = chout_next(io->chan)) != NULL) {
 			EV_SET_CANCEL(evt);
 			evt->trans = 0;
 			io_send(io, evt->val);
 		    }
-		    TAILQ_REMOVE(io_mwrq, io, mlink);
+		    TAILQ_REMOVE(&io_mwrq, io, mlink);
 		}
 	    }
 	}
@@ -344,7 +405,9 @@ void io_chout(ioent_t *io, event_t *evt) {
 	if (evt->trans == 0) {
 	    io_send(io, evt->val);
 	} else {
-	    TAILQ_INSERT_TAIL(io_mwrq, io, mlink);
+            if (io->mlink.tqe_prev == NULL) {
+	        TAILQ_INSERT_TAIL(&io_mwrq, io, mlink);
+ 	    }
 	}
 	break;
     case IO_TYPE_TIMER:
@@ -369,9 +432,19 @@ void io_chin(ioent_t *io, event_t *evt) {
 	if (evt->trans == 0) {
 	    io_recv(io);
 	} else {
-	    TAILQ_INSERT_TAIL(io_mrdq, io, mlink);
+            if (io->mlink.tqe_prev == NULL) {
+	        TAILQ_INSERT_TAIL(&io_mrdq, io, mlink);
+            } 
 	}
-
+	break;
+    case IO_TYPE_ACCEPT:
+	/* 既にIO発行済みであれば何もしない */
+	if (chin_next(io->chan) != NULL) {
+	    return;
+	}
+        if (io->mlink.tqe_prev == NULL) {
+	    TAILQ_INSERT_TAIL(&io_mrdq, io, mlink);
+        }
 	break;
     default:
 	perr(PERR_INTERNAL, __FILE__, __LINE__);

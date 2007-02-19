@@ -11,5 +11,6 @@
 
 typedef struct chan_ chan_t;
 typedef struct ioent_ ioent_t;
+typedef int (*code_t)(void);
 
 #endif /* __INC_TYPE_H__ */

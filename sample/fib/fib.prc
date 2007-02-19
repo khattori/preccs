@@ -3,6 +3,7 @@
  */
 C{
 #include <stdio.h>
+#include <string.h>
 C}
 proc Main() = 
     var ch:<int>;

@@ -15,9 +15,13 @@ proc Main() =
     Total();
     var end:<bool>;
     Test1(end,ok,ng); end?x;
+    C{ printf("TEST1 completed\n"); C};
     Test2(end,ok,ng); end?x;
+    C{ printf("TEST2 completed\n"); C};
     Test3(end,ok,ng); end?x;
+    C{ printf("TEST3 completed\n"); C};
     Test4(end,ok,ng); end?x;
+    C{ printf("TEST4 completed\n"); C};
     res!true;
     stop
 

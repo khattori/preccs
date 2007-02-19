@@ -16,6 +16,8 @@ type Bopt4 = BootpOption{len={"04"h},tag={"00"h}}
 type BootpFoo = Bootp{opt.tag={"01"h}}
 type BootpBar = Bootp{opt.tag={"02"h}}
 
+type TEXT = {/"^\r\n"*}
+
 proc Test2(end:<bool>,ok:<int>,ng:<int>) =
     var x = "hogehogehogehogehogehoge";
     ( "00"h^"a" @ x: Bopt1 -> ok!1
@@ -140,6 +142,14 @@ proc Test2(end:<bool>,ok:<int>,ng:<int>) =
 
     var x="0105FF"h;
     ( x @ y:{l:octet;m:octet;n:(octet[l]|octet[m])} -> ok!1
+        | _ -> ng!1 );
+
+    var x="hogehoge\r\n";
+    ( x @ y:{text:TEXT; cr:("\r"|"\n")*} ->
+	    ok!1; 
+            ( y.text @ "hogehoge" -> ok!1
+                     | _ -> ng!1 
+	    )
         | _ -> ng!1 );
 
     end!true

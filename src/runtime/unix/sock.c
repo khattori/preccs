@@ -35,7 +35,7 @@ int prc_SockUdpClient(int ich, int och, char *host, int port) {
     int sock;
 
     if ((hent = gethostbyname(host)) == NULL) {
-        perr(PERR_SYSTEM, "gethostbyname", strerror(errno), __FILE__, __LINE__);
+        perr(PERR_SYSTEM, "gethostbyname", hstrerror(h_errno), __FILE__, __LINE__);
         return -1;
     }
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -141,6 +141,7 @@ int prc_SockTcpServer(int ch, int port) {
         perr(PERR_SYSTEM, "socket", strerror(errno), __FILE__, __LINE__);
         return -1;
     }
+    /* TODO: fcntl()でO_NONBLOCKをセットする */
 
     addr.sin_port = htons(port);
     addr.sin_family = AF_INET;

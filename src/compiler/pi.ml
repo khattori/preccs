@@ -178,7 +178,7 @@ and trans_proc env nxt = function
            Guard(
              List.fold_left (
                fun proc (g,p) ->
-		 Alt(trans_gproc env (trans_proc env (Call(v_nprc,[])) p) g,proc)
+		 Alt(proc, trans_gproc env (trans_proc env (Call(v_nprc,[])) p) g)
              ) (trans_gproc env (trans_proc env (Call(v_nprc,[])) p) g) (List.tl ps)))
   | A.ProcMatch(i,e,ps,t) -> (
       try 
