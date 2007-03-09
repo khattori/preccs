@@ -35,7 +35,7 @@ int prc_FileOpenR(int ich, char *fname) {
         // perr(PERR_SYSTEM, "open", strerror(errno), __FILE__, __LINE__);
 	return -1;
     }
-
+    // printf("file opened: %d\n", fd);
     ioent_create((chan_t *)ich, fd, IO_TYPE_IN, BUFSIZ);
 
     return 0;

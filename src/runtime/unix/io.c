@@ -27,14 +27,16 @@
 
 ioq_t __prc__ioq;
 
+/* pselectで待つIO */
 static ioq_t io_mrdq;
 static ioq_t io_mwrq;
 
-static ioent_t *aio_ioent;
-static int aio_errno;
-static ssize_t aio_ret;
+#define AIO_MAX 10
+static ioent_t *aio_ioent[AIO_MAX];
+static int aio_errno[AIO_MAX];
+static ssize_t aio_ret[AIO_MAX];
 static int aio_count;
-static int aio_completion_flag;
+static int aio_completion_count;
 
 static sigset_t ss_default;
 static sigset_t ss_sigio;
@@ -48,27 +50,36 @@ static void io_send(ioent_t *io, int val) {
 
     /* 非同期IO要求を発行 */
     if ((len = STRLEN(val)) == 0) {
-	ioent_delete(io);
+	event_t *evt;
+	proc_t *prc;
+
+	__prc__regs[0] = (int)chout_next(io->chan);
+	prc = proc();
+	evt = (event_t *)__prc__regs[0]; /* GCを考慮しevtを再取得 */
+	prc->clos = evt->clos;
+     	prc->val  = 0;
+        TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
+	ioent_delete2(io->desc);
 	return;
     }
     len -= io->offset;
     if (io->bufsz < len) {
 	len = io->bufsz;
     }
-    memcpy(io->buf, STRPTR(val)+io->offset, len);
+    memcpy((void *)io->aiocb->aio_buf, STRPTR(val)+io->offset, len);
 
-    io->aiocb.aio_nbytes = len;
+    io->aiocb->aio_nbytes = len;
     aio_count++;
-    if (aio_write(&io->aiocb) < 0) {
+    if (aio_write(io->aiocb) < 0) {
 	perr(PERR_SYSTEM, "aio_write", strerror(errno), __FILE__, __LINE__);
     }
 }
 
 static void io_recv(ioent_t *io) {
-    io->aiocb.aio_nbytes = io->bufsz;
+    io->aiocb->aio_nbytes = io->bufsz;
     aio_count++;
-    if (aio_read(&io->aiocb) < 0) {
-	perr(PERR_SYSTEM, "aio_write", strerror(errno), __FILE__, __LINE__);
+    if (aio_read(io->aiocb) < 0) {
+	perr(PERR_SYSTEM, "aio_read", strerror(errno), __FILE__, __LINE__);
     }
 }
 
@@ -76,7 +87,7 @@ static void io_accept(ioent_t *io) {
     proc_t *prc;
     event_t *evt;
     int so;
-
+    // printf("io_accept: enter\n");
     if ((so = accept(io->desc, NULL, NULL)) < 0) {
 	perr(PERR_SYSTEM, "accept", strerror(errno), __FILE__, __LINE__);
     }
@@ -84,34 +95,40 @@ static void io_accept(ioent_t *io) {
     __prc__regs[1] = (int)__chan__();
     ioent_create((chan_t *)__prc__regs[0], so, IO_TYPE_IN,  BUFSIZ);
     ioent_create((chan_t *)__prc__regs[1], so, IO_TYPE_OUT, BUFSIZ);
-    __prc__regs[0] = __record__(2, __prc__regs[0], __prc__regs[1]);
+    __prc__regs[2] = __record__(2);
+    ((int*)__prc__regs[2])[0] = __prc__regs[0];
+    ((int*)__prc__regs[2])[1] = __prc__regs[1];
 
     /* 実行可能プロセスをセット */
     prc = proc();
     evt = chin_next(io->chan);
     prc->clos = evt->clos;
-    prc->val  = __prc__regs[0];
+    prc->val  = __prc__regs[2];
     TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
     TAILQ_REMOVE(&io->chan->inq, evt, link);
+    //printf("io_accept: leave: %d\n", so);
 }
-
 
 static void aio_completion_handler(int signo, siginfo_t *info, void *context) {
     struct aiocb *req;
-
-    if (info->si_signo != SIGIO) {
+    //printf("aio_completion_handler: %d: enter\n", info->si_code);
+    if (info->si_signo != SIGRTMIN+SIGIO) {
         perr(PERR_INTERNAL, __FILE__, __LINE__);
     }
-
-    aio_ioent = (ioent_t *)info->si_value.sival_ptr;
-    req = &aio_ioent->aiocb;
-    if ((aio_errno = aio_error(req)) == 0) {
-	aio_ret = aio_return(req);
-    } else {
-        perr(PERR_SYSTEM, "aio_error", strerror(aio_errno), __FILE__, __LINE__);
+    if (info->si_code != SI_ASYNCIO) {
+   	return;
     }
 
-    aio_completion_flag = 1;
+    aio_ioent[aio_completion_count] = (ioent_t *)info->si_value.sival_ptr;
+    req = aio_ioent[aio_completion_count]->aiocb;
+    if ((aio_errno[aio_completion_count] = aio_error(req)) == 0) {
+	aio_ret[aio_completion_count] = aio_return(req);
+    } else {
+        perr(PERR_SYSTEM, "aio_error", strerror(aio_errno[aio_completion_count]), __FILE__, __LINE__);
+    }
+
+    //printf("aio_completion_handler: %p: %d: code=%d: leave\n", aio_ioent[aio_completion_count], aio_ioent[aio_completion_count]->desc, info->si_code);
+    aio_completion_count++;
 
     siglongjmp(sj_buf, 1);
 }
@@ -127,7 +144,7 @@ void io_init(void) {
     TAILQ_INIT(&io_mwrq);
 
     sigemptyset(&ss_sigio);
-    sigaddset(&ss_sigio, SIGIO);
+    sigaddset(&ss_sigio, SIGRTMIN+SIGIO);
     sigprocmask(SIG_BLOCK, &ss_sigio, &ss_default);
     
     /* シグナルハンドラを登録 */
@@ -135,7 +152,7 @@ void io_init(void) {
     sig_act.sa_flags = SA_SIGINFO;
     sig_act.sa_sigaction = aio_completion_handler;
 
-    if (sigaction(SIGIO, &sig_act, NULL) < 0) {
+    if (sigaction(SIGRTMIN+SIGIO, &sig_act, NULL) < 0) {
 	perr(PERR_SYSTEM, "sigaction", strerror(errno), __FILE__, __LINE__);
     }
 
@@ -158,24 +175,26 @@ void io_init(void) {
 void ioent_create(chan_t *ch, int desc, iotype_t type, size_t size) {
     ioent_t *io;
 
-    io = (ioent_t *)malloc(sizeof(ioent_t)+size-1);
+    io = malloc(sizeof(ioent_t)+sizeof(struct aiocb)+size);
     if (io == NULL) {
         perr(PERR_OUTOFMEM, __FILE__, __LINE__);
     }
+    io->aiocb = (struct aiocb *)(io+1);
+    memset(io->aiocb, 0, sizeof(struct aiocb));
     io->bufsz  = size;
     io->chan   = ch;
     io->type   = type;
     io->offset = 0;
     io->mlink.tqe_prev = NULL;
-    memset(&io->aiocb, 0, sizeof(struct aiocb));
-    io->aiocb.aio_fildes = io->desc = desc;
-    io->aiocb.aio_buf    = io->buf;
+    io->aiocb->aio_fildes = io->desc = desc;
+    io->aiocb->aio_buf    = (char *)(io->aiocb+1);
 
-    io->aiocb.aio_sigevent.sigev_notify = SIGEV_SIGNAL;
-    io->aiocb.aio_sigevent.sigev_signo  = SIGIO;
-    io->aiocb.aio_sigevent.sigev_value.sival_ptr = io;
+    io->aiocb->aio_sigevent.sigev_notify = SIGEV_SIGNAL;
+    io->aiocb->aio_sigevent.sigev_signo  = SIGRTMIN+SIGIO;
+    io->aiocb->aio_sigevent.sigev_value.sival_ptr = io;
 
     TAILQ_INSERT_TAIL(&__prc__ioq, io, link);
+    // printf("insert: %p(desc=%d)\n", io, io->desc);
 
     ch->ioent = io;
 }
@@ -189,19 +208,30 @@ void ioent_delete(ioent_t *ioent) {
     TAILQ_REMOVE(&__prc__ioq, ioent, link);
     ioent->chan->ioent = NULL;
     close(ioent->desc);
+    // printf("ioent_delete: %d\n", ioent->desc);
 
     for (io = io_mrdq.tqh_first; io != NULL; io = io->mlink.tqe_next) {
 	if (io == ioent) {
 	    TAILQ_REMOVE(&io_mrdq, ioent, mlink);
-	    free(ioent);
-	    return;
 	}
     }
     for (io = io_mwrq.tqh_first; io != NULL; io = io->mlink.tqe_next) {
 	if (io == ioent) {
 	    TAILQ_REMOVE(&io_mwrq, ioent, mlink);
-	    free(ioent);
-	    return;
+	}
+    }
+    free(ioent);
+}
+void ioent_delete2(int desc) {
+    ioent_t *io, *oio;
+
+    for (io = __prc__ioq.tqh_first; io != NULL; ) {
+	if (io->desc == desc) {
+	    oio = io;
+            io = io->link.tqe_next;
+	    ioent_delete(oio);
+	} else {
+	    io = io->link.tqe_next;
 	}
     }
 }
@@ -219,7 +249,7 @@ static void io_complete(ioent_t *ioent, ssize_t len) {
     switch (ioent->type) {
     case IO_TYPE_IN:
 	/* 受信データをコピー */
-	__prc__regs[0] = __string__(len, ioent->buf);
+	__prc__regs[0] = __string__(len, (void *)ioent->aiocb->aio_buf);
 	prc = proc();
 	evt = chin_next(ioent->chan);
 	prc->clos = evt->clos;
@@ -227,11 +257,11 @@ static void io_complete(ioent_t *ioent, ssize_t len) {
         TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
         TAILQ_REMOVE(&ioent->chan->inq, evt, link);
 
-	ioent->aiocb.aio_offset += len;
+	ioent->aiocb->aio_offset += len;
 	/* IO待ちプロセスが無ければ終了 */
 	if ((evt = chin_next(ioent->chan)) == NULL) {
 	    if (len == 0) {
-		ioent_delete(ioent);
+		ioent_delete2(ioent->desc);
 	    }
 	    return;
 	}
@@ -246,7 +276,7 @@ static void io_complete(ioent_t *ioent, ssize_t len) {
     case IO_TYPE_OUT:
 	/* 未送信データが残っていれば，再度，IO要求を発行 */
 	ioent->offset += len;
-	ioent->aiocb.aio_offset += len;
+	ioent->aiocb->aio_offset += len;
 	__prc__regs[0] = (int)chout_next(ioent->chan);
 	evt = (event_t *)__prc__regs[0];
 	if (STRLEN(evt->val) > ioent->offset) {
@@ -257,6 +287,7 @@ static void io_complete(ioent_t *ioent, ssize_t len) {
 	prc = proc();
 	evt = (event_t *)__prc__regs[0]; /* GCを考慮しevtを再取得 */
 	prc->clos = evt->clos;
+     	prc->val  = 0;
         TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
         TAILQ_REMOVE(&ioent->chan->outq, evt, link);
 
@@ -318,6 +349,7 @@ int io_exec(void) {
     siginfo_t si;
     event_t *evt;
     fd_set rfds, wfds;
+    int i;
     int n;
     int ret;
 
@@ -329,10 +361,13 @@ int io_exec(void) {
     if (ts == NULL && n == 0 && aio_count == 0) {
 	return (int)__stop__;
     }
-
     if (sigsetjmp(sj_buf, 1) == 0) {
+	//printf("aio_count = %d\n", aio_count);
 	ret = pselect(n+1, &rfds, &wfds, NULL, ts, &ss_default);
 	if (ret < 0) {
+            if (errno == EINTR) {
+	        goto interrupted;
+	    }
 	    perr(PERR_SYSTEM, "pselect", strerror(errno), __FILE__, __LINE__);
 	} else if (ret == 0) {
 	    /* タイムアウト時 */
@@ -373,18 +408,22 @@ int io_exec(void) {
 	}
     }
 
+interrupted:
     /* IO完了シグナルを処理 */
-    if (aio_completion_flag && aio_errno == 0) {
-	io_complete(aio_ioent, aio_ret);
-	while (sigtimedwait(&ss_sigio, &si, &ts_zero) == SIGIO) {
-	    ioent_t *ioent = (ioent_t *)si.si_value.sival_ptr;
-	    int err = aio_error(&ioent->aiocb);
-	    if (err == 0) {
-		io_complete(ioent, aio_return(&ioent->aiocb));
-	    }
-	}
-	aio_completion_flag = 0;
+    for (i = 0; i < aio_completion_count; i++) {
+        if (aio_errno[i] == 0) {
+	    io_complete(aio_ioent[i], aio_ret[i]);
+        }
     }
+    while (sigtimedwait(&ss_sigio, &si, &ts_zero) == SIGRTMIN+SIGIO) {
+        ioent_t *ioent = (ioent_t *)si.si_value.sival_ptr;
+        int err = aio_error(ioent->aiocb);
+	//printf("sigtimedwait: %d\n", si.si_code);
+        if (err == 0) {
+	    io_complete(ioent, aio_return(ioent->aiocb));
+	}
+    }
+    aio_completion_count = 0;
 
     return (int)__disp__;
 }

@@ -135,10 +135,15 @@ int prc_SockTcpClient(int ich, int och, char *host, int port) {
  */
 int prc_SockTcpServer(int ch, int port) {
     struct sockaddr_in addr;
+    int option = 1;
     int sock;
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perr(PERR_SYSTEM, "socket", strerror(errno), __FILE__, __LINE__);
+        return -1;
+    }
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) < 0) {
+        perr(PERR_SYSTEM, "setsockopt", strerror(errno), __FILE__, __LINE__);
         return -1;
     }
     /* TODO: fcntl()でO_NONBLOCKをセットする */

@@ -38,12 +38,16 @@ extern int __prc__send;
 extern int __prc__recv;
 extern int __prc__run;
 
+extern int __prc__temp;
+extern int __prc__temp1;
+extern int __prc__temp2;
+
 /* 組込み関数 */
 int __concat__(int s1, int s2);
 int __equals__(int s1, int s2);
 int __disp__(void);
 int __stop__(void);
-int __record__(int sz, ...);
+int __record__(int sz);
 int __rexrcd__(int s, int r);
 int __string__(int len, char *buf);
 int __dmatch__(int val, u_int st);
@@ -55,7 +59,7 @@ int __dmatch__(int val, u_int st);
 #define TOPINT(i) (((i)<<1)^0x01)
 
 #define DEFAULT_HEAP_SIZE (1024*1024*16)
-/* #define DEFAULT_HEAP_SIZE (1024) */
+//#define DEFAULT_HEAP_SIZE (1024*16)
 
 #define IADD(a,b) ((a)+(b)-1)
 #define ISUB(a,b) ((a)-(b)+1)

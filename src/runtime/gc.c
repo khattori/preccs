@@ -48,7 +48,8 @@ from_space --> |                |
 #define IS_FRWD(p)  ((p)[0]==0x2)
 #define SET_FRWD(p) ((p)[0]=0x2)
 
-static void flip(void);
+//static void flip(void);
+void flip(void);
 static int *copy(int *p);
 
 extern ioq_t __prc__ioq;
@@ -97,7 +98,7 @@ int *gc_record(int n) {
 /**
  * ヒープから配列領域を確保
  */
-int *gc_array(int n) {
+int gc_array(int n) {
     int *new_cell;
 
     assert(n > 0);
@@ -112,8 +113,7 @@ int *gc_array(int n) {
     SET_SIZE(new_cell,n);
     SET_ARRY(new_cell);
     heap_free += n;
-    
-    return new_cell + 1;
+    return (int)(new_cell + 1);
 }
 
 int *gc_forward(int *p) {
@@ -133,14 +133,16 @@ int *gc_forward(int *p) {
     return p;
 }
 
-static void flip(void) {
+//static void flip(void) {
+void flip(void) {
     ioent_t *io;
     int *scan;
     int *t;
     int i;
+
     printf("GC started...\n");
     fflush(stdout);
-    // validate();
+    //validate();
     /* TOとFROMの入れ替え */
     t = from_space;
     from_space = to_space;
@@ -159,6 +161,9 @@ static void flip(void) {
     __prc__timer  = (int)copy((int*)__prc__timer);
     __prc__cond   = (int)copy((int*)__prc__cond);
     __prc__null   = (int)copy((int*)__prc__null);
+    __prc__temp   = (int)copy((int*)__prc__temp);
+    __prc__temp1  = (int)copy((int*)__prc__temp1);
+    __prc__temp2  = (int)copy((int*)__prc__temp2);
 
     /* ハンドルの走査 */
     for (io = __prc__ioq.tqh_first; io != NULL; io = io->link.tqe_next) {
@@ -176,7 +181,7 @@ static void flip(void) {
         assert(GET_SIZE(scan) != 0);
         scan += GET_SIZE(scan);
     }
-    // validate();
+    //validate();
 
     printf("GC finished(%d reclaimed).\n", heap_top - heap_free);
     fflush(stdout);
@@ -227,6 +232,9 @@ void validate(void) {
     static int num;
     int *scan = to_space;
 
+    if (num == 15165) {
+	printf("HIT\n");
+    }
     printf("validate:%d\n", num++);
     fflush(stdout);
     while (scan < heap_free) {

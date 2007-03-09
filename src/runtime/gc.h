@@ -12,7 +12,7 @@
 void __hlimit__(int n);
 void gc_init(void);
 int *gc_record(int n);
-int *gc_array(int n);
+int gc_array(int n);
 int *gc_forward(int *p);
 
 #define GC_ALIGN(l) ((l+3)>>2)

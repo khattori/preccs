@@ -27,10 +27,10 @@ struct ioent_ {
     iotype_t type;             /* IO種別 */
     int      desc;             /* ディスクリプタ */
     chan_t *chan;
-    struct aiocb aiocb;
+    struct aiocb *aiocb;
     size_t offset;
     size_t bufsz;
-    char buf[1];
+    // char buf[1];
 };
 
 typedef TAILQ_HEAD(ioq_, ioent_) ioq_t;
@@ -42,5 +42,6 @@ void io_chin(ioent_t *io, event_t *evt);
 
 void ioent_create(chan_t *ch, int desc, iotype_t type, size_t size);
 void ioent_delete(ioent_t *ioent);
+void ioent_delete2(int desc);
 
 #endif /* __INC_IO_H__ */

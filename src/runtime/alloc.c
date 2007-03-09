@@ -16,22 +16,8 @@
 /**
  * レコード生成と初期化
  */
-int __record__(int sz, ...) {
-    int *rec;
-    int i;
-    va_list ap;
-
-    /* レコードを確保 */
-    rec = gc_record(sz);
-
-    /* レコードに値を設定 */
-    va_start(ap, sz);
-    for (i = 0; i < sz; i++) {
-        rec[i] = (int)gc_forward((int*)va_arg(ap, int));
-    }
-    va_end(ap);
-
-    return (int)rec;
+int __record__(int sz) {
+    return (int)gc_record(sz);
 }
 
 /**
@@ -62,13 +48,19 @@ int __rexrcd__(int s, int r) {
  * 文字列のアロケート
  */
 int __string__(int len, char *buf) {
-    char *str;
+    int ret;
 
-    str = (char *)gc_array(GC_ALIGN(len+1));
-    memcpy(str, buf, len);
-    str[len] = '\0';
+    __prc__temp = gc_array(GC_ALIGN(len+1));
+    ret = __record__(4);
+    ((int*)ret)[0] = 0;
+    ((int*)ret)[1] = __prc__temp;
+    ((int*)ret)[2] = 0;
+    ((int*)ret)[3] = len;
+    memcpy((char*)__prc__temp, buf, len);
+    ((char*)__prc__temp)[len] = '\0';
+    __prc__temp = (int)NULL;
 
-    return __record__(4,0,(int)str,0,len);
+    return ret;
 }
 
 /**
@@ -76,19 +68,25 @@ int __string__(int len, char *buf) {
  */
 int __concat__(int s1, int s2) {
     int len1, len2;
-    char *str;
+    int ret;
 
     len1 = STRLEN(s1);
     len2 = STRLEN(s2);
 
-    str = (char *)gc_array(GC_ALIGN(len1+len2+1));
+    __prc__temp = gc_array(GC_ALIGN(len1+len2+1));
     s1 = (int)gc_forward((int*)s1);
     s2 = (int)gc_forward((int*)s2);
-    memcpy(str, STRPTR(s1), len1);
-    memcpy(str+len1, STRPTR(s2), len2);
-    str[len1+len2] = '\0';
+    memcpy((char*)__prc__temp, STRPTR(s1), len1);
+    memcpy(((char*)__prc__temp)+len1, STRPTR(s2), len2);
+    ((char*)__prc__temp)[len1+len2] = '\0';
+    ret = __record__(4);
+    ((int*)ret)[0] = 0;
+    ((int*)ret)[1] = __prc__temp;
+    ((int*)ret)[2] = 0;
+    ((int*)ret)[3] = len1+len2;
+    __prc__temp = (int)NULL;
 
-    return __record__(4,0,(int)str,0,len1+len2);
+    return ret;
 }
 /**
  * 文字列の中身の比較

@@ -26,7 +26,7 @@ let emitRegdecl ()   = Printf.printf "int __prc__treg;\n";
                        
 let val2str rmap = function
     C.Var l    -> Rmap.regname (Rmap.find rmap l)
-  | C.Label l  -> Printf.sprintf "__prc__%s" (Symbol.name l)
+  | C.Label l  -> Printf.sprintf "(int)__prc__%s" (Symbol.name l)
   | C.Bool b   -> if b then "~0" else "1"
   | C.Int i    -> string_of_int ((i lsl 1) lxor 1)
   | C.Cint i   -> string_of_int i
@@ -175,13 +175,23 @@ and emitPrim rm = function
         Printf.printf "%s=(int)__chan__();\n" (val2str rm'' (C.Var r));
         emit rm'' (c,fv)
   | C.Record,vs,[r],[c,fv] ->
+(*
       let rm'  = Rmap.release rm !fv in
       let rm'' = Rmap.assign rm' r in
-      let rs   = val2str rm'' (C.Var r) in
+*)
+      let rm'  = Rmap.assign rm r in
+      let rm'' = Rmap.release rm' !fv in
+      let rs   = val2str rm' (C.Var r) in
       let l    = List.length vs in
+	(*
         Printf.printf "%s=__record__(%d" rs l;
         List.iter (fun v -> Printf.printf ",%s" (val2str rm v)) vs;
         print_string ");\n";
+	*)
+	Printf.printf "%s=__record__(%d);\n" rs l;
+	for i = 0 to (List.length vs) - 1 do
+	    Printf.printf "((int*)%s)[%d]=%s;\n" rs i (val2str rm (List.nth vs i))
+	done;
         emit rm'' (c,fv)
   | C.Rexrcd,[s;x],[r],[c,fv] ->
       let rm'  = Rmap.release rm !fv in
