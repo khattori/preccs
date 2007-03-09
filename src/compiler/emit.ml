@@ -57,8 +57,8 @@ let binop2str = function
   | C.Geq -> "GEQ"
   | C.And -> "AND"
   | C.Or  -> "OR"
+  | C.Eqs -> "EQS"
   | C.Cat   -> "__concat__"
-  | C.Eqs   -> "__equals__"
   | C.Match -> "__dmatch__"
   | _     -> assert false
 

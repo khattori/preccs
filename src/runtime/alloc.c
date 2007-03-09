@@ -92,6 +92,8 @@ int __concat__(int s1, int s2) {
  * 文字列の中身の比較
  */
 int __equals__(int s1, int s2) {
-    int len = STRLEN(s1);
-    return memcmp(STRPTR(s1),STRPTR(s2),len)==0;
+    int len1 = STRLEN(s1);
+    int len2 = STRLEN(s2);
+    
+    return len1==len2 ? memcmp(STRPTR(s1),STRPTR(s2),len1)==0 : 0;
 }

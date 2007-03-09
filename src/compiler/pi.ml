@@ -114,6 +114,14 @@ let con_regex =
           let s = List.fold_left (fun s (_,r) -> s ^ defstr_of_regex r) "" fs in
             Rexrcd(s, List.map (fun (_,r) -> trav r) fs)
 
+let is_regex_pattern patns =
+  List.exists (
+    function 
+        A.PatAny _ | A.PatConst(A.ConStr _) -> false
+      | A.PatRegex _ -> true
+      | _ -> assert false
+  ) patns
+
 (*
  * 値式の変換
  * 
@@ -215,7 +223,7 @@ and trans_match env nxt ty exp pts =
   let v_nprc = genid "nprc" in
     Fix([v_nprc,[],nxt],
         match ty with 
-            T.STRING | T.REGEX _ ->
+            T.STRING | T.REGEX _ when is_regex_pattern pt_ls ->
               let mexp,binds  = trans_patns ty (Var v_mval) pt_ls in
                 Let(v_mval,(trans_expr env exp),
                     Let(v_temp,mexp, (* v_temp:(index,data) *)
@@ -261,6 +269,8 @@ and trans_case v patns =
               If(Prim(Eq,[v;Bool b]),Int i,e),i-1
           | A.PatConst(A.ConInt(_,n)) ->
               If(Prim(Eq,[v;Int n]),Int i,e),i-1
+          | A.PatConst(A.ConStr(_,s)) ->
+              If(Prim(Eqs,[v;String s]),Int i,e),i-1
           | _ -> assert false
       ) patns (Int len,len-1)
     )

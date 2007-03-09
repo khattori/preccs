@@ -74,6 +74,7 @@ int __dmatch__(int val, u_int st);
 #define GEQ(a,b) ((a)>=(b)?~0:1)
 #define AND(a,b) ((a)&(b))
 #define OR(a,b)  ((a)|(b))
+#define EQS(a,b)  (__equals__(a,b)?~0:1)
 
 #define INEG(a)  TOPINT(-TOCINT(a))
 #define NOT(a)  (-(a))
