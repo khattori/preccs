@@ -4,14 +4,13 @@
 #
 # ---
 # $Id: Makefile,v 1.5 2006/08/07 09:07:51 hattori Exp $
-INSTALLDIR = /usr/local
 CC	= gcc
 SHELL	= /bin/sh
-INCLUDES= -I`pwd` -fPIC
-CFLAGS	= -Wall -g $(INCLUDES)
+CFLAGS	= -Wall -g $(INCLUDES) -fPIC
+INCLUDES= -I.
 LIBS	= -lrt
+INSTALLDIR = /usr/local
 
-TARGET	= libprcrt.so
 SRCS	=		\
 	perr.c		\
 	alloc.c		\
@@ -21,12 +20,13 @@ SRCS	=		\
 	exec.c		\
 	event.c		\
 	dfa.c		\
-	prcrt.c
-SRCS	+=		\
-	unix/timer.c	\
+	prcrt.c		\
 	unix/io.c	\
+	unix/sock.c	\
 	unix/file.c	\
-	unix/sock.c
+	unix/timer.c
+
+TARGET	= libprcrt.so
 
 OBJS	= $(SRCS:.c=.o)
 
@@ -36,3 +36,5 @@ $(TARGET)	: $(OBJS)
 clean	:
 	rm -fr $(OBJS) $(TARGET)
 	rm -rf .libs
+
+
