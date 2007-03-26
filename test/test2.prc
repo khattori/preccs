@@ -19,6 +19,7 @@ type BootpBar = Bootp{opt.tag={"02"h}}
 type TEXT = {/"^\r\n"*}
 
 proc Test2(end:<bool>,ok:<int>,ng:<int>) =
+
     var x = "hogehogehogehogehogehoge";
     ( "00"h^"a" @ x: Bopt1 -> ok!1
                 | x: Bopt2 -> ng!1
