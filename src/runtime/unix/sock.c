@@ -107,7 +107,7 @@ int prc_SockTcpClient(int ich, int och, char *host, int port) {
     int sock;
 
     if ((hent = gethostbyname(host)) == NULL) {
-        perr(PERR_SYSTEM, "gethostbyname", strerror(errno), __FILE__, __LINE__);
+        perr(PERR_SYSTEM, "gethostbyname", hstrerror(h_errno), __FILE__, __LINE__);
         return -1;
     }
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
