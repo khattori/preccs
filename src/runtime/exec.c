@@ -76,6 +76,8 @@ int __send__(void) {
 	ioent_t *io;
 	event_t *evt;
 
+	/* キャンセルイベントを削除 */
+	(void)chout_next((chan_t *)__prc__regs[2]);
 	/* 新規イベント追加 */
         evt = event(__prc__regs[3], __prc__regs[4], __prc__regs[5]);
 	if ((io = ((chan_t *)__prc__regs[2])->ioent) != NULL) {
@@ -152,6 +154,8 @@ int __recv__(void) {
 	ioent_t *io;
 	event_t *evt;
 
+	/* キャンセルイベントを削除 */
+	(void)chin_next((chan_t *)__prc__regs[2]);
 	/* 新規イベント追加 */
         evt = event(0, __prc__regs[3], __prc__regs[4]);
 	if ((io = ((chan_t *)__prc__regs[2])->ioent) != NULL) {
