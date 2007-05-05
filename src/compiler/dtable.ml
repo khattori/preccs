@@ -266,7 +266,3 @@ let emit () =
   Printf.printf "};\n";
   (* ラベルレジスタ *)
   Printf.printf "#define MAX_LABEL (%d)\n" !max_label;
-  Printf.printf "u_char *__prc__lbl_ptr[MAX_LABEL];\n";
-  Printf.printf "u_int __prc__lbl_value[MAX_LABEL];\n";
-  Printf.printf "u_int __prc__lbl_count[MAX_LABEL];\n";
-  Printf.printf "u_int __prc__lbl_max = MAX_LABEL;\n";

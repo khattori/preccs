@@ -14,15 +14,25 @@ let string_hexstr s =
     ) s;
     !h
 
-let emitHeader ()    = Printf.printf "#include \"prcrt.h\"\n"
+let emitHeader ()    = Printf.printf "#include <preccs/prcrt.h>\n"
 let emitFndecl fname = Printf.printf "static int __prc__%s(void);\n" fname
 let emitProlog fname = Printf.printf "static int __prc__%s(void) {\n" fname
 let emitPrologInit ()= Printf.printf "int __prc__init(void) {\n"
 let emitEpilog ()    = Printf.printf "}\n"
 let emitMoveReg i j  = Printf.printf "%s=%s;\n" (Rmap.regname j) (Rmap.regname i)
-let emitRegdecl ()   = Printf.printf "int __prc__treg;\n";
-                       Printf.printf "int __prc__regs[%d];\n" (Rmap.maxreg());
-                       Printf.printf "int __prc__rnum = %d;\n" (Rmap.maxreg())
+let emitDtable ()    = Printf.printf "prc_dtable_t __prc_dtbl = {\n";
+                       Printf.printf "__prc__state_table,\n";
+                       Printf.printf "__prc__fact_table,\n";
+                       Printf.printf "__prc__mact_table,\n";
+                       Printf.printf "__prc__cset_table,\n";
+                       Printf.printf "__prc__ract_table,\n";
+                       Printf.printf "__prc__cond_table,\n";
+                       Printf.printf "__prc__cact_table,\n";
+                       Printf.printf "MAX_LABEL\n";
+                       Printf.printf "};\n"
+let emitPrcMain ()   = Printf.printf "int prc_main(void) {\n";
+                       Printf.printf "return __prc__main__(%d, __prc__init, &__prc__dtbl);\n" (Rmap.maxreg());
+                       Printf.printf "}\n"
                        
 let val2str rmap = function
     C.Var l    -> Rmap.regname (Rmap.find rmap l)
@@ -84,7 +94,8 @@ let rec emit rmap (cexp,fv) =
       emitPrologInit();        (* 初期化コードの出力 *)
       emit Rmap.empty c;
       emitEpilog();
-      emitRegdecl()
+      emitDtable();
+      emitPrcMain()
   | C.App(op,ops) ->
       emitApp rmap (op,ops)
   | C.Cblk(cs,vs,c) ->
