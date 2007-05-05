@@ -12,7 +12,7 @@
 #ifdef WIN32
 #include <windows.h>
 #endif
-
+#include <string.h>
 #include <assert.h>
 #include "chan.h"
 #include "dfa.h"
