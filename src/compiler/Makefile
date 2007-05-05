@@ -8,8 +8,12 @@
 # ---
 # $Id: Makefile,v 1.5 2006/06/06 04:39:15 hattori Exp $
 #
-
+ifneq (,$(findstring Linux,$(UNAME)))
 TARGET = prcc
+else
+TARGET = prcc.exe
+endif
+
 OBJS =	symbol.cmo	\
 	error.cmo	\
 	label.cmo	\
