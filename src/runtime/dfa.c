@@ -29,7 +29,7 @@ if (cond) { act = (ce)->tact; idx = (ce)->tidx; } else { act = (ce)->fact; idx =
  *   戻り値：{受理番号,受理データ}の組
  */
 int __dmatch__(int val, u_int st) {
-    state_t *state = &__prc__state_table[TOCINT(st)];
+    state_t *state = &__prc__dtable.state[TOCINT(st)];
     act_t act = state->nact;
     u_int idx = state->nidx;
     u_char *p, *ep;
@@ -39,7 +39,7 @@ int __dmatch__(int val, u_int st) {
 
     __prc__temp = val;
     /* ラベル記録ポインタの初期化 */
-    for (i = 0; i < __prc__lbl_max; i++) {
+    for (i = 0; i < __prc__dtable.lbl_max; i++) {
         __prc__lbl_ptr[i] = NULL;
     }
 
@@ -54,8 +54,8 @@ int __dmatch__(int val, u_int st) {
         u_int *cset;
 
         do {
-            mact = &__prc__mact_table[idx];
-            cset = __prc__cset_table[mact->cidx];
+            mact = &__prc__dtable.mact[idx];
+            cset = __prc__dtable.cset[mact->cidx];
             idx = mact->midx;
         } while (!(cset[n] & b));
         act = mact->nact;
@@ -64,14 +64,14 @@ int __dmatch__(int val, u_int st) {
         break;
     }
     case ACT_SKIP: { /* 文字スキップ */
-        mact_t *mact = &__prc__mact_table[idx];
+        mact_t *mact = &__prc__dtable.mact[idx];
         act = mact->nact;
         idx = mact->nidx;
         p++;          /* 文字ポインタの位置を進める */
         break;
     }
     case ACT_TRANS: { /* 遷移処理 */
-        state = &__prc__state_table[idx];
+        state = &__prc__dtable.state[idx];
         if (p==ep) {
             act = ACT_FINAL;
             idx = state->fidx;
@@ -83,7 +83,7 @@ int __dmatch__(int val, u_int st) {
         break;
     }
     case ACT_FINAL: { /* 終了処理 */
-        fact_t *fact = &__prc__fact_table[idx];
+        fact_t *fact = &__prc__dtable.fact[idx];
         assert(idx >= 0);
 
 	__prc__temp1 = __record__(2);
@@ -104,7 +104,7 @@ int __dmatch__(int val, u_int st) {
         return (int)retval;
     }
     case ACT_RECORD: { /* 記録処理（ラベルレジスタにオフセット値を記録する）*/
-        ract_t *ract = &__prc__ract_table[idx];
+        ract_t *ract = &__prc__dtable.ract[idx];
         u_char lid = ract->lid;
         int i;
 
@@ -119,7 +119,7 @@ int __dmatch__(int val, u_int st) {
         break;
     } 
     case ACT_COND_VALZERO: { /* 条件マッチ */
-        cond_t *cond = &__prc__cond_table[idx];
+        cond_t *cond = &__prc__dtable.cond[idx];
         u_char lid = cond->lid;
         __prc__lbl_ptr[lid] = NULL;
         COND_ACT(__prc__lbl_value[lid] == 0,cond)
@@ -127,7 +127,7 @@ int __dmatch__(int val, u_int st) {
         break;
     }
     case ACT_COND_VALNONZ: {
-        cond_t *cond = &__prc__cond_table[idx];
+        cond_t *cond = &__prc__dtable.cond[idx];
         u_char lid = cond->lid;
         __prc__lbl_ptr[lid] = NULL;
         COND_ACT(__prc__lbl_value[lid] != 0,cond)
@@ -135,7 +135,7 @@ int __dmatch__(int val, u_int st) {
         break;
     }
     case ACT_COND_CNTZERO: {
-        cond_t *cond = &__prc__cond_table[idx];
+        cond_t *cond = &__prc__dtable.cond[idx];
         u_char lid = cond->lid;
 
         COND_ACT(__prc__lbl_count[lid] == 0,cond)
@@ -143,7 +143,7 @@ int __dmatch__(int val, u_int st) {
         break;
     }
     case ACT_COND_CNTNONZ: {
-        cond_t *cond = &__prc__cond_table[idx];
+        cond_t *cond = &__prc__dtable.cond[idx];
         u_char lid = cond->lid;
 
         COND_ACT(__prc__lbl_count[lid] != 0,cond)
@@ -151,7 +151,7 @@ int __dmatch__(int val, u_int st) {
         break;
     }
     case ACT_COUNT_SET: {
-        cact_t *cact = &__prc__cact_table[idx];
+        cact_t *cact = &__prc__dtable.cact[idx];
         u_char lid = cact->lid;
 
         __prc__lbl_count[lid] = __prc__lbl_value[lid] - 1;
@@ -160,7 +160,7 @@ int __dmatch__(int val, u_int st) {
         break;
     }
     case ACT_COUNT_DECR: {
-        cact_t *cact = &__prc__cact_table[idx];
+        cact_t *cact = &__prc__dtable.cact[idx];
         u_char lid = cact->lid;
 
         __prc__lbl_count[lid]--;

@@ -393,6 +393,7 @@ int io_exec(void) {
 			    io_recv(io);
 			}
 		    }
+		    TAILQ_REMOVE(&io_mrdq, io, mlink);
 		}
 	    }
 	    for (io = io_mwrq.tqh_first; io != NULL; io = io->mlink.tqe_next) {

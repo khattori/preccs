@@ -87,18 +87,22 @@ typedef struct cact_ {
     u_char lid;       /* ラベル識別子   */
 } cact_t;
 
-extern state_t __prc__state_table[];
-extern fact_t __prc__fact_table[];
-extern mact_t __prc__mact_table[];
-extern cset_t __prc__cset_table[];
-extern ract_t __prc__ract_table[];
-extern cond_t __prc__cond_table[];
-extern cact_t __prc__cact_table[];
+typedef struct prc_dtable_ {
+    state_t *state;
+    fact_t *fact;
+    mact_t *mact;
+    cset_t *cset;
+    ract_t *ract;
+    cond_t *cond;
+    cact_t *cact;
+    u_int lbl_max;
+} prc_dtable_t;
+
+extern prc_dtable_t __prc__dtable;
 
 /* ラベル用レジスタ */
-extern u_char *__prc__lbl_ptr[];
-extern u_int __prc__lbl_value[];
-extern u_int __prc__lbl_count[];
-extern u_int __prc__lbl_max;
+extern u_char **__prc__lbl_ptr;
+extern u_int *__prc__lbl_value;
+extern u_int *__prc__lbl_count;
 
 #endif /*  __INC_DFA_H__ */

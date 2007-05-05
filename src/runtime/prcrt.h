@@ -1,3 +1,11 @@
+/**
+ * @file 
+ * @brief 実行時ライブラリ 共通ヘッダファイル
+ *
+ * @author Kenta HATTORI
+ * @date   2006/04/18
+ * $Id$
+ */
 #ifndef __INC_PRCRT_H__
 #define __INC_PRCRT_H__
 
@@ -15,11 +23,8 @@
 #include "wave.h"
 
 /* Preccsメイン関数 */
-int prc_main(void);
-int __prc__stdin__(void);
-
-/* スタートアップルーチン */
-extern int __prc__init(void);
+typedef int (*prc_func_t)(void);
+int __prc__main__(int rnum, prc_func_t init, prc_dtable_t *dtbl);
 
 /* グローバルチャネルの宣言 */
 extern int __prc__stdout;
@@ -30,7 +35,7 @@ extern int __prc__null;
 
 /* レジスタ宣言 */
 extern int __prc__treg;
-extern int __prc__regs[];
+extern int *__prc__regs;
 extern int __prc__rnum;
 
 extern int __prc__disp;

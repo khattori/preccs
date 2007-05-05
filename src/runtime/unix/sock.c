@@ -97,7 +97,6 @@ int prc_SockUdpOpen(int ich, int och, char *host, int cport, int bport) {
     return 0;
 }
 
-
 /*
  * クライアントソケットのハンドルを返す
  */
@@ -169,4 +168,5 @@ int prc_SockTcpServer(int ch, int port) {
 }
 
 void prc_SockClose(int h) {
+    perr(PERR_SYSTEM, "prc_SockClose", "not supported", __FILE__, __LINE__);
 }

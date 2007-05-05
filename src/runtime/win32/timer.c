@@ -12,7 +12,6 @@
 #include "timer.h"
 #include "gc.h"
 
-
 tmrq_t *__prc__tmrq;
 
 /**
