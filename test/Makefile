@@ -10,14 +10,15 @@ SRCS	=	\
 
 OBJS	= $(SRCS:.c=.o)
 
+.SUFFIXES : .prc .out.c
+.prc.out.c:
+	$(PRCC) $(PFLAGS) $< > $@
+
 $(TARGET)	: $(OBJS)
 	$(CC) -g -o $@ $(OBJS) $(LIBS) 
-
-test.out.c	: test.prc
-	$(PRCC) $(PFLAGS) $< > $@
 
 clean	:
 	rm -fr $(OBJS) $(TARGET)
 
 clean-all	:
-	rm -fr $(OBJS) $(TARGET) test.out.c *~
+	rm -fr $(OBJS) $(TARGET) *.out.c *~
