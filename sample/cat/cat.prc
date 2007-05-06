@@ -5,7 +5,7 @@
 type FileIn = {ok:bool;in:<string>}
 
 proc Main() =
-    Cat("cat.out.c")
+    Cat("cat.prc")
 
 proc Cat(fname:string) =
     var ret:<FileIn>;
