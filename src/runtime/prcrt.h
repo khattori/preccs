@@ -23,6 +23,8 @@
 #include "wave.h"
 
 /* Preccsメイン関数 */
+int prc_main(void);	/* コンパイラが生成する関数 */
+
 typedef int (*prc_func_t)(void);
 int __prc__main__(int rnum, prc_func_t init, prc_dtable_t *dtbl);
 
