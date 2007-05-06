@@ -20,7 +20,7 @@ let emitProlog fname = Printf.printf "static int __prc__%s(void) {\n" fname
 let emitPrologInit ()= Printf.printf "int __prc__init(void) {\n"
 let emitEpilog ()    = Printf.printf "}\n"
 let emitMoveReg i j  = Printf.printf "%s=%s;\n" (Rmap.regname j) (Rmap.regname i)
-let emitDtable ()    = Printf.printf "prc_dtable_t __prc_dtbl = {\n";
+let emitDtable ()    = Printf.printf "prc_dtable_t __prc__dtbl = {\n";
                        Printf.printf "__prc__state_table,\n";
                        Printf.printf "__prc__fact_table,\n";
                        Printf.printf "__prc__mact_table,\n";

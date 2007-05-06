@@ -8,6 +8,10 @@
 # ---
 # $Id: Makefile,v 1.5 2006/06/06 04:39:15 hattori Exp $
 #
+
+SHELL	= /bin/sh
+UNAME	= $(shell uname)
+
 ifneq (,$(findstring Linux,$(UNAME)))
 TARGET = prcc
 else
