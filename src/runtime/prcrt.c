@@ -49,6 +49,7 @@ int __prc__main__(int rnum, prc_func_t init, prc_dtable_t *dtbl) {
         return -1;
     }
     memset(__prc__regs, 0, sizeof(int)*rnum);
+    __prc__rnum = rnum;
 
     /* 状態遷移テーブルの初期化 */
     __prc__dtable = *dtbl;
