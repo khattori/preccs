@@ -7,23 +7,21 @@
 CC	= gcc
 SHELL	= /bin/sh
 INCLUDES= -I.
+LDFLAGS	= -g -shared
 
 UNAME	= $(shell uname)
 ifneq (,$(findstring Linux,$(UNAME)))
 OS	= unix
 CFLAGS	= -Wall -g $(INCLUDES) -fPIC
-LDFLAGS	= -g -shared
 LIBS	= -lrt
 TARGET	= libprcrt.so
-DLLWRAP	=
 else
 OS	= win32
 CFLAGS	= -Wall -g $(INCLUDES)
-LDFLAGS	= -g
-LIBS	= -lws2_32
 DEF	= prcrt.def
+IMPLIB	= libprcrt.a
+LIBS	= -lws2_32 -Wl,--output-def,$(DEF),--out-implib,$(IMPLIB)
 TARGET	= prcrt.dll
-DLLWRAP	= dllwrap -k -def $(DEF) --driver-name
 endif
 
 SRCS	=		\
@@ -45,14 +43,10 @@ ifeq ($(OS),win32)
 SRCS	+= $(OS)/strerror.c
 endif
 
-
-
 OBJS	= $(SRCS:.c=.o)
 
 $(TARGET)	: $(OBJS)
-	$(DLLWRAP) $(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 clean	:
-	@rm -fr $(OBJS) $(TARGET)
-
-
+	@rm -fr $(OBJS) $(TARGET) $(IMPLIB) $(DEF)
