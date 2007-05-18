@@ -52,7 +52,6 @@ from_space --> |                |
 void flip(void);
 static int *copy(int *p);
 
-extern ioq_t __prc__ioq;
 /**
  * GCの初期化
  */

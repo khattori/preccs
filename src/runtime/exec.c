@@ -80,10 +80,9 @@ int __send__(void) {
 	(void)chout_next((chan_t *)__prc__regs[2]);
 	/* 新規イベント追加 */
         evt = event(__prc__regs[3], __prc__regs[4], __prc__regs[5]);
-	if ((io = ((chan_t *)__prc__regs[2])->ioent) != NULL) {
-	    io_chout(io, evt);
-	} else {
-	    TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[2])->outq, evt, link);
+        TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[2])->outq, evt, link);
+	if ((io = ((chan_t *)__prc__regs[2])->ioent) != NULL && chout_next(io->chan) == evt) {
+	    io->iof(io, evt, 0);
 	}
     } else {
         proc_t *prc;
@@ -158,10 +157,10 @@ int __recv__(void) {
 	(void)chin_next((chan_t *)__prc__regs[2]);
 	/* 新規イベント追加 */
         evt = event(0, __prc__regs[3], __prc__regs[4]);
-	if ((io = ((chan_t *)__prc__regs[2])->ioent) != NULL) {
-	    io_chin(io, evt);
-	}
         TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[2])->inq, evt, link);
+	if ((io = ((chan_t *)__prc__regs[2])->ioent) != NULL && chin_next(io->chan) == evt) {
+            io->iof(io, evt, 0);
+        }
     } else {
 	proc_t *prc;
 
