@@ -64,12 +64,24 @@ int prc_FileCreate(int och, char *fname) {
     return 0;
 }
 
+static void close_file(ioent_t *io) {
+//    printf("close_file: enter\n");
+//    fflush(stdout);
+
+    if (!CloseHandle(io->handle)) {
+        perr(PERR_SYSTEM, "CloseHandle", StrError(GetLastError()), __FILE__, __LINE__);
+        return ;
+    }
+
+    ioent_delete(io);
+}
+
 static void CALLBACK read_completion_handler(DWORD err, DWORD len, LPOVERLAPPED ovl) {
     event_t *evt;
     ioent_t *io = (ioent_t*)(((char*)ovl)-offsetof(ioent_t,ctlblk));
 
-    printf("read completed: err=%ld, len=%ld\n", err, len);
-    fflush(stdout);
+//    printf("read completed: err=%ld, len=%ld\n", err, len);
+//    fflush(stdout);
 
     aio_count--;
     io_read_complete(io, len);
@@ -85,8 +97,8 @@ static void CALLBACK read_completion_handler(DWORD err, DWORD len, LPOVERLAPPED 
 static void fi_input(ioent_t *io, event_t *evt, int exec) {
     DWORD error;
 
-    printf("fi_input: enter(exec=%d, trans=%d)\n", exec, evt->trans);
-    fflush(stdout);
+//    printf("fi_input: enter(exec=%d, trans=%d)\n", exec, evt->trans);
+//    fflush(stdout);
 
     if (evt->trans == 0) {
         aio_count++;
@@ -97,7 +109,9 @@ static void fi_input(ioent_t *io, event_t *evt, int exec) {
             case ERROR_IO_PENDING:
                 break;
             case ERROR_HANDLE_EOF:
+                aio_count--;
                 io_read_complete(io, 0);
+                close_file(io);
                 break;
             default:
                 perr(PERR_SYSTEM, "ReadFile", StrError(error), __FILE__, __LINE__);
@@ -119,10 +133,11 @@ static void CALLBACK write_completion_handler(DWORD err, DWORD len, LPOVERLAPPED
     event_t *evt;
     ioent_t *io = (ioent_t*)(((char*)ovl)-offsetof(ioent_t,ctlblk));
 
-    printf("write completed: err=%ld, len=%ld\n", err, len);
-    fflush(stdout);
+//    printf("write completed: err=%ld, len=%ld\n", err, len);
+//    fflush(stdout);
 
     aio_count--;
+    io_leave_cs();
     io_write_complete(io, len);
     /* IO待ちプロセスが無ければ終了 */
     if ((evt = chout_next(io->chan)) == NULL) {
@@ -130,19 +145,27 @@ static void CALLBACK write_completion_handler(DWORD err, DWORD len, LPOVERLAPPED
     }
     io->iof(io, evt, 0);
 }
+
 /**
  * IOチャネル出力時の処理 
  */
 static void fi_output(ioent_t *io, event_t *evt, int exec) {
     DWORD error;
 
-    printf("fi_output: enter(exec=%d,trans=%d)\n", exec, evt->trans);
-    fflush(stdout);
+//    printf("fi_output: enter(exec=%d,trans=%d)\n", exec, evt->trans);
+//    fflush(stdout);
 
     if (evt->trans == 0) {
+        int len = STRLEN(evt->val);
+        if (len == 0) {
+            io_write_complete(io, 0);
+            close_file(io);
+            return;
+        }
         aio_count++;
+        io_enter_cs();
         /* 新規に書き込みIO発行 */
-        if (!WriteFileEx(io->handle, STRPTR(evt->val), STRLEN(evt->val), &io->ctlblk, write_completion_handler)) {
+        if (!WriteFileEx(io->handle, STRPTR(evt->val), len, &io->ctlblk, write_completion_handler)) {
             error = GetLastError();
             switch (error) {
             case ERROR_IO_PENDING:

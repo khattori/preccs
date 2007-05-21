@@ -186,7 +186,6 @@ int io_exec(void) {
 
     /* 多重化IOのイベントリストを初期化 */
     n = io_set_events(events, ioents);
-
     /* タイマーイベントを取得 */
     timo = timer_next();
     if (n == 0) {
@@ -233,6 +232,31 @@ int io_exec(void) {
 }
 
 /**
+ * 非同期IOの完了を待つ
+ */
+static int cs_count;
+static HANDLE cs_event;
+void io_wait_cs(void) {
+    while (WAIT_OBJECT_0 == WaitForSingleObjectEx(cs_event, INFINITE, TRUE));
+}
+void io_enter_cs(void) {
+    if (cs_count++ == 0) {
+        if (!ResetEvent(cs_event)) {
+            perr(PERR_SYSTEM, "ResetEvent", StrError(GetLastError()), __FILE__, __LINE__);
+            return;
+        }
+    }
+}
+void io_leave_cs(void) {
+    if (--cs_count == 0) {
+        if (!SetEvent(cs_event)) {
+            perr(PERR_SYSTEM, "SetEvent", StrError(GetLastError()), __FILE__, __LINE__);
+            return;
+        }
+    }
+}
+
+/**
  * I/O処理の初期化
  */
 void io_init(void) {
@@ -247,22 +271,31 @@ void io_init(void) {
     ioent_create((chan_t *)__prc__stdout, GetStdHandle(STD_OUTPUT_HANDLE), IOT_OUTPUT, io_stdout, BUFSIZ);
     ioent_create((chan_t *)__prc__stdin, GetStdHandle(STD_INPUT_HANDLE), IOT_INPUT, io_stdin, BUFSIZ);
     ioent_create((chan_t *)__prc__timer, 0, IOT_OUTPUT, io_tmout, 0);
+
+    /* 非同期I/O保護用の通知イベントを初期化 */
+    cs_event = CreateEvent(NULL, TRUE, TRUE, NULL);
+    if (cs_event == NULL) {
+        perr(PERR_SYSTEM, "CreateEvent", StrError(GetLastError()), __FILE__, __LINE__);
+        return;
+    }
 }
 
 /**
  * IOエントリの新規作成
  */
-void ioent_create(chan_t *ch, HANDLE handle, iotype_t iotype, iof_t iof, size_t size) {
+ioent_t *ioent_create(chan_t *ch, HANDLE handle, iotype_t iotype, iof_t iof, size_t size) {
     ioent_t *io;
 
     io = malloc(sizeof(ioent_t)+size);
     if (io == NULL) {
         perr(PERR_OUTOFMEM, __FILE__, __LINE__);
+        return NULL;
     }
 
     io->iotype = iotype;
     io->iof    = iof;
     io->chan   = ch;
+    io->data   = NULL;
     io->handle = handle;
     io->offset = 0;
     io->bufsz  = size;
@@ -271,6 +304,7 @@ void ioent_create(chan_t *ch, HANDLE handle, iotype_t iotype, iof_t iof, size_t 
     /* 自動リセットイベントを作成 */
     if ((io->ctlblk.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL)) == NULL) {
 	perr(PERR_SYSTEM, "CreateEvent", StrError(GetLastError()), __FILE__, __LINE__);
+        return NULL;
     }
 
     TAILQ_INSERT_TAIL(&__prc__ioq, io, link);
@@ -278,38 +312,16 @@ void ioent_create(chan_t *ch, HANDLE handle, iotype_t iotype, iof_t iof, size_t 
     // printf("insert: %p(desc=%d)\n", io, io->handle);
 
     ch->ioent = io;
+
+    return io;
 }
 
 /**
  * I/Oエントリの削除
  */
 void ioent_delete(ioent_t *ioent) {
-    ioent_t *io;
-
     TAILQ_REMOVE(&__prc__ioq, ioent, link);
     ioent->chan->ioent = NULL;
-    if (!CloseHandle(ioent->handle)) {
-        perr(PERR_SYSTEM, "CloseHandle", StrError(GetLastError()), __FILE__, __LINE__);
-    }
-    // printf("ioent_delete: %d\n", ioent->handle);
-
-    for (io = __prc__mioq.tqh_first; io != NULL; io = io->mlink.tqe_next) {
-	if (io == ioent) {
-	    TAILQ_REMOVE(&__prc__mioq, ioent, mlink);
-	}
-    }
     free(ioent);
 }
-void ioent_delete2(HANDLE handle) {
-    ioent_t *io, *oio;
 
-    for (io = __prc__ioq.tqh_first; io != NULL; ) {
-	if (io->handle == handle) {
-	    oio = io;
-            io = io->link.tqe_next;
-	    ioent_delete(oio);
-	} else {
-	    io = io->link.tqe_next;
-	}
-    }
-}
