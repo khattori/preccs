@@ -37,6 +37,7 @@ struct ioent_ {
     chan_t *chan;              /* チャネルへのリンク */
     iohandle_t handle;
     ioctlblk_t ctlblk;
+    void *data;                /* 自由に使用可能なフィールド */
     size_t offset;
     size_t bufsz;
     char buf[1];
@@ -53,9 +54,11 @@ int  io_exec(void);
 
 void io_read_complete(ioent_t *io, int len);
 void io_write_complete(ioent_t *io, int len);
+void io_wait_cs(void);
+void io_enter_cs(void);
+void io_leave_cs(void);
 
-void ioent_create(chan_t *ch, iohandle_t handle, iotype_t iotype, iof_t iof, size_t size);
+ioent_t *ioent_create(chan_t *ch, iohandle_t handle, iotype_t iotype, iof_t iof, size_t size);
 void ioent_delete(ioent_t *ioent);
-void ioent_delete2(iohandle_t handle);
 
 #endif /* __INC_IO_H__ */
