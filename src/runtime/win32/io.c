@@ -154,12 +154,11 @@ static void io_tmout(ioent_t *io, event_t *evt, int exec) {
 /* ディスクリプタ集合を初期化する */
 static int io_set_events(HANDLE *events, ioent_t **ioents) {
     ioent_t *io;
-    event_t *evt;
     int count = 0;
 
     for (io = __prc__mioq.tqh_first; io != NULL; io = io->mlink.tqe_next) {
-	if ((io->iotype == IOT_INPUT && (evt = chin_next(io->chan)) == NULL) ||
-            (io->iotype == IOT_OUTPUT && (evt = chout_next(io->chan)) == NULL)) {
+	if ((io->iotype == IOT_INPUT && chin_next(io->chan) == NULL) ||
+            (io->iotype == IOT_OUTPUT && chout_next(io->chan) == NULL)) {
             /* キャンセルされた場合 */
             TAILQ_REMOVE(&__prc__mioq, io, mlink);
             io->mlink.tqe_prev = NULL;
@@ -313,7 +312,6 @@ ioent_t *ioent_create(chan_t *ch, HANDLE handle, iotype_t iotype, iof_t iof, siz
 
     TAILQ_INSERT_TAIL(&__prc__ioq, io, link);
     io->mlink.tqe_prev = NULL;
-    // printf("insert: %p(desc=%d)\n", io, io->handle);
 
     ch->ioent = io;
 

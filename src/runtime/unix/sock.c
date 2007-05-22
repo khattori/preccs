@@ -16,9 +16,12 @@
 #include <netdb.h>
 
 #include "prcrt.h"
+#include "proc.h"
 #include "exec.h"
 #include "perr.h"
 #include "sock.h"
+
+static void so_accept(ioent_t *io, event_t *evt, int exec);
 
 void prc_SockStart(void) {
 }
@@ -51,8 +54,8 @@ int prc_SockUdpClient(int ich, int och, char *host, int port) {
 	close(sock);
         return -1;
     }
-    ioent_create((chan_t *)ich, sock, IO_TYPE_IN, BUFSIZ);
-    ioent_create((chan_t *)och, sock, IO_TYPE_OUT, BUFSIZ);
+    ioent_create((chan_t *)ich, sock, IOT_INPUT, io_input, BUFSIZ);
+    ioent_create((chan_t *)och, sock, IOT_OUTPUT, io_output, BUFSIZ);
 
     return 0;
 }
@@ -91,8 +94,8 @@ int prc_SockUdpOpen(int ich, int och, char *host, int cport, int bport) {
 	close(sock);
         return -1;
     }
-    ioent_create((chan_t *)ich, sock, IO_TYPE_IN, BUFSIZ);
-    ioent_create((chan_t *)och, sock, IO_TYPE_OUT, BUFSIZ);
+    ioent_create((chan_t *)ich, sock, IOT_INPUT, io_input, BUFSIZ);
+    ioent_create((chan_t *)och, sock, IOT_OUTPUT, io_output, BUFSIZ);
 
     return 0;
 }
@@ -123,8 +126,8 @@ int prc_SockTcpClient(int ich, int och, char *host, int port) {
         return -1;
     }
 
-    ioent_create((chan_t *)ich, sock, IO_TYPE_IN, BUFSIZ);
-    ioent_create((chan_t *)och, sock, IO_TYPE_OUT, BUFSIZ);
+    ioent_create((chan_t *)ich, sock, IOT_INPUT, io_input, BUFSIZ);
+    ioent_create((chan_t *)och, sock, IOT_OUTPUT, io_output, BUFSIZ);
 
     return 0;
 }
@@ -162,11 +165,50 @@ int prc_SockTcpServer(int ch, int port) {
         return -1;
     }
 
-    ioent_create((chan_t *)ch, sock, IO_TYPE_ACCEPT, 0);
+    ioent_create((chan_t *)ch, sock, IOT_INPUT, so_accept, 0);
 
     return 0;
 }
 
 void prc_SockClose(int h) {
     perr(PERR_SYSTEM, "prc_SockClose", "not supported", __FILE__, __LINE__);
+}
+
+static void accept_exec(ioent_t *io) {
+    proc_t *prc;
+    event_t *evt;
+    int so;
+
+    if ((so = accept(io->handle, NULL, NULL)) < 0) {
+	perr(PERR_SYSTEM, "accept", strerror(errno), __FILE__, __LINE__);
+	return;
+    }
+    __prc__regs[0] = (int)__chan__();
+    __prc__regs[1] = (int)__chan__();
+    ioent_create((chan_t *)__prc__regs[0], so, IOT_INPUT, io_input, BUFSIZ);
+    ioent_create((chan_t *)__prc__regs[1], so, IOT_OUTPUT, io_output, BUFSIZ);
+    __prc__regs[2] = __record__(2);
+    ((int*)__prc__regs[2])[0] = __prc__regs[0];
+    ((int*)__prc__regs[2])[1] = __prc__regs[1];
+
+    /* 実行可能プロセスをセット */
+    prc = proc();
+    evt = chin_next(io->chan);
+    prc->clos = evt->clos;
+    prc->val  = __prc__regs[2];
+    TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
+    TAILQ_REMOVE(&io->chan->inq, evt, link);
+
+    /* IO待ちプロセスが無ければ終了 */
+    if ((evt = chin_next(io->chan)) != NULL) {
+	io->iof(io, evt, 0);
+    }
+}
+
+static void so_accept(ioent_t *io, event_t *evt, int exec) {
+    if (exec) {
+	accept_exec(io);
+	return;
+    }
+    TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
 }

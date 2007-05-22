@@ -36,7 +36,7 @@ int prc_FileOpenR(int ich, char *fname) {
 	return -1;
     }
     // printf("file opened: %d\n", fd);
-    ioent_create((chan_t *)ich, fd, IO_TYPE_IN, BUFSIZ);
+    ioent_create((chan_t *)ich, fd, IOT_INPUT, io_input, BUFSIZ);
 
     return 0;
 }
@@ -52,7 +52,7 @@ int prc_FileCreate(int och, char *fname) {
 	return -1;
     }
 
-    ioent_create((chan_t *)och, fd, IO_TYPE_OUT, BUFSIZ);
+    ioent_create((chan_t *)och, fd, IOT_OUTPUT, io_output, BUFSIZ);
 
     return 0;
 }

@@ -52,6 +52,8 @@ extern int aio_count;
 void io_init(void);
 int  io_exec(void);
 
+void io_input(ioent_t *io, event_t *evt, int exec);
+void io_output(ioent_t *io, event_t *evt, int exec);
 void io_read_complete(ioent_t *io, int len);
 void io_write_complete(ioent_t *io, int len);
 void io_wait_cs(void);
