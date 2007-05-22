@@ -321,6 +321,7 @@ ioent_t *ioent_create(chan_t *ch, int handle, iotype_t iotype, iof_t iof, size_t
     memset(&io->ctlblk, 0, sizeof(struct aiocb));
     io->ctlblk.aio_fildes = handle;
     io->ctlblk.aio_buf    = (char *)io->buf;
+    io->ctlblk.aio_nbytes = size;
     io->ctlblk.aio_sigevent.sigev_notify = SIGEV_SIGNAL;
     io->ctlblk.aio_sigevent.sigev_signo  = SIGRTMIN+SIGIO;
     io->ctlblk.aio_sigevent.sigev_value.sival_ptr = io;
