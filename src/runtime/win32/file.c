@@ -18,6 +18,7 @@
 
 static void fi_input(ioent_t *io, event_t *evt, int exec);
 static void fi_output(ioent_t *io, event_t *evt, int exec);
+static void write_exec(ioent_t *io, event_t *evt);
 
 /*
  * ファイルを読み込み専用にオープンする
@@ -137,13 +138,39 @@ static void CALLBACK write_completion_handler(DWORD err, DWORD len, LPOVERLAPPED
 //    fflush(stdout);
 
     aio_count--;
-    io_leave_cs();
-    io_write_complete(io, len);
-    /* IO待ちプロセスが無ければ終了 */
-    if ((evt = chout_next(io->chan)) == NULL) {
+    io->offset += len;
+    evt = (event_t*)chout_next(io->chan);
+    if (io->offset < STRLEN(evt->val)) {
+        write_exec(io, evt);
         return;
     }
-    io->iof(io, evt, 0);
+    io_write_complete(io, len);
+    /* IO待ちプロセスが無ければ終了 */
+    if ((evt = chout_next(io->chan)) != NULL) {
+        io->iof(io, evt, 0);
+    }
+}
+static void write_exec(ioent_t *io, event_t *evt) {
+    DWORD error;
+    int len;
+
+    aio_count++;
+    len = STRLEN(evt->val) - io->offset;
+    if (len > io->bufsz) {
+        len = io->bufsz;
+    }
+    /* 新規に書き込みIO発行 */
+    memcpy(io->buf, STRPTR(evt->val)+io->offset, len);
+    if (!WriteFileEx(io->handle, io->buf, len, &io->ctlblk, write_completion_handler)) {
+        error = GetLastError();
+        switch (error) {
+        case ERROR_IO_PENDING:
+            break;
+        default:
+            perr(PERR_SYSTEM, "WriteFile", error, __FILE__, __LINE__);
+            return;
+        }
+    }
 }
 
 /**
@@ -162,19 +189,8 @@ static void fi_output(ioent_t *io, event_t *evt, int exec) {
             close_file(io);
             return;
         }
-        aio_count++;
-        io_enter_cs();
-        /* 新規に書き込みIO発行 */
-        if (!WriteFileEx(io->handle, STRPTR(evt->val), len, &io->ctlblk, write_completion_handler)) {
-            error = GetLastError();
-            switch (error) {
-            case ERROR_IO_PENDING:
-                break;
-            default:
-                perr(PERR_SYSTEM, "WriteFile", error, __FILE__, __LINE__);
-                return;
-            }
-        }
+        io->offset = 0;
+        write_exec(io, evt);
         return;
     }
 

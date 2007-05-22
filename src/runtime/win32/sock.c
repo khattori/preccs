@@ -38,6 +38,7 @@ static void so_input(ioent_t *io, event_t *evt, int exec);
 static void so_output(ioent_t *io, event_t *evt, int exec);
 static void so_accept(ioent_t *io, event_t *evt, int exec);
 static void so_event(ioevt_t *io, event_t *evt, int exec);
+static void send_exec(ioent_t *io, event_t *evt);
 
 static ioevt_t *ioevt_create(SOCKET handle, ioent_t *ioin, ioent_t *ioout);
 static void ioevt_delete(ioevt_t *io);
@@ -325,6 +326,7 @@ static void so_input(ioent_t *io, event_t *evt, int exec) {
     TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
 }
 
+
 static void CALLBACK send_completion_handler(DWORD err, DWORD len, LPWSAOVERLAPPED ovl, DWORD flags) {
     event_t *evt;
     ioent_t *io = (ioent_t*)(((char*)ovl)-offsetof(ioent_t,ctlblk));
@@ -333,23 +335,62 @@ static void CALLBACK send_completion_handler(DWORD err, DWORD len, LPWSAOVERLAPP
 //    fflush(stdout);
 
     aio_count--;
-    io_leave_cs();
-    io_write_complete(io, len);
-    /* IO待ちプロセスが無ければ終了 */
-    if ((evt = chout_next(io->chan)) == NULL) {
+    io->offset += len;
+    evt = (event_t*)chout_next(io->chan);
+    if (io->offset < STRLEN(evt->val)) {
+        send_exec(io, evt);
         return;
     }
-    io->iof(io, evt, 0);
+    io_write_complete(io, len);
+    /* IO待ちプロセスが無ければ終了 */
+    if ((evt = chout_next(io->chan)) != NULL) {
+        io->iof(io, evt, 0);
+    }
+}
+static void send_exec(ioent_t *io, event_t *evt) {
+    WSABUF wsabuf;
+    DWORD flags = 0;
+    int result;
+    int error;
+    int len;
+
+    aio_count++;
+    len = STRLEN(evt->val) - io->offset;
+    if (len > io->bufsz) {
+        len = io->bufsz;
+    }
+    /* 新規に送信IO発行 */
+    memcpy(io->buf, STRPTR(evt->val)+io->offset, len);
+    wsabuf.len = len;
+    wsabuf.buf = io->buf;
+    result = WSASend((SOCKET)io->handle, &wsabuf, 1, (LPDWORD)&len, flags, &io->ctlblk, send_completion_handler);
+    if (result == 0) {
+//            printf("so_output: WSASend() result=0\n");
+//            fflush(stdout);
+        return;
+    }
+    error = WSAGetLastError();
+    switch (error) {
+    case WSA_IO_PENDING:
+//            printf("so_output: WSASend() WSA_IO_PENDING\n");
+//            fflush(stdout);
+        break;
+    case WSAECONNRESET:
+        aio_count--;
+//            printf("so_input: WSASend() WSAECONNRESET\n");
+//            fflush(stdout);
+        io_write_complete(io, 0);
+        shutdown_sendsock(io);
+        break;
+    default:
+        perr(PERR_SYSTEM, "WSASend", StrError(error), __FILE__, __LINE__);
+        break;
+    }
 }
 /**
  * ソケットIOチャネル出力時の処理 
  */
 static void so_output(ioent_t *io, event_t *evt, int exec) {
-    WSABUF wsabuf;
-    DWORD flags = 0;
-    int result;
-    int error;
-
 //    printf("so_output: enter(exec=%d,trans=%d)\n", exec, evt->trans);
 //    fflush(stdout);
 
@@ -360,35 +401,8 @@ static void so_output(ioent_t *io, event_t *evt, int exec) {
             shutdown_sendsock(io);
             return;
         }
-
-        aio_count++;
-        io_enter_cs();
-        /* 新規に送信IO発行 */
-        wsabuf.len = len;
-        wsabuf.buf = STRPTR(evt->val);
-        result = WSASend((SOCKET)io->handle, &wsabuf, 1, (LPDWORD)&io->offset, flags, &io->ctlblk, send_completion_handler);
-        if (result == 0) {
-//            printf("so_output: WSASend() result=0\n");
-//            fflush(stdout);
-            return;
-        }
-        error = WSAGetLastError();
-        switch (error) {
-        case WSA_IO_PENDING:
-//            printf("so_output: WSASend() WSA_IO_PENDING\n");
-//            fflush(stdout);
-            break;
-        case WSAECONNRESET:
-            aio_count--;
-//            printf("so_input: WSASend() WSAECONNRESET\n");
-//            fflush(stdout);
-            io_write_complete(io, 0);
-            shutdown_sendsock(io);
-            break;
-        default:
-            perr(PERR_SYSTEM, "WSASend", StrError(error), __FILE__, __LINE__);
-            break;
-        }
+        io->offset = 0;
+        send_exec(io, evt);
         return;
     } else {
         ioevt_t *ioevt = (ioevt_t *)io->data;

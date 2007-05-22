@@ -56,9 +56,6 @@ void io_input(ioent_t *io, event_t *evt, int exec);
 void io_output(ioent_t *io, event_t *evt, int exec);
 void io_read_complete(ioent_t *io, int len);
 void io_write_complete(ioent_t *io, int len);
-void io_wait_cs(void);
-void io_enter_cs(void);
-void io_leave_cs(void);
 
 ioent_t *ioent_create(chan_t *ch, iohandle_t handle, iotype_t iotype, iof_t iof, size_t size);
 void ioent_delete(ioent_t *ioent);

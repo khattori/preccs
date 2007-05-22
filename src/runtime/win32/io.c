@@ -23,31 +23,6 @@ ioq_t __prc__mioq; /* WaitForMultipleObjectsで待つIO */
 
 int aio_count;
 
-/**
- * 非同期IOの完了を待つ
- */
-static int cs_count;
-static HANDLE cs_event;
-void io_wait_cs(void) {
-    while (WAIT_OBJECT_0 != WaitForSingleObjectEx(cs_event, INFINITE, TRUE));
-}
-void io_enter_cs(void) {
-    if (cs_count++ == 0) {
-        if (!ResetEvent(cs_event)) {
-            perr(PERR_SYSTEM, "ResetEvent", StrError(GetLastError()), __FILE__, __LINE__);
-            return;
-        }
-    }
-}
-void io_leave_cs(void) {
-    if (--cs_count == 0) {
-        if (!SetEvent(cs_event)) {
-            perr(PERR_SYSTEM, "SetEvent", StrError(GetLastError()), __FILE__, __LINE__);
-            return;
-        }
-    }
-}
-
 /*
  * IO読み込みの完了処理
  */
@@ -274,13 +249,6 @@ void io_init(void) {
     ioent_create((chan_t *)__prc__stdout, GetStdHandle(STD_OUTPUT_HANDLE), IOT_OUTPUT, io_stdout, BUFSIZ);
     ioent_create((chan_t *)__prc__stdin, GetStdHandle(STD_INPUT_HANDLE), IOT_INPUT, io_stdin, BUFSIZ);
     ioent_create((chan_t *)__prc__timer, 0, IOT_OUTPUT, io_tmout, 0);
-
-    /* 非同期I/O保護用の通知イベントを初期化 */
-    cs_event = CreateEvent(NULL, TRUE, TRUE, NULL);
-    if (cs_event == NULL) {
-        perr(PERR_SYSTEM, "CreateEvent", StrError(GetLastError()), __FILE__, __LINE__);
-        return;
-    }
 }
 
 /**

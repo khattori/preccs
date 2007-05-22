@@ -142,9 +142,6 @@ void flip(void) {
     printf("GC started...\n");
     fflush(stdout);
 
-    /* 非同期IO書き込みが完了するのを待つ */
-    io_wait_cs();
-
     //validate();
     /* TOとFROMの入れ替え */
     t = from_space;
