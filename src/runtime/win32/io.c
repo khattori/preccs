@@ -168,6 +168,10 @@ static int io_set_events(HANDLE *events, ioent_t **ioents) {
         ioents[count] = io;
 	events[count] = io->ctlblk.hEvent;
         count++;
+        if (count >= MAXIMUM_WAIT_OBJECTS) {
+            perr(PWRN_DESCLIM);
+            break;
+        }
     }
 
     return count;
@@ -237,7 +241,7 @@ int io_exec(void) {
 static int cs_count;
 static HANDLE cs_event;
 void io_wait_cs(void) {
-    while (WAIT_OBJECT_0 == WaitForSingleObjectEx(cs_event, INFINITE, TRUE));
+    while (WAIT_OBJECT_0 != WaitForSingleObjectEx(cs_event, INFINITE, TRUE));
 }
 void io_enter_cs(void) {
     if (cs_count++ == 0) {

@@ -316,6 +316,11 @@ static void so_input(ioent_t *io, event_t *evt, int exec) {
             break;
         }
         return;
+    } else {
+        ioevt_t *ioevt = (ioevt_t *)io->data;
+        if (ioevt->mlink.tqe_prev == NULL) {
+            TAILQ_INSERT_TAIL(&__prc__mioq, (ioent_t *)ioevt, mlink);
+        }
     }
     TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
 }
@@ -385,6 +390,11 @@ static void so_output(ioent_t *io, event_t *evt, int exec) {
             break;
         }
         return;
+    } else {
+        ioevt_t *ioevt = (ioevt_t *)io->data;
+        if (ioevt->mlink.tqe_prev == NULL) {
+            TAILQ_INSERT_TAIL(&__prc__mioq, (ioent_t *)ioevt, mlink);
+        }
     }
     TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
 }
@@ -470,7 +480,8 @@ static ioevt_t *ioevt_create(SOCKET handle, ioent_t *ioin, ioent_t *ioout) {
     io->ctlblk.hEvent = wsaevt;
 
     TAILQ_INSERT_TAIL(&__prc__ioq, (ioent_t*)io, link);
-    TAILQ_INSERT_TAIL(&__prc__mioq, (ioent_t*)io, mlink);
+    io->mlink.tqe_prev = NULL;
+    // TAILQ_INSERT_TAIL(&__prc__mioq, (ioent_t*)io, mlink);
 
     return io;
 }
@@ -535,6 +546,8 @@ static void so_event(ioevt_t *io, event_t *evt, int exec) {
         perr(PERR_INTERNAL, __FILE__, __LINE__);
         return;
     }
-
-    TAILQ_INSERT_TAIL(&__prc__mioq, (ioent_t *)io, mlink);
+    if (((evt = chin_next(io->ioin->chan)) != NULL && evt->trans != 0) ||
+        ((evt = chout_next(io->ioout->chan)) != NULL && evt->trans != 0)) {
+        TAILQ_INSERT_TAIL(&__prc__mioq, (ioent_t *)io, mlink);
+    }
 }
