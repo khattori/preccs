@@ -3,7 +3,7 @@
 //   --- 一定時間入力が無い場合にはタイムアウトする
 //
 proc Timer() = 
-    stdin?msg -> stdout!("message: " ^ msg)
-  | timer!3  -> stdout!"timeout\n"
+    stdin?msg -> stdout!"mesg:"^msg
+  | timer!1   -> stdout!"timeout\n"; Timer()
 
 proc Main() = Timer()
