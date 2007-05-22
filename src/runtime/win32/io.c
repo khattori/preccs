@@ -23,6 +23,31 @@ ioq_t __prc__mioq; /* WaitForMultipleObjectsで待つIO */
 
 int aio_count;
 
+/**
+ * 非同期IOの完了を待つ
+ */
+static int cs_count;
+static HANDLE cs_event;
+void io_wait_cs(void) {
+    while (WAIT_OBJECT_0 != WaitForSingleObjectEx(cs_event, INFINITE, TRUE));
+}
+void io_enter_cs(void) {
+    if (cs_count++ == 0) {
+        if (!ResetEvent(cs_event)) {
+            perr(PERR_SYSTEM, "ResetEvent", StrError(GetLastError()), __FILE__, __LINE__);
+            return;
+        }
+    }
+}
+void io_leave_cs(void) {
+    if (--cs_count == 0) {
+        if (!SetEvent(cs_event)) {
+            perr(PERR_SYSTEM, "SetEvent", StrError(GetLastError()), __FILE__, __LINE__);
+            return;
+        }
+    }
+}
+
 /*
  * IO読み込みの完了処理
  */
@@ -232,31 +257,6 @@ int io_exec(void) {
     }
 
     return (int)__disp__;
-}
-
-/**
- * 非同期IOの完了を待つ
- */
-static int cs_count;
-static HANDLE cs_event;
-void io_wait_cs(void) {
-    while (WAIT_OBJECT_0 != WaitForSingleObjectEx(cs_event, INFINITE, TRUE));
-}
-void io_enter_cs(void) {
-    if (cs_count++ == 0) {
-        if (!ResetEvent(cs_event)) {
-            perr(PERR_SYSTEM, "ResetEvent", StrError(GetLastError()), __FILE__, __LINE__);
-            return;
-        }
-    }
-}
-void io_leave_cs(void) {
-    if (--cs_count == 0) {
-        if (!SetEvent(cs_event)) {
-            perr(PERR_SYSTEM, "SetEvent", StrError(GetLastError()), __FILE__, __LINE__);
-            return;
-        }
-    }
 }
 
 /**
