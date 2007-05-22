@@ -200,7 +200,7 @@ void io_init(void) {
 /* ディスクリプタ集合を初期化する */
 static int io_set_fds(fd_set *rfds, fd_set *wfds) {
     ioent_t *io;
-    int max = 0;
+    int max = -1;
 
     FD_ZERO(rfds);
     FD_ZERO(wfds);
@@ -232,7 +232,7 @@ static int io_set_fds(fd_set *rfds, fd_set *wfds) {
 	max = PRC_MAX(max, io->handle);
     }
 
-    return max;
+    return max + 1;
 }
 
 /**
@@ -256,7 +256,7 @@ int io_exec(void) {
     }
     if (sigsetjmp(sj_buf, 1) == 0) {
 	//printf("aio_count = %d\n", aio_count);
-	ret = pselect(n+1, &rfds, &wfds, NULL, ts, &ss_default);
+	ret = pselect(n, &rfds, &wfds, NULL, ts, &ss_default);
 	if (ret < 0) {
             if (errno == EINTR) {
 	        goto interrupted;
@@ -287,7 +287,7 @@ int io_exec(void) {
 		}
 	    }
 	}
-	
+    	return (int)__disp__;
     }
 
 interrupted:

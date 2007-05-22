@@ -82,6 +82,10 @@ int __send__(void) {
         evt = event(__prc__regs[3], __prc__regs[4], __prc__regs[5]);
         TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[2])->outq, evt, link);
 	if ((io = ((chan_t *)__prc__regs[2])->ioent) != NULL && chout_next(io->chan) == evt) {
+	    if (io->mlink.tqe_prev != NULL) {
+		TAILQ_REMOVE(&__prc__mioq, io, mlink);
+		io->mlink.tqe_prev = NULL;
+	    }
 	    io->iof(io, evt, 0);
 	}
     } else {
@@ -159,6 +163,10 @@ int __recv__(void) {
         evt = event(0, __prc__regs[3], __prc__regs[4]);
         TAILQ_INSERT_TAIL(&((chan_t *)__prc__regs[2])->inq, evt, link);
 	if ((io = ((chan_t *)__prc__regs[2])->ioent) != NULL && chin_next(io->chan) == evt) {
+	    if (io->mlink.tqe_prev != NULL) {
+		TAILQ_REMOVE(&__prc__mioq, io, mlink);
+		io->mlink.tqe_prev = NULL;
+	    }
             io->iof(io, evt, 0);
         }
     } else {
