@@ -25,8 +25,8 @@ proc Main() =
     EchoProc(sock)
 
 proc EchoProc(so:Sockets) =
-    ( so.in?msg   -> stdout!"Message Received: "^msg
-    | stdin?msg -> ( msg @ x:"q";octet* -> stop
+    ( so.in?msg -> stdout!"EchoProc: recvd: "^msg
+    | stdin?msg -> ( msg @ x:"q";octet* -> stdout!"EchoProc: stop\n"; so.out!""
                          | _ -> so.out!msg ) );
     EchoProc(so)
 
