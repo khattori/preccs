@@ -13,13 +13,15 @@ proc Main() =
     EchoSrv(lsock)
 
 proc EchoSrv(lsock:<Sockets>) =
-      stdin?msg   -> stop
-    | lsock?csock -> ( stdout!"conneted\n";		// 接続待ち
-			  EchoProc(csock);
+      stdin?msg   -> stdout!"Echo Server: stop\n"
+    | lsock?csock -> ( stdout!"Echo Server: conneted\n"; // 接続待ち
+			  EchoProc(csock, "ID=1: ");
+			  EchoProc(csock, "ID=2: ");
 		         EchoSrv(lsock) )
 
-proc EchoProc(s:Sockets) =
-    stdout!"Echo\n";
-    s.in?msg; stdout!"recvd\n";
-    ( msg @ "" -> stdout!"closed\n"; stop
-          | _  -> s.out!msg; EchoProc(s) )
+proc EchoProc(s:Sockets, id:string) =
+      s.in?msg  -> stdout!"EchoProc:"^id^"recvd: "^msg^"\n";
+	            ( msg @ "" -> stdout!"EchoProc: "^id^"closed\n"; s.out!"BYE\n"; s.out!""
+		           | _  -> s.out!msg; EchoProc(s, id) )
+    | stdin?msg -> stdout!"EchoProc: "^id^"stop\n"
+
