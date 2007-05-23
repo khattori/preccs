@@ -17,7 +17,7 @@ proc Memo(fname:string) =
 
 proc FileCopy(in:<string>, out:<string>) =
     in?buf;
-    ( buf @ c:("q"|"Q");octet* -> stop
+    ( buf @ c:("q"|"Q");octet* -> out!""; stdout!"FileCopy: stop\n"
           | _  -> out!buf; FileCopy(in,out) )
 
 proc PrcFileCreate(ret:<FileOut>, fname:string) =
