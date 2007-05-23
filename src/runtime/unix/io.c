@@ -26,6 +26,8 @@
 #include "exec.h"
 #include "io.h"
 
+#define PRC_MAX(a,b) ((a) > (b) ? (a) : (b))
+
 ioq_t __prc__ioq;
 ioq_t __prc__mioq;
 
@@ -36,20 +38,7 @@ static sigset_t ss_sigio;
 static struct timespec ts_zero;
 static sigjmp_buf sj_buf;
 
-#define PRC_MAX(a,b) ((a) > (b) ? (a) : (b))
-
-/**
- * 非同期IOの完了を待つ
- */
-void io_wait_cs(void) {
-    perr(PERR_INTERNAL, __FILE__, __LINE__);
-}
-void io_enter_cs(void) {
-    perr(PERR_INTERNAL, __FILE__, __LINE__);
-}
-void io_leave_cs(void) {
-    perr(PERR_INTERNAL, __FILE__, __LINE__);
-}
+static void write_exec(ioent_t *io, event_t *evt);
 
 /*
  * IO読み込みの完了処理
@@ -96,11 +85,23 @@ static void io_complete(ioent_t *io) {
     switch (io->iotype) {
     case IOT_INPUT:
 	io_read_complete(io, len);
+	if (len == 0) {
+	    close(io->handle);
+	    ioent_delete(io);
+	    return;
+	}
+
 	if ((evt = chin_next(io->chan)) != NULL) {
 	    io->iof(io, evt, 0);
 	}
 	break;
     case IOT_OUTPUT:
+	io->offset += len;
+	evt = (event_t*)chout_next(io->chan);
+	if (io->offset < STRLEN(evt->val)) {
+	    write_exec(io, evt);
+	    return;
+	}
 	io_write_complete(io, len);
 	if ((evt = chout_next(io->chan)) != NULL) {
 	    io->iof(io, evt, 0);
@@ -141,17 +142,38 @@ void io_input(ioent_t *io, event_t *evt, int exec) {
     TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
 }
 
+static void write_exec(ioent_t *io, event_t *evt) {
+    int len;
+
+    aio_count++;
+    len = STRLEN(evt->val) - io->offset;
+    if (len > io->bufsz) {
+	len = io->bufsz;
+    }
+    /* 新規に書き込みIO発行 */
+    memcpy(io->buf, STRPTR(evt->val)+io->offset, len);
+    io->ctlblk.aio_buf = io->buf;
+    io->ctlblk.aio_nbytes = len;
+    if (aio_write(&io->ctlblk) < 0) {
+	perr(PERR_SYSTEM, "aio_write", strerror(errno), __FILE__, __LINE__);
+    }
+}
+
 /**
  * IOチャネル出力時の処理 
  */
 void io_output(ioent_t *io, event_t *evt, int exec) {
     if (evt->trans == 0) {
-	aio_count++;
-	io->ctlblk.aio_buf = STRPTR(evt->val);
-	io->ctlblk.aio_nbytes = STRLEN(evt->val);
-	if (aio_write(&io->ctlblk) < 0) {
-	    perr(PERR_SYSTEM, "aio_write", strerror(errno), __FILE__, __LINE__);
-	}
+        int len = STRLEN(evt->val);
+
+        if (len == 0) {
+            io_write_complete(io, 0);
+            close(io->handle);
+	    ioent_delete(io);
+            return;
+        }
+        io->offset = 0;
+        write_exec(io, evt);
 	return;
     }
     TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
