@@ -33,6 +33,7 @@ type HttpRequest = {{
 type HttpRequestGet = HttpRequest{start=RequestLineGet}
 type SocketPair = {in:<string>;out:<string>}
 type FileIn = {ok:bool;in:<string>}
+
 proc Main() =
     var lsock:<SocketPair>;
     C{	prc_SockTcpServer($lsock$, 8080); C};
@@ -45,17 +46,17 @@ proc HttpOnAcc(sp:SocketPair) =
     sp.in?msg;
     ( msg @ "" -> stdout!"CLOSED\n"
           | _  -> ( msg @ x:HttpRequestGet -> HttpOnRead(sp, x.start.path)
-                  | _ -> stdout!"unknown request: "^msg; sp.out!"" ))
+                  | _ -> stdout!"unknown request: "^msg; sp.out!"" ) )
 proc HttpOnRead(sp:SocketPair, path:string) =
     var ret:<FileIn>;
     PrcFileOpenR(ret, "."^path);
     ret?fr;
-    ( fr.ok @ true  -> sp.out!"HTTP/1.1 200 OK\r\n\r\n"; ReadFile(fr.in, sp.out)
+    ( fr.ok @ true  -> sp.out!"HTTP/1.1 200 OK\r\n\r\n"; ReadFile(fr.in, sp.in, sp.out)
             | false -> sp.out!"HTTP/1.1 404 Not found\r\n"; sp.out!"" )
-proc ReadFile(in:<string>,out:<string>) =
+proc ReadFile(in:<string>,sin:<string>,out:<string>) =
     in?buf; out!buf;
-    ( buf @ "" -> skip
-          | _  -> ReadFile(in,out) )
+    ( buf @ "" -> sin?msg
+          | _  -> ReadFile(in,sin,out) )
 proc PrcFileOpenR(ret:<FileIn>, fname:string) =
     var h:int;
     var fin:<string>;
