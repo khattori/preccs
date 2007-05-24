@@ -34,7 +34,7 @@ ioq_t __prc__mioq;
 int aio_count;
 
 static sigset_t ss_default;
-static sigset_t ss_sigio;
+sigset_t ss_sigio;
 static struct timespec ts_zero;
 static sigjmp_buf sj_buf;
 
@@ -73,7 +73,7 @@ void io_write_complete(ioent_t *io, int len) {
     TAILQ_REMOVE(&io->chan->outq, evt, link);
 }
 
-static void io_complete(ioent_t *io) {
+void io_complete(ioent_t *io) {
     event_t *evt;
     int len;
 

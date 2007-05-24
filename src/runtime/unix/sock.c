@@ -22,6 +22,7 @@
 #include "sock.h"
 
 extern void write_exec(ioent_t *io, event_t *evt);
+extern void io_complete(ioent_t * io);
 static void so_output(ioent_t *io, event_t *evt, int exec);
 static void so_accept(ioent_t *io, event_t *evt, int exec);
 
@@ -182,6 +183,21 @@ static void accept_exec(ioent_t *io) {
     int so;
 
     if ((so = accept(io->handle, NULL, NULL)) < 0) {
+	if (errno == EMFILE) {
+	    extern sigset_t ss_sigio;
+	    siginfo_t si;
+	    perr(PWRN_SYSTEM, "accept", strerror(errno), __FILE__, __LINE__);
+	    /* IO完了シグナルを処理 */
+	    while (aio_count > 0) {
+	    	if (sigwaitinfo(&ss_sigio, &si) != SIGRTMIN+SIGIO) {
+	    	    perr(PERR_SYSTEM, "sigwaitinfo", strerror(errno), __FILE__, __LINE__);
+		    return;
+	    	}
+	        io_complete((ioent_t *)si.si_value.sival_ptr);
+	    }
+    	    TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
+	    return;
+	}
 	perr(PERR_SYSTEM, "accept", strerror(errno), __FILE__, __LINE__);
 	return;
     }
