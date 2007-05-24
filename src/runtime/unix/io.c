@@ -38,7 +38,7 @@ static sigset_t ss_sigio;
 static struct timespec ts_zero;
 static sigjmp_buf sj_buf;
 
-static void write_exec(ioent_t *io, event_t *evt);
+void write_exec(ioent_t *io, event_t *evt);
 
 /*
  * IO読み込みの完了処理
@@ -79,6 +79,7 @@ static void io_complete(ioent_t *io) {
 
     aio_count--;
     if (aio_error(&io->ctlblk) != 0) {
+	perr(PERR_SYSTEM, "aio_error", strerror(errno), __FILE__, __LINE__);
 	return;
     }
     len = aio_return(&io->ctlblk);
@@ -142,7 +143,7 @@ void io_input(ioent_t *io, event_t *evt, int exec) {
     TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
 }
 
-static void write_exec(ioent_t *io, event_t *evt) {
+void write_exec(ioent_t *io, event_t *evt) {
     int len;
 
     aio_count++;
@@ -327,6 +328,7 @@ interrupted:
 ioent_t *ioent_create(chan_t *ch, int handle, iotype_t iotype, iof_t iof, size_t size) {
     ioent_t *io;
 
+//  printf("ioent_create: enter(handle=%d, iotype=%d)\n", handle, iotype);
     io = malloc(sizeof(ioent_t)+size);
     if (io == NULL) {
         perr(PERR_OUTOFMEM, __FILE__, __LINE__);
@@ -360,6 +362,7 @@ ioent_t *ioent_create(chan_t *ch, int handle, iotype_t iotype, iof_t iof, size_t
  * I/Oエントリの削除
  */
 void ioent_delete(ioent_t *ioent) {
+//    printf("ioent_delete: enter(handle=%d, iotype=%d)\n", ioent->handle, ioent->iotype);
     TAILQ_REMOVE(&__prc__ioq, ioent, link);
     ioent->chan->ioent = NULL;
     free(ioent);

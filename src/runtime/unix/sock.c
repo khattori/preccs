@@ -21,6 +21,8 @@
 #include "perr.h"
 #include "sock.h"
 
+extern void write_exec(ioent_t *io, event_t *evt);
+static void so_output(ioent_t *io, event_t *evt, int exec);
 static void so_accept(ioent_t *io, event_t *evt, int exec);
 
 void prc_SockStart(void) {
@@ -55,7 +57,7 @@ int prc_SockUdpClient(int ich, int och, char *host, int port) {
         return -1;
     }
     ioent_create((chan_t *)ich, sock, IOT_INPUT, io_input, BUFSIZ);
-    ioent_create((chan_t *)och, sock, IOT_OUTPUT, io_output, BUFSIZ);
+    ioent_create((chan_t *)och, sock, IOT_OUTPUT, so_output, BUFSIZ);
 
     return 0;
 }
@@ -95,7 +97,7 @@ int prc_SockUdpOpen(int ich, int och, char *host, int cport, int bport) {
         return -1;
     }
     ioent_create((chan_t *)ich, sock, IOT_INPUT, io_input, BUFSIZ);
-    ioent_create((chan_t *)och, sock, IOT_OUTPUT, io_output, BUFSIZ);
+    ioent_create((chan_t *)och, sock, IOT_OUTPUT, so_output, BUFSIZ);
 
     return 0;
 }
@@ -127,7 +129,7 @@ int prc_SockTcpClient(int ich, int och, char *host, int port) {
     }
 
     ioent_create((chan_t *)ich, sock, IOT_INPUT, io_input, BUFSIZ);
-    ioent_create((chan_t *)och, sock, IOT_OUTPUT, io_output, BUFSIZ);
+    ioent_create((chan_t *)och, sock, IOT_OUTPUT, so_output, BUFSIZ);
 
     return 0;
 }
@@ -186,7 +188,7 @@ static void accept_exec(ioent_t *io) {
     __prc__regs[0] = (int)__chan__();
     __prc__regs[1] = (int)__chan__();
     ioent_create((chan_t *)__prc__regs[0], so, IOT_INPUT, io_input, BUFSIZ);
-    ioent_create((chan_t *)__prc__regs[1], so, IOT_OUTPUT, io_output, BUFSIZ);
+    ioent_create((chan_t *)__prc__regs[1], so, IOT_OUTPUT, so_output, BUFSIZ);
     __prc__regs[2] = __record__(2);
     ((int*)__prc__regs[2])[0] = __prc__regs[0];
     ((int*)__prc__regs[2])[1] = __prc__regs[1];
@@ -203,6 +205,25 @@ static void accept_exec(ioent_t *io) {
     if ((evt = chin_next(io->chan)) != NULL) {
 	io->iof(io, evt, 0);
     }
+}
+/**
+ * ソケットIOチャネル出力時の処理 
+ */
+static void so_output(ioent_t *io, event_t *evt, int exec) {
+    if (evt->trans == 0) {
+        int len = STRLEN(evt->val);
+
+        if (len == 0) {
+            io_write_complete(io, 0);
+            shutdown(io->handle, SHUT_WR);
+	    ioent_delete(io);
+            return;
+        }
+        io->offset = 0;
+        write_exec(io, evt);
+	return;
+    }
+    TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
 }
 
 static void so_accept(ioent_t *io, event_t *evt, int exec) {
