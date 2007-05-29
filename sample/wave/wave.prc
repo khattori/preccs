@@ -13,7 +13,7 @@ proc WaveStart() =
     Wave(wout)
 
 proc Wave(wout:<string>) =
-      stdin?cmd -> wout?msg; Main()
+      stdin?cmd -> wout!""; Main()
     | wout!data^data^data^data -> Wave(wout)
 
     
