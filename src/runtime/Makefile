@@ -20,7 +20,7 @@ OS	= win32
 CFLAGS	= -Wall -g $(INCLUDES)
 DEF	= prcrt.def
 IMPLIB	= libprcrt.a
-LIBS	= -lws2_32 -Wl,--output-def,$(DEF),--out-implib,$(IMPLIB)
+LIBS	= -lws2_32 -lwinmm -Wl,--output-def,$(DEF),--out-implib,$(IMPLIB)
 TARGET	= prcrt.dll
 endif
 
@@ -37,7 +37,8 @@ SRCS	=		\
 	${OS}/io.c	\
 	${OS}/sock.c	\
 	${OS}/file.c	\
-	${OS}/timer.c
+	${OS}/timer.c	\
+	${OS}/wave.c
 
 ifeq ($(OS),win32)
 SRCS	+= $(OS)/strerror.c

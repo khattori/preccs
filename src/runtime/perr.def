@@ -8,6 +8,7 @@
  */
 DEF_PERR(PERR_OUTOFMEM, "[fatal] out of memory at %s:%d.", PERRCLS_FATAL)
 DEF_PERR(PERR_SYSTEM,   "[fatal] system error in %s:%s at %s:%d", PERRCLS_FATAL)
+DEF_PERR(PERR_SYSTEM2,  "[fatal] system error in %s(err=%d) at %s:%d", PERRCLS_FATAL)
 DEF_PERR(PERR_INTERNAL, "[fatal] internal error at %s:%d.", PERRCLS_FATAL)
 DEF_PERR(PERR_STKOVRFLW,"[fatal] stack overflow at %s:%d.", PERRCLS_FATAL)
 DEF_PERR(PERR_BUFOVRFLW,"[fatal] buffer overflow at %s:%d.", PERRCLS_FATAL)

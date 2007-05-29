@@ -377,7 +377,7 @@ static void send_exec(ioent_t *io, event_t *evt) {
         break;
     case WSAECONNRESET:
         aio_count--;
-//            printf("so_input: WSASend() WSAECONNRESET\n");
+//            printf("so_output: WSASend() WSAECONNRESET\n");
 //            fflush(stdout);
         io_write_complete(io, 0);
         shutdown_sendsock(io);

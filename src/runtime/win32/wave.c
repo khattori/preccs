@@ -9,20 +9,15 @@
 #include <windows.h>
 #include <stdio.h>
 #include "prcrt.h"
+#include "proc.h"
 #include "exec.h"
 #include "perr.h"
+#include "strerror.h"
 #include "wave.h"
 
 #define RBUF_NUM 5
 #define RBUF_SIZ BUFSIZ
 
-static HWAVEOUT hWaveOut = NULL;
-static HWAVEIN  hWaveIn  = NULL;
-static HANDLE hEvtWout = NULL;
-static HANDLE hEvtWin  = NULL;
-
-int wave_och; /* GCの対象 */
-int wave_ich; /* GCの対象 */
 static int woq_len; /* 出力キューの長さ */
 static int woq_hd;
 static int woq_tl;
@@ -33,214 +28,13 @@ static int wiq_tl;
 
 static WAVEHDR wo_whdr[RBUF_NUM];
 static WAVEHDR wi_whdr[RBUF_NUM];
-static char rec_bufs[RBUF_NUM][RBUF_SIZ];
 
-/* IO処理ループから呼び出される */
-int wave_io(HANDLE handles[], ioent_t io_table[], int *io_count) {
-    event_t *evt;
-    int len;
-    MMRESULT ret;
+static void wv_input(ioent_t *io, event_t *evt, int exec);
+static void wv_output(ioent_t *io, event_t *evt, int exec);
+static void wout_exec(ioent_t *io, event_t *evt);
 
-    /* waveOutWrite処理 */
-    if (wave_och) {
-        if ((evt = chout_next((chan_t *)wave_och)) != NULL
-            && woq_len < RBUF_NUM) {
-            int i = woq_tl++;
-            char *buf;
-            
-            if ((len = STRLEN(evt->val)) == 0)
-                return chan_recv(wave_och);
-
-            if (wo_whdr[i].lpData) {
-                ret = waveOutUnprepareHeader(hWaveOut, &wo_whdr[i], sizeof(WAVEHDR));
-                if (ret != MMSYSERR_NOERROR) {
-                    perr(PERR_SYSTEM, "waveOutUnprepareHeader", ret, __FILE__, __LINE__);
-                }
-                free(wo_whdr[i].lpData);
-            }
-
-            if ((buf = (char *)malloc(len)) == NULL) {
-                perr(PERR_OUTOFMEM, __FILE__, __LINE__);
-            }
-            memcpy(buf, STRPTR(evt->val), len);
-
-            wo_whdr[i].lpData = buf;
-            wo_whdr[i].dwBufferLength = len;
-            wo_whdr[i].dwBytesRecorded = 0;
-            wo_whdr[i].dwFlags = WHDR_BEGINLOOP | WHDR_ENDLOOP;
-            wo_whdr[i].dwLoops = 1;
-            wo_whdr[i].lpNext = NULL;
-            wo_whdr[i].dwUser = i;
-            wo_whdr[i].reserved = 0;
-
-            woq_tl %= RBUF_NUM;
-            woq_len++;
-
-            ret = waveOutPrepareHeader(hWaveOut, &wo_whdr[i], sizeof(WAVEHDR));
-            if (ret != MMSYSERR_NOERROR) {
-                perr(PERR_SYSTEM, "waveOutPrepareHeader", ret, __FILE__, __LINE__);
-            }
-            ret = waveOutWrite(hWaveOut, &wo_whdr[i], sizeof(WAVEHDR));
-            if (ret != MMSYSERR_NOERROR) {
-                perr(PERR_SYSTEM, "waveOutWrite", ret, __FILE__, __LINE__);
-            }
-
-            return chan_recv(wave_och);
-        } else {
-            ioent_t *io = &io_table[*io_count];
-
-            ResetEvent(hEvtWout);
-            handles[*io_count] = hEvtWout;
-            io->type = IOT_WAVE;
-            (*io_count)++;
-        }
-        /* waveOutClose処理 */
-        if ((evt = chin_next((chan_t *)wave_och)) != NULL) {
-            int i;
-            printf("wave out close\n");
-            fflush(stdout);
-
-            if ((ret = waveOutReset(hWaveOut)) != MMSYSERR_NOERROR) {
-                perr(PERR_SYSTEM, "waveOutReset", ret, __FILE__, __LINE__);
-            }
-
-            for (i = 0; i < RBUF_NUM; i++) {
-                if (wo_whdr[i].lpData == NULL) continue;
-
-                free(wo_whdr[i].lpData);
-                ret = waveOutUnprepareHeader(hWaveOut, &wo_whdr[i], sizeof(WAVEHDR));
-                if (ret != MMSYSERR_NOERROR) {
-                    perr(PERR_SYSTEM, "waveOutUnprepareHeader", ret, __FILE__, __LINE__);
-                }
-            }
-
-            if ((ret = waveOutClose(hWaveOut)) != MMSYSERR_NOERROR) {
-                perr(PERR_SYSTEM, "waveOutClose", ret, __FILE__, __LINE__);
-            }
-            hWaveOut = NULL;
-            __prc__regs[0] = __string__(0, "");
-            __prc__regs[1] = wave_och;
-            wave_och = 0;
-            woq_len = 0;
-            woq_hd  = 0;
-            woq_tl  = 0;
-            return chan_send(__prc__regs[1], __prc__regs[0]);
-        }
-    }
-    /* サウンド入力処理 */
-    if (wave_ich) {
-        if (chin_next((chan_t *)wave_ich) != NULL) {
-            if (wiq_len > 0) { // 未処理録音データがある場合
-                int i = wiq_hd++;
-
-                wiq_hd %= RBUF_NUM;
-                wiq_len--;
-                __prc__regs[0] = __string__(wi_whdr[i].dwBytesRecorded, wi_whdr[i].lpData);
-                ret = waveInAddBuffer(hWaveIn, &wi_whdr[i], sizeof(WAVEHDR));
-                if (ret != MMSYSERR_NOERROR) {
-                    perr(PERR_SYSTEM, "waveInAddBuffer", ret, __FILE__, __LINE__);
-                }
-
-                return chan_send(wave_ich, __prc__regs[0]);
-            } else {           // 未処理録音データがない場合
-                ioent_t *io = &io_table[*io_count];
-                ResetEvent(hEvtWin);
-                handles[*io_count] = hEvtWin;
-                io->type = IOT_WAVE;
-                (*io_count)++;
-            }
-        }
-        /* waveInClose処理 */
-        if (chout_next((chan_t *)wave_ich) != NULL) {
-            int i;
-            printf("wave in close\n");
-            fflush(stdout);
-            if ((ret = waveInReset(hWaveIn)) != MMSYSERR_NOERROR) {
-                perr(PERR_SYSTEM, "waveInReset", ret, __FILE__, __LINE__);
-            }
-
-            for (i = 0; i < RBUF_NUM; i++) {
-                ret = waveInUnprepareHeader(hWaveIn, &wi_whdr[i], sizeof(WAVEHDR));
-                if (ret != MMSYSERR_NOERROR) {
-                    perr(PERR_SYSTEM, "waveOutUnprepareHeader", ret, __FILE__, __LINE__);
-                }
-            }
-
-            if ((ret = waveInClose(hWaveIn)) != MMSYSERR_NOERROR) {
-                perr(PERR_SYSTEM, "waveInClose", ret, __FILE__, __LINE__);
-            }
-            hWaveIn = NULL;
-            __prc__regs[0] = wave_ich;
-            wave_ich = 0;
-            wiq_len = 0;
-            wiq_tl  = 0;
-            wiq_hd  = 0;
-            return chan_recv(__prc__regs[0]);
-        }
-    }
-        
-    return 0;
-}
-
-static void CALLBACK waveOutProc(
-    HWAVEOUT hwo,     
-    UINT uMsg,        
-    DWORD dwInstance, 
-    DWORD dwParam1,   
-    DWORD dwParam2    
-    ) {
-    LPWAVEHDR lpwh = (LPWAVEHDR)dwParam1;
-
-    switch (uMsg) {
-    case WOM_CLOSE:
-        break;
-    case WOM_DONE:
-        assert(woq_hd == lpwh->dwUser);
-        assert(woq_len > 0);
-
-        woq_hd++;
-        woq_hd %= RBUF_NUM;
-        woq_len--;
-        SetEvent(hEvtWout);
-        break;
-    case WOM_OPEN:
-        break;
-    }
-}
-
-/* サウンド出力用デバイスをオープン */
-int prc_WaveOutOpen(int ch, int srate) {
-    WAVEFORMATEX wfe;
-    MMRESULT ret;
-
-    wfe.wFormatTag      = WAVE_FORMAT_PCM;
-    wfe.nChannels       = 1;
-    wfe.nSamplesPerSec  = srate;
-    wfe.nAvgBytesPerSec = srate;
-    wfe.wBitsPerSample  = 16;
-    wfe.nBlockAlign     = wfe.nChannels * wfe.wBitsPerSample / 8;
-
-    if ((ret = waveOutOpen(&hWaveOut, WAVE_MAPPER, &wfe,
-                           (DWORD)waveOutProc, 0, CALLBACK_FUNCTION)) != MMSYSERR_NOERROR) {
-        perr(PERR_SYSTEM, "waveOutOpen", ret, __FILE__, __LINE__);
-    }
-    if (hEvtWout == NULL
-        && (hEvtWout = CreateEvent(NULL, TRUE, FALSE, NULL)) == NULL) {
-        perr(PERR_SYSTEM, "CreateEvent", GetLastError(), __FILE__, __LINE__);
-    }
-    wave_och = ch;
-    memset(wo_whdr, 0, sizeof wo_whdr);
-
-    return 0;
-}
-
-static void CALLBACK waveInProc(
-    HWAVEOUT hwi,     
-    UINT uMsg,        
-    DWORD dwInstance, 
-    DWORD dwParam1,   
-    DWORD dwParam2    
-    ) {
+static void CALLBACK waveInProc(HWAVEOUT hwi, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2) {
+    ioent_t *io = (ioent_t *)dwInstance;
     LPWAVEHDR lpwh = (LPWAVEHDR)dwParam1;
 
     switch (uMsg) {
@@ -253,17 +47,22 @@ static void CALLBACK waveInProc(
         wiq_tl++;
         wiq_tl %= RBUF_NUM;
         wiq_len++;
-        SetEvent(hEvtWin);
+        if (!SetEvent(io->ctlblk.hEvent)) {
+            perr(PERR_SYSTEM, "SetEvent", StrError(GetLastError()), __FILE__, __LINE__);
+            return;
+        }
         break;
     case WIM_OPEN:
         break;
     }
 }
-
-/* サウンド入力用デバイスをオープン */
+/**
+ * サウンド入力用デバイスをオープン
+ */
 int prc_WaveInOpen(int ch, int srate) {
     WAVEFORMATEX wfe;
     MMRESULT ret;
+    ioent_t *io;
     int i;
 
     wfe.wFormatTag      = WAVE_FORMAT_PCM;
@@ -273,14 +72,16 @@ int prc_WaveInOpen(int ch, int srate) {
     wfe.wBitsPerSample  = 16;
     wfe.nBlockAlign     = wfe.nChannels * wfe.wBitsPerSample / 8;
 
-    if ((ret = waveInOpen(&hWaveIn, WAVE_MAPPER, &wfe,
-                           (DWORD)waveInProc, 0, CALLBACK_FUNCTION)) != MMSYSERR_NOERROR) {
-        perr(PERR_SYSTEM, "waveInOpen", ret, __FILE__, __LINE__);
+    io = ioent_create((chan_t *)ch, NULL, IOT_INPUT, wv_input, RBUF_SIZ*RBUF_NUM);
+
+    ret = waveInOpen((LPHWAVEIN)&io->handle, WAVE_MAPPER, &wfe, (DWORD)waveInProc, (DWORD)io, CALLBACK_FUNCTION);
+    if (ret != MMSYSERR_NOERROR) {
+        perr(PERR_SYSTEM2, "waveInOpen", ret, __FILE__, __LINE__);
+        return -1;
     }
 
-    wave_ich = ch;
     for (i = 0; i < RBUF_NUM; i++) {
-        wi_whdr[i].lpData          = rec_bufs[i];
+        wi_whdr[i].lpData          = io->buf + RBUF_SIZ*i;
         wi_whdr[i].dwBufferLength  = RBUF_SIZ;
         wi_whdr[i].dwBytesRecorded = 0;
         wi_whdr[i].dwFlags         = WHDR_BEGINLOOP | WHDR_ENDLOOP;
@@ -289,24 +90,244 @@ int prc_WaveInOpen(int ch, int srate) {
         wi_whdr[i].dwUser          = i;
         wi_whdr[i].reserved        = 0;
 
-        ret = waveInPrepareHeader(hWaveIn, &wi_whdr[i], sizeof(WAVEHDR));
+        ret = waveInPrepareHeader(io->handle, &wi_whdr[i], sizeof(WAVEHDR));
         if (ret != MMSYSERR_NOERROR) {
-            perr(PERR_SYSTEM, "waveInPrepareHeader", ret, __FILE__, __LINE__);
+            perr(PERR_SYSTEM2, "waveInPrepareHeader", ret, __FILE__, __LINE__);
+            return -1;
         }
-        ret = waveInAddBuffer(hWaveIn, &wi_whdr[i], sizeof(WAVEHDR));
+        ret = waveInAddBuffer(io->handle, &wi_whdr[i], sizeof(WAVEHDR));
         if (ret != MMSYSERR_NOERROR) {
-            perr(PERR_SYSTEM, "waveInAddBuffer", ret, __FILE__, __LINE__);
+            perr(PERR_SYSTEM2, "waveInAddBuffer", ret, __FILE__, __LINE__);
+            return -1;
         }
     }
-
-    if ((ret = waveInStart(hWaveIn)) != MMSYSERR_NOERROR) {
-        perr(PERR_SYSTEM, "waveInStart", ret, __FILE__, __LINE__);
-    }
-
-    if (hEvtWin == NULL
-        && (hEvtWin = CreateEvent(NULL, TRUE, FALSE, NULL)) == NULL) {
-        perr(PERR_SYSTEM, "CreateEvent", GetLastError(), __FILE__, __LINE__);
+    ret = waveInStart(io->handle);
+    if (ret != MMSYSERR_NOERROR) {
+        perr(PERR_SYSTEM2, "waveInStart", ret, __FILE__, __LINE__);
+        return -1;
     }
 
     return 0;
 }
+
+static void CALLBACK waveOutProc(HWAVEOUT hwo, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2) {
+    ioent_t *io = (ioent_t *)dwInstance;
+    LPWAVEHDR lpwh = (LPWAVEHDR)dwParam1;
+
+    switch (uMsg) {
+    case WOM_CLOSE:
+        break;
+    case WOM_DONE:
+        assert(woq_hd == lpwh->dwUser);
+        assert(woq_len > 0);
+
+        woq_hd++;
+        woq_hd %= RBUF_NUM;
+        woq_len--;
+        if (!SetEvent(io->ctlblk.hEvent)) {
+            perr(PERR_SYSTEM, "SetEvent", StrError(GetLastError()), __FILE__, __LINE__);
+            return;
+        }
+        break;
+    case WOM_OPEN:
+        break;
+    }
+}
+/**
+ * サウンド出力用デバイスをオープン
+ */
+int prc_WaveOutOpen(int ch, int srate) {
+    WAVEFORMATEX wfe;
+    MMRESULT ret;
+    ioent_t *io;
+    int i;
+
+    wfe.wFormatTag      = WAVE_FORMAT_PCM;
+    wfe.nChannels       = 1;
+    wfe.nSamplesPerSec  = srate;
+    wfe.nAvgBytesPerSec = srate;
+    wfe.wBitsPerSample  = 16;
+    wfe.nBlockAlign     = wfe.nChannels * wfe.wBitsPerSample / 8;
+
+    io = ioent_create((chan_t *)ch, NULL, IOT_OUTPUT, wv_output, RBUF_SIZ*RBUF_NUM);
+
+    ret = waveOutOpen((LPHWAVEOUT)&io->handle, WAVE_MAPPER, &wfe, (DWORD)waveOutProc, (DWORD)io, CALLBACK_FUNCTION);
+    if (ret != MMSYSERR_NOERROR) {
+        perr(PERR_SYSTEM2, "waveOutOpen", ret, __FILE__, __LINE__);
+        return -1;
+    }
+    for (i = 0; i < RBUF_NUM; i++) {
+        wo_whdr[i].lpData = io->buf + RBUF_SIZ*i;
+        wo_whdr[i].dwBufferLength = RBUF_SIZ;
+        wo_whdr[i].dwBytesRecorded = 0;
+        wo_whdr[i].dwFlags = WHDR_BEGINLOOP | WHDR_ENDLOOP;
+        wo_whdr[i].dwLoops = 1;
+        wo_whdr[i].lpNext = NULL;
+        wo_whdr[i].dwUser = i;
+        wo_whdr[i].reserved = 0;
+
+        ret = waveOutPrepareHeader(io->handle, &wo_whdr[i], sizeof(WAVEHDR));
+        if (ret != MMSYSERR_NOERROR) {
+            perr(PERR_SYSTEM2, "waveOutPrepareHeader", ret, __FILE__, __LINE__);
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+/* サウンド入力を閉じる */
+static void win_close(ioent_t *io) {
+    MMRESULT ret;
+    int i;
+    // printf("wave in close\n");
+    // fflush(stdout);
+    
+    ret = waveInReset(io->handle);
+    if (ret != MMSYSERR_NOERROR) {
+        perr(PERR_SYSTEM2, "waveInReset", ret, __FILE__, __LINE__);
+        return;
+    }
+    for (i = 0; i < RBUF_NUM; i++) {
+        ret = waveInUnprepareHeader(io->handle, &wi_whdr[i], sizeof(WAVEHDR));
+        if (ret != MMSYSERR_NOERROR) {
+            perr(PERR_SYSTEM2, "waveOutUnprepareHeader", ret, __FILE__, __LINE__);
+            return;
+        }
+    }
+    ret = waveInClose(io->handle);
+    if (ret != MMSYSERR_NOERROR) {
+        perr(PERR_SYSTEM2, "waveInClose", ret, __FILE__, __LINE__);
+        return;
+    }
+    wiq_len = 0;
+    wiq_tl  = 0;
+    wiq_hd  = 0;
+}
+
+static void wv_read_complete(ioent_t *io, int num) {
+    proc_t *prc;
+    event_t *evt;
+
+    __prc__regs[0] = __string__(RBUF_SIZ, (void *)io->buf+RBUF_SIZ*num);
+    prc = proc();
+    evt = chin_next(io->chan);
+    prc->clos = evt->clos;
+    prc->val  = __prc__regs[0];
+    TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
+    TAILQ_REMOVE(&io->chan->inq, evt, link);
+}
+
+static void wv_input(ioent_t *io, event_t *evt, int exec) {
+    MMRESULT ret;
+
+    /* サウンド入力処理 */
+    if (chin_next(io->chan) == evt) {
+        // 未処理録音データがある場合
+        if (evt->trans == 0 && wiq_len > 0) {
+            int i = wiq_hd++;
+            wiq_hd %= RBUF_NUM;
+            wiq_len--;
+
+            wv_read_complete(io, i);
+            ret = waveInAddBuffer(io->handle, &wi_whdr[i], sizeof(WAVEHDR));
+            if (ret != MMSYSERR_NOERROR) {
+                perr(PERR_SYSTEM2, "waveInAddBuffer", ret, __FILE__, __LINE__);
+                return;
+            }
+            /* IO待ちプロセスが無ければ終了 */
+            if ((evt = chin_next(io->chan)) == NULL) {
+                return;
+            }
+            io->iof(io, evt, 0);
+        } else {
+            TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
+        }
+    } else if (chout_next(io->chan) == evt) {
+        win_close(io);
+        io_write_complete(io, 0);
+        ioent_delete(io);
+    }
+}
+
+/* サウンド出力を閉じる */
+static void wout_close(ioent_t *io) {
+    MMRESULT ret;
+    int i;
+    // printf("wave out close\n");
+    // fflush(stdout);
+
+    ret = waveOutReset(io->handle);
+    if (ret  != MMSYSERR_NOERROR) {
+        perr(PERR_SYSTEM2, "waveOutReset", ret, __FILE__, __LINE__);
+        return;
+    }
+    for (i = 0; i < RBUF_NUM; i++) {
+        ret = waveOutUnprepareHeader(io->handle, &wo_whdr[i], sizeof(WAVEHDR));
+        if (ret != MMSYSERR_NOERROR) {
+            perr(PERR_SYSTEM2, "waveOutUnprepareHeader", ret, __FILE__, __LINE__);
+            return;
+        }
+    }
+    ret = waveOutClose(io->handle);
+    if (ret != MMSYSERR_NOERROR) {
+        perr(PERR_SYSTEM2, "waveOutClose", ret, __FILE__, __LINE__);
+        return;
+    }
+    woq_len = 0;
+    woq_hd  = 0;
+    woq_tl  = 0;
+}
+
+static void wv_output(ioent_t *io, event_t *evt, int exec) {
+    if (evt->trans == 0) {
+        int len = STRLEN(evt->val);
+        if (len == 0) {
+            wout_close(io);
+            io_write_complete(io, 0);
+            ioent_delete(io);
+            return;
+        }
+        io->offset = 0;
+        wout_exec(io, evt);
+        return;
+    }
+    TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
+}
+
+/* 一つのオーディオ出力データブロックを処理する */
+static void wout_exec(ioent_t *io, event_t *evt) {
+    MMRESULT ret;
+    int len;
+
+    if (woq_len < RBUF_NUM) {
+        int i = woq_tl++;
+        woq_tl %= RBUF_NUM;
+        woq_len++;
+        len = STRLEN(evt->val)-io->offset;
+        if (len > RBUF_SIZ) {
+            len = io->bufsz;
+        }
+        /* waveOutWrite処理 */
+        memcpy(wo_whdr[i].lpData, STRPTR(evt->val)+io->offset, len);
+        wo_whdr[i].dwBufferLength = len;
+        ret = waveOutWrite(io->handle, &wo_whdr[i], sizeof(WAVEHDR));
+        if (ret != MMSYSERR_NOERROR) {
+            perr(PERR_SYSTEM, "waveOutWrite", ret, __FILE__, __LINE__);
+            return;
+        }
+        io->offset += len;
+        if (io->offset < STRLEN(evt->val)) {
+            wout_exec(io, evt);
+            return;
+        }
+        io_write_complete(io, len);
+        /* IO待ちプロセスが無ければ終了 */
+        if ((evt = chout_next(io->chan)) != NULL) {
+            io->iof(io, evt, 0);
+        }
+    } else {
+        TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
+    }
+}
+
