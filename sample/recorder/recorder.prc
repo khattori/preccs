@@ -52,7 +52,7 @@ proc Recording() =
                              | _ -> stdout!"Invalid Command\n"; Recording() ) )
 
 proc WaveOut(m:<string>, in:<string>, out:<string>) =
-    m?msg   -> out?x; stop
+    m?msg   -> out!""; stop
   | in?data -> ( data @ "" -> out!""; m!"end"
                       | _  -> out!data; WaveOut(m, in, out) )
 
