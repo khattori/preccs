@@ -280,6 +280,8 @@ static void wout_close(ioent_t *io) {
 }
 
 static void wv_output(ioent_t *io, event_t *evt, int exec) {
+    //printf("wv_output: exec=%d, trans=%d\n", exec, evt->trans);
+    // fflush(stdout);
     if (evt->trans == 0) {
         int len = STRLEN(evt->val);
         if (len == 0) {
@@ -290,6 +292,10 @@ static void wv_output(ioent_t *io, event_t *evt, int exec) {
         }
         io->offset = 0;
         wout_exec(io, evt);
+        return;
+    }
+    if (!SetEvent(io->ctlblk.hEvent)) {
+        perr(PERR_SYSTEM, "SetEvent", StrError(GetLastError()), __FILE__, __LINE__);
         return;
     }
     TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
