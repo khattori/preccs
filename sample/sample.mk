@@ -7,7 +7,7 @@ endif
 
 CC	= gcc
 CFLAGS	= -Wall -g -I../../include
-LIBS	= -L../../src/runtime -lprcrt
+LIBS	:= $(LIBS) -L../../src/runtime -lprcrt
 PRCC	= ../../src/compiler/prcc
 
 OBJS	= $(SRCS:.c=.o)

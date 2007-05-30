@@ -1,5 +1,6 @@
 C{
 #include <stdio.h>
+#include <winsock2.h>
 #include "global.h"
 extern unsigned char linear2ulaw(short pcm_val);
 extern short ulaw2linear(unsigned char u_val);

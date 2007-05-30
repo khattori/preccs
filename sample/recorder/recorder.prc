@@ -53,7 +53,7 @@ proc Recording() =
 
 proc WaveOut(m:<string>, in:<string>, out:<string>) =
     m?msg   -> out?x; stop
-  | in?data -> ( data @ "" -> out?x; m!"end"
+  | in?data -> ( data @ "" -> out!""; m!"end"
                       | _  -> out!data; WaveOut(m, in, out) )
 
 proc WaveIn(m:<string>, in:<string>, out:<string>) =
