@@ -3,21 +3,23 @@ CFLAGS	= -Wall -g -I../../src/runtime
 LIBS	= -L../../src/runtime -lprcrt
 PRCC	= ../../src/compiler/prcc
 
-TARGET	= test
+TARGET	= iotest
 SRCS	=	\
-	test.c	\
-	test.out.c
+	iotest.c	\
+	iotest.out.c
 
 OBJS	= $(SRCS:.c=.o)
+
+.SUFFIXES: .prc .out.c
 
 $(TARGET)	: $(OBJS)
 	$(CC) -g -o $@ $(OBJS) $(LIBS) 
 
-test.out.c	: test.prc
+.prc.out.c:
 	$(PRCC) $(PFLAGS) $< > $@
 
 clean	:
 	rm -fr $(OBJS) $(TARGET)
 
 clean-all	:
-	rm -fr $(OBJS) $(TARGET) test.out.c *~
+	rm -fr $(OBJS) $(TARGET) *.out.c *~
