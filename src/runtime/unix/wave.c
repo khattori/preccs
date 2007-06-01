@@ -11,7 +11,9 @@
 
 int prc_WaveOutOpen(int ch, int srate) {
     perr(PERR_NOTSUP, "prc_WaveOutOpen");
+    return 0;
 }
 int prc_WaveInOpen(int ch, int srate) {
     perr(PERR_NOTSUP, "prc_WaveInOpen");
+    return 0;
 }
