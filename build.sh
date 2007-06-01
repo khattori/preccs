@@ -24,7 +24,9 @@ mkdir "$prc_pkgdir"
 
 # サブディレクトリをクリーンアップしておく
 for i in sample/*; do
+  if test -d $i; then
     (cd $i; make clean-all)
+  fi
 done
 (cd test; make clean-all)
 
@@ -37,7 +39,9 @@ mkdir $prc_pkgdir/src/runtime/unix
 mkdir $prc_pkgdir/src/runtime/win32
 mkdir $prc_pkgdir/sample
 for i in sample/*; do
+  if test -d $i; then
     mkdir $prc_pkgdir/$i
+  fi
 done
 mkdir $prc_pkgdir/test
 mkdir $prc_pkgdir/test/error
@@ -49,6 +53,7 @@ cp ChangeLog $prc_pkgdir/ChangeLog
 cp TODO      $prc_pkgdir/TODO
 
 for i in \
+    sample/sample.mk \
     src/compiler/Makefile \
     src/compiler/*.ml src/compiler/*.mly \
     src/compiler/*.mll \
