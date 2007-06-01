@@ -1,7 +1,7 @@
 #!/bin/sh
 ################################################################
 #
-# PreccsƒpƒbƒP[ƒWƒrƒ‹ƒh
+# Preccsãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ãƒ“ãƒ«ãƒ‰
 #
 # ---
 # $Id$
@@ -14,7 +14,7 @@ prc_pkglist=pkglist
 prc_pkgname="preccs-$prc_version"
 prc_pkgdir="$prc_blddir/$prc_pkgname"
 
-# ƒpƒbƒP[ƒWƒrƒ‹ƒh
+# ãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ãƒ“ãƒ«ãƒ‰
 if test -d "$prc_blddir"; then
     echo "build directory clean up..."
     rm -rf "$prc_blddir"
@@ -22,13 +22,13 @@ fi
 mkdir "$prc_blddir"
 mkdir "$prc_pkgdir"
 
-# ƒTƒuƒfƒBƒŒƒNƒgƒŠ‚ğƒNƒŠ[ƒ“ƒAƒbƒv‚µ‚Ä‚¨‚­
+# ã‚µãƒ–ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚’ã‚¯ãƒªãƒ¼ãƒ³ã‚¢ãƒƒãƒ—ã—ã¦ãŠã
 for i in sample/*; do
     (cd $i; make clean-all)
 done
 (cd test; make clean-all)
 
-# ƒtƒ@ƒCƒ‹‚ğƒRƒs[
+# ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚³ãƒ”ãƒ¼
 echo "copy files..."
 mkdir $prc_pkgdir/src
 mkdir $prc_pkgdir/src/compiler
@@ -75,7 +75,7 @@ for i in sample/*; do
     done
 done
 
-# ƒpƒbƒP[ƒWì¬
+# ãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ä½œæˆ
 echo "create package..."
 (cd $prc_blddir; tar zcvf $prc_pkgname.tar.gz $prc_pkgname)
 
