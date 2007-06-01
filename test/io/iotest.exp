@@ -1,0 +1,197 @@
+#!/usr/bin/expect
+
+set count_ok 0
+set count_ng 0
+
+puts "Starting I/O test..."
+
+#log_user 0
+
+#
+# 標準入力IOのテスト
+#
+spawn ./iotest --stdin
+expect "start StdinProc\\\(\\\)\r\n"
+
+send	"OK1\r"
+expect	"OK1\r\n"	{ incr count_ok } \
+	"\n"		{ incr count_ng }
+
+send	"OK2\r"
+expect	"OK2\r\n"	{ incr count_ok } \
+	"\n"		{ incr count_ng }
+
+send	"OK\r"
+expect	"OK1\r\nOK2\r\n"
+expect	"1st message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng }
+
+send	"OK\r"
+expect	"OK\r\n"
+expect	"2nd message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng }
+
+send	"OK3\r"
+expect	"OK3\r\n"	{ incr count_ok } \
+	"\n"		{ incr count_ng }
+
+expect	"OK\r\nOK\r\n"
+expect	"3rd message\r\n"	{ incr count_ok } \
+	"\r\n"			{ incr count_ng }
+expect	"4th message\r\n"	{ incr count_ok } \
+	"\r\n"			{ incr count_ng }
+expect	"5th message\r\n"	{ incr count_ok } \
+	"\r\n"			{ incr count_ng }
+expect	"6th message\r\n"	{ incr count_ok } \
+	"\r\n"			{ incr count_ng }
+expect	"7th message\r\n"	{ incr count_ok } \
+	"\r\n"			{ incr count_ng }
+expect	"8th message\r\n"	{ incr count_ok } \
+	"\r\n"			{ incr count_ng }
+
+#
+# 標準出力IOのテスト
+#
+spawn ./iotest --stdout
+expect "start StdoutProc\\\(\\\)\r\n"
+
+expect	"^1st message\r\n"	{ incr count_ok } \
+	"?"			{ incr count_ng }
+expect	"^2nd message\r\n"	{ incr count_ok } \
+	"?"			{ incr count_ng }
+expect	"^3rd message\r\n"	{ incr count_ok } \
+	"?"			{ incr count_ng }
+expect	"^4th message\r\n"	{ incr count_ok } \
+	"?"			{ incr count_ng }
+expect	"^5th message\r\n"	{ incr count_ok } \
+	"?"			{ incr count_ng }
+expect	"^6th message\r\n"	{ incr count_ok } \
+	"?"			{ incr count_ng }
+expect	"^7th message\r\n"	{ incr count_ok } \
+	"?"			{ incr count_ng }
+expect	"^8th message\r\n"	{ incr count_ok } \
+	"?"			{ incr count_ng }
+expect	"^9th message\r\n"	{ incr count_ok } \
+	"?"			{ incr count_ng }
+expect	"^10th message\r\n"	{ incr count_ok } \
+	"?"			{ incr count_ng }
+expect	"^11th message\r\n"	{ incr count_ok } \
+	"?"			{ incr count_ng }
+expect	"^12th message\r\n"	{ incr count_ok } \
+	"?"			{ incr count_ng }
+expect	"^13th message\r\n"	{ incr count_ok } \
+	"?"			{ incr count_ng }
+
+#
+# タイマーIOのテスト
+#
+spawn ./iotest --timer
+expect "start TimerProc\\\(\\\)\r\n"
+
+set timeout 1
+expect	"^1st message\r\n"	{ incr count_ng } \
+	timeout			{ incr count_ok }
+sleep 1
+expect	"^1st message\r\n"	{ incr count_ok } \
+	timeout			{ incr count_ng }
+expect	"^2nd message\r\n"	{ incr count_ok } \
+	"\r\n"			{ incr count_ng }
+expect	"^3rd message\r\n"	{ incr count_ok } \
+	"\r\n"			{ incr count_ng }
+
+set timeout 2
+expect	"^4th message\r\n"	{ incr count_ok } \
+	"\r\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"^5th message\r\n"	{ incr count_ok } \
+	"\r\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"^6th message\r\n"	{ incr count_ok } \
+	"\r\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"^7th message\r\n"	{ incr count_ok } \
+	"\r\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"^8th message\r\n"	{ incr count_ok } \
+	"\r\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+
+# TCPソケットI/Oのテスト
+spawn ./iotest --server
+set server_id $spawn_id
+expect "start ServerProc\\\(\\\)\r\n"
+
+spawn ./iotest --client
+set client_id $spawn_id
+expect "start ClientProc\\\(\\\)\r\n"
+
+set spawn_id $server_id
+expect	"1st message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"2nd message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"3rd message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"4th message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"5th message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"6th message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"7th message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"8th message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"9th message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"10th message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+
+set spawn_id $client_id
+expect	"1st message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"2nd message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"3rd message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"4th message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"5th message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"6th message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"7th message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"8th message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+
+spawn ./iotest --udp
+expect "start UdpProc\\\(\\\)\r\n"
+expect	"1st message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"2nd message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+
+puts "\n========================================"
+puts "  Result: $count_ok/[expr $count_ok + $count_ng] passed." 
+puts "========================================"
