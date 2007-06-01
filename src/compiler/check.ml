@@ -285,6 +285,9 @@ and check_match env ty = function
   | A.PatConst c -> 
       if T.subtype ty (type_of_const c) then env
       else errorAt (A.info_of_const c) ERR_ILLEGAL_PATTERN
+  | A.PatVar x ->
+      if T.subtype ty (check_var env x) then env
+      else errorAt (A.info_of_var x) ERR_ILLEGAL_PATTERN
   | A.PatRegex(i,s,r,t) ->
       let rt = check_regex env r in
         t := rt;

@@ -48,6 +48,7 @@ and rgx =
 and pat =
     PatAny   of info
   | PatConst of const
+  | PatVar   of var
   | PatRegex of info * Symbol.t * rgx * Types.rgx ref
 
 (** プロセス式 *)
@@ -97,7 +98,8 @@ and binop =
 (** 単項演算子 *)
 and monop = MopNeg | MopNot
 
-let info_of_const = function  ConUnit(i) | ConBool(i,_) | ConInt(i,_) | ConStr(i,_) -> i
+let info_of_const = function ConUnit(i) | ConBool(i,_) | ConInt(i,_) | ConStr(i,_) -> i
+let info_of_var = function VarSimple(i,_) | VarField(i,_,_,_,_) | VarSubscr(i,_,_) | VarProj(i,_,_) -> i
 
 type toplevel = def list
 

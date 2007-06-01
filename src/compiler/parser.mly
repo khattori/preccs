@@ -305,6 +305,7 @@ patExpression
   | TRUE   { PatConst(ConBool($1,true))  }
   | FALSE  { PatConst(ConBool($1,false)) }
   | IDENT COLON rgxExpression { PatRegex($1.i,$1.v,$3,ref (T.REXP R.EPS)) }
+  | IDENT  { PatVar(VarSimple($1.i,$1.v)) }
 ;
 
 /*****************************************************************

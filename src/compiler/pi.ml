@@ -117,7 +117,7 @@ let con_regex =
 let is_regex_pattern patns =
   List.exists (
     function 
-        A.PatAny _ | A.PatConst(A.ConStr _) -> false
+        A.PatAny _ | A.PatConst(A.ConStr _) | A.PatVar _ -> false
       | A.PatRegex _ -> true
       | _ -> assert false
   ) patns
@@ -234,7 +234,7 @@ and trans_match env nxt ty exp pts =
                                  | Some s -> Let(s,Select(Var v_temp,Int 1),
                                                  trans_proc env (Call(v_nprc,[])) p)
                              ) pr_ls binds)))
-          | _ -> let mexp = trans_case (Var v_mval) pt_ls in
+          | _ -> let mexp = trans_case ty (Var v_mval) pt_ls in
               Let(v_mval,(trans_expr env exp),
                   Let(v_temp,mexp, (* v_temp:index *)
                       Case(Var v_temp,
@@ -258,7 +258,7 @@ and trans_patns ty v patns =
       | T.REGEX r -> Prim(Match,[v;Int (Dfa.generate2 rs r)]),binds
       | _ -> assert false
 
-and trans_case v patns =
+and trans_case ty v patns =
   (* ケース文処理 *)
   let len = List.length patns in
     fst (
@@ -271,6 +271,10 @@ and trans_case v patns =
               If(Prim(Eq,[v;Int n]),Int i,e),i-1
           | A.PatConst(A.ConStr(_,s)) ->
               If(Prim(Eqs,[v;String s]),Int i,e),i-1
+	  | A.PatVar(A.VarSimple(_,s)) when T.is_string ty ->
+	      If(Prim(Eqs,[v;Var s]),Int i,e),i-1
+	  | A.PatVar(A.VarSimple(_,s)) ->
+	      If(Prim(Eq,[v;Var s]),Int i,e),i-1
           | _ -> assert false
       ) patns (Int len,len-1)
     )

@@ -69,6 +69,8 @@ let proj typ i =
 (** チャネル型か判定する *)
 let is_chan = function CHAN _ -> true | _ -> false
 
+let is_string = function STRING | REGEX _ -> true | _ -> false
+
 (** オフセットを取得 *)
 let offset typ sym =
   (* ('a -> bool) -> 'a list -> int *)
