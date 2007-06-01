@@ -7,7 +7,7 @@
 # $Id$
 #
 
-prc_version=0.2.1
+prc_version=0.2.2a
 prc_blddir=build
 prc_pkglist=pkglist
 
@@ -33,12 +33,15 @@ echo "copy files..."
 mkdir $prc_pkgdir/src
 mkdir $prc_pkgdir/src/compiler
 mkdir $prc_pkgdir/src/runtime
+mkdir $prc_pkgdir/src/runtime/unix
+mkdir $prc_pkgdir/src/runtime/win32
 mkdir $prc_pkgdir/sample
 for i in sample/*; do
     mkdir $prc_pkgdir/$i
 done
 mkdir $prc_pkgdir/test
 mkdir $prc_pkgdir/test/error
+mkdir $prc_pkgdir/test/io
 
 cp README    $prc_pkgdir/README
 cp Makefile  $prc_pkgdir/Makefile
@@ -53,11 +56,18 @@ for i in \
     src/runtime/*.c \
     src/runtime/*.h \
     src/runtime/*.def \
+    src/runtime/unix/*.c \
+    src/runtime/win32/*.c \
     test/Makefile \
     test/*.prc \
     test/*.c \
     test/*.h \
-    test/error/*.prc
+    test/error/*.prc \
+    test/io/Makefile \
+    test/io/*.exp \
+    test/io/*.prc \
+    test/io/*.c \
+    test/io/*.h
   do
   if test -f $i; then
       cp $i $prc_pkgdir/$i
