@@ -63,7 +63,8 @@ void io_read_complete(ioent_t *io, int len) {
 void io_write_complete(ioent_t *io, int len) {
     event_t *evt;
     proc_t *prc;
-
+    // fprintf(stderr, "io_write_complete: len = %d\n", len);
+    // fflush(stderr);
     io->ctlblk.aio_offset += len;
     prc = proc();
     evt = (event_t*)chout_next(io->chan);
@@ -97,6 +98,8 @@ void io_complete(ioent_t *io) {
 	}
 	break;
     case IOT_OUTPUT:
+        // fprintf(stderr, "io_complete: IOT_OUTPUT(len=%d)\n", len);
+  	// fflush(stderr);
 	io->offset += len;
 	evt = (event_t*)chout_next(io->chan);
 	if (io->offset < STRLEN(evt->val)) {
@@ -114,8 +117,8 @@ void io_complete(ioent_t *io) {
 }
 
 static void aio_completion_handler(int signo, siginfo_t *info, void *context) {
-//    printf("aio_completion_handler: enter: (si_signo=%d,si_code=%d)\n", info->si_signo, info->si_code);
-//    fflush(stdout);
+    // fprintf(stderr, "aio_completion_handler: enter: (si_signo=%d,si_code=%d)\n", info->si_signo, info->si_code);
+    // fflush(stderr);
 
     if (info->si_signo != SIGRTMIN+SIGIO) {
         perr(PERR_INTERNAL, __FILE__, __LINE__);
@@ -148,6 +151,8 @@ void write_exec(ioent_t *io, event_t *evt) {
 
     aio_count++;
     len = STRLEN(evt->val) - io->offset;
+    // fprintf(stderr,"write_exec: len=%d\n", len);
+    // fflush(stderr);
     if (len > io->bufsz) {
 	len = io->bufsz;
     }
@@ -164,6 +169,8 @@ void write_exec(ioent_t *io, event_t *evt) {
  * IOチャネル出力時の処理 
  */
 void io_output(ioent_t *io, event_t *evt, int exec) {
+    // fprintf(stderr,"io_output: trans=%d,exec=%d\n", evt->trans, exec);
+    // fflush(stderr);
     if (evt->trans == 0) {
         int len = STRLEN(evt->val);
 
@@ -316,6 +323,8 @@ int io_exec(void) {
 interrupted:
     /* IO完了シグナルを処理 */
     while (sigtimedwait(&ss_sigio, &si, &ts_zero) == SIGRTMIN+SIGIO) {
+	// fprintf(stderr, "sigtimedwait\n");
+	// fflush(stderr);
 	io_complete((ioent_t *)si.si_value.sival_ptr);
     }
 
