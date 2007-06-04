@@ -1,3 +1,12 @@
+2007-06-04    <hattori@isp.co.jp>
+
+	* 分岐文の選択肢に，定数だけでなく変数も使用できるようにした
+
+	* IO用のテストスクリプトを追加
+
+	* Version 0.2.3a released.
+	
+
 2007-05-07    <hattori@isp.co.jp>
 
 	* Windows版とLinux版ソースコードのマージ
