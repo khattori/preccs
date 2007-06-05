@@ -28,7 +28,7 @@ static void set_rcd(int s, int *rcd) {
     int len = GET_SIZE(rcd);
     int i;
 
-    for (i = 0; i < len-1; i += 3) {
+    for (i = 0; i < len-2; i += 3) {
         rcd[i+1] = s;
         if (rcd[i+2] != 0) {
             set_rcd(s, (int *)rcd[i+2]);
