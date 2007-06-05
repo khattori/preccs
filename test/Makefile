@@ -1,5 +1,5 @@
 CC	= gcc
-CFLAGS	= -Wall -g -I../include
+CFLAGS	= -Wall -g
 LIBS	= -L../src/runtime -lprcrt
 PRCC	= ../src/compiler/prcc
 

@@ -55,7 +55,7 @@ int __string__(int len, char *buf) {
     ((int*)ret)[0] = 0;
     ((int*)ret)[1] = __prc__temp;
     ((int*)ret)[2] = 0;
-    ((int*)ret)[3] = len;
+    ((int*)ret)[3] = TOPINT(len);
     memcpy((char*)__prc__temp, buf, len);
     ((char*)__prc__temp)[len] = '\0';
     __prc__temp = (int)NULL;
@@ -83,7 +83,7 @@ int __concat__(int s1, int s2) {
     ((int*)ret)[0] = 0;
     ((int*)ret)[1] = __prc__temp;
     ((int*)ret)[2] = 0;
-    ((int*)ret)[3] = len1+len2;
+    ((int*)ret)[3] = TOPINT(len1+len2);
     __prc__temp = (int)NULL;
 
     return ret;

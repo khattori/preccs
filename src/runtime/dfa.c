@@ -225,10 +225,10 @@ static int con_field(char *con) {
         /* フィールドの末尾まで到達した場合 */
         if (cstack[top] == lstack[top]) {
             /* エンドポイントの設定 */
-            ((int*)stack[top])[cstack[top]*3] = (int)__prc__lbl_ptr[lid]-((int*)__prc__temp)[1];
+            ((int*)stack[top])[cstack[top]*3] = TOPINT((int)__prc__lbl_ptr[lid]-((int*)__prc__temp)[1]);
 	    top--;
         }
-        ((int*)stack[top])[cstack[top]++*3] = (int)__prc__lbl_ptr[lid]-((int*)__prc__temp)[1];
+        ((int*)stack[top])[cstack[top]++*3] = TOPINT((int)__prc__lbl_ptr[lid]-((int*)__prc__temp)[1]);
 
         break;
     default: assert(0);

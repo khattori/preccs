@@ -99,9 +99,9 @@ let rec defstr_of_regex = function
 
 let con_regex =
   let rec trav = function
-      T.REXP re -> Cint (R.size re)
-    | T.RARR(r,n) -> Cint ((R.size (T.regexify r)) * n)
-    | T.RITR _ -> Cint 0
+      T.REXP re -> Int (R.size re)
+    | T.RARR(r,n) -> Int ((R.size (T.regexify r)) * n)
+    | T.RITR _ -> Int 0
     | T.RRCD fs -> Record (List.map (fun (_,r) -> trav r)  fs)
   in
     function

@@ -142,7 +142,7 @@ void flip(void) {
     printf("GC started...\n");
     fflush(stdout);
 
-    //validate();
+    // validate();
     /* TOとFROMの入れ替え */
     t = from_space;
     from_space = to_space;
@@ -177,11 +177,10 @@ void flip(void) {
                 *p = (int)copy((int*)*p);
             }
 
-        fflush(stdout);
         assert(GET_SIZE(scan) != 0);
         scan += GET_SIZE(scan);
     }
-    //validate();
+    // validate();
 
     printf("GC finished(%d reclaimed).\n", heap_top - heap_free);
     fflush(stdout);
@@ -216,7 +215,7 @@ static int *copy(int *p) {
         heap_free[i] = q[i];
     }
 //    printf ("heap_free:%p:%d\n", q,GET_SIZE(q));
-    fflush(stdout);
+//    fflush(stdout);
     if (GET_SIZE(q)==1) {
         assert(0);
     }

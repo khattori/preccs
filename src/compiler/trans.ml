@@ -26,8 +26,8 @@ let trans_prim = function
 
 let rec expand_exp o = function
     P.Record es ->
-      let ls,tl = expand_exp_list o es in [P.Cint o; P.Cint 0;P.Record ls],tl
-  | P.Cint i -> [P.Cint o; P.Cint 0;P.Cint 0],o+i
+      let ls,tl = expand_exp_list o es in [P.Int o; P.Cint 0;P.Record ls],tl
+  | P.Int i -> [P.Int o; P.Cint 0;P.Cint 0],o+i
   | _ -> assert false
 and expand_exp_list o =
   List.fold_left (fun (ls,j) e ->
@@ -79,7 +79,7 @@ let rec trans_exp env ctxt = function
                    (fun x ->
                       C.Prim(C.Rexrcd,[C.Var t1;x],[t2],[ctxt (C.Var t2)]),ref [])
                    (let ls,tl = expand_exp_list 0 es in
-                      P.Record (ls @ [P.Cint tl]))
+                      P.Record (ls @ [P.Int tl]))
                ]),ref []
   | P.Select(e1,e2) ->
       let t = C.genid "t" in

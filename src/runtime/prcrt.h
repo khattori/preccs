@@ -59,14 +59,14 @@ int __rexrcd__(int s, int r);
 int __string__(int len, char *buf);
 int __dmatch__(int val, u_int st);
 
-#define STRPTR(s) ((char*)((int*)s)[1]+((int*)s)[0])
-#define STRLEN(s) (((int*)s)[3]-((int*)s)[0])
+#define STRPTR(s) ((char*)((int*)s)[1]+(((int*)s)[0]>>1))
+#define STRLEN(s) ((((int*)s)[3]-((int*)s)[0])>>1)
 
 #define TOCINT(i) ((i)>>1)
 #define TOPINT(i) (((i)<<1)^0x01)
 
 #define DEFAULT_HEAP_SIZE (1024*1024*16)
-//#define DEFAULT_HEAP_SIZE (1024*16)
+//#define DEFAULT_HEAP_SIZE (1024*64)
 
 #define IADD(a,b) ((a)+(b)-1)
 #define ISUB(a,b) ((a)-(b)+1)
