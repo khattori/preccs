@@ -16,6 +16,7 @@
 #include "prcrt.h"
 
 static int con_field(char *con);
+static u_char *origin;
 
 #define COND_ACT(cond,ce) \
 if (cond) { act = (ce)->tact; idx = (ce)->tidx; } else { act = (ce)->fact; idx = (ce)->fidx; }
@@ -38,12 +39,14 @@ int __dmatch__(int val, u_int st) {
     int *retval;
 
     __prc__temp = val;
+    __prc__temp1 = (int)NULL;
+    __prc__temp2 = (int)NULL;
     /* ラベル記録ポインタの初期化 */
     for (i = 0; i < __prc__dtable.lbl_max; i++) {
         __prc__lbl_ptr[i] = NULL;
     }
-
-    p      = STRPTR(val);              /* データ   */
+    origin = (u_char *)((int*)val)[1];
+    p = STRPTR(val);              /* データ   */
     ep     = STRPTR(val)+STRLEN(val);  /* 終了位置 */
 
     for (;;) switch (act) {
@@ -225,10 +228,12 @@ static int con_field(char *con) {
         /* フィールドの末尾まで到達した場合 */
         if (cstack[top] == lstack[top]) {
             /* エンドポイントの設定 */
-            ((int*)stack[top])[cstack[top]*3] = TOPINT((int)__prc__lbl_ptr[lid]-((int*)__prc__temp)[1]);
+            // ((int*)stack[top])[cstack[top]*3] = TOPINT((int)__prc__lbl_ptr[lid]-((int*)__prc__temp)[1]);
+            ((int*)stack[top])[cstack[top]*3] = TOPINT((int)__prc__lbl_ptr[lid]-(int)origin);
 	    top--;
         }
-        ((int*)stack[top])[cstack[top]++*3] = TOPINT((int)__prc__lbl_ptr[lid]-((int*)__prc__temp)[1]);
+        //((int*)stack[top])[cstack[top]++*3] = TOPINT((int)__prc__lbl_ptr[lid]-((int*)__prc__temp)[1]);
+        ((int*)stack[top])[cstack[top]++*3] = TOPINT((int)__prc__lbl_ptr[lid]-(int)origin);
 
         break;
     default: assert(0);

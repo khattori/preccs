@@ -112,6 +112,7 @@ int gc_array(int n) {
     SET_SIZE(new_cell,n);
     SET_ARRY(new_cell);
     heap_free += n;
+
     return (int)(new_cell + 1);
 }
 
@@ -142,7 +143,7 @@ void flip(void) {
     printf("GC started...\n");
     fflush(stdout);
 
-    // validate();
+    //validate();
     /* TOとFROMの入れ替え */
     t = from_space;
     from_space = to_space;
@@ -180,7 +181,7 @@ void flip(void) {
         assert(GET_SIZE(scan) != 0);
         scan += GET_SIZE(scan);
     }
-    // validate();
+    //validate();
 
     printf("GC finished(%d reclaimed).\n", heap_top - heap_free);
     fflush(stdout);
@@ -206,16 +207,15 @@ static int *copy(int *p) {
     /* デスクリプタをバックスキャン */
     for (q = p-1; !IS_DESC(q); q--);
 
-    if (IS_FRWD(q))
+    if (IS_FRWD(q)) {
         return (int *)FWADDR(q)+(p-q);
+    }
 
     addr = heap_free;
     /* move(p,heap_free) */
     for (i = 0; i < GET_SIZE(q); i++) {
         heap_free[i] = q[i];
     }
-//    printf ("heap_free:%p:%d\n", q,GET_SIZE(q));
-//    fflush(stdout);
     if (GET_SIZE(q)==1) {
         assert(0);
     }
@@ -231,9 +231,6 @@ void validate(void) {
     static int num;
     int *scan = to_space;
 
-    if (num == 15165) {
-	printf("HIT\n");
-    }
     printf("validate:%d\n", num++);
     fflush(stdout);
     while (scan < heap_free) {
