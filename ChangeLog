@@ -1,5 +1,7 @@
 2007-06-07  Kenta Hattori  <hattori@localhost.localdomain>
 
+	* 接続なしのUDPソケットに対応
+
 	* 正規表現レコード型のデータを保持しているときに，GCが発生した場合，
 	GCが間違ったアドレスを返すバグを修正
 
