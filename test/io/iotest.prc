@@ -152,6 +152,11 @@ proc Client(id:string,ret:<unit>) =
     sp.out!""; sp.in?x;
     ret!() 
 
+type ipaddr = { octet[4] }
+type sockaddr = { addr	: ipaddr; port	: int }
+type mesgaddr = { data	: string; saddr	: sockaddr }
+type UdpSock = { in:<mesgaddr>; out:<mesgaddr> }
+
 proc UdpProc() = stdout!"start UdpProc()\n";
     var sin:<string>; var sout:<string>; var sp1={in=sin;out=sout};
     C{ prc_SockUdpOpen($sin$, $sout$, "localhost", 10001, 10002); C};
@@ -160,8 +165,15 @@ proc UdpProc() = stdout!"start UdpProc()\n";
     var ret1:<unit>; var ret2:<unit>;
     UdpPeer1(sp1,ret1); UdpPeer2(sp2,ret2);
     ret1?x; stdout!"1st message\n";
-    ret2?x; stdout!"2nd message\n"
-
+    ret2?x; stdout!"2nd message\n";
+    var sin:<string>; var sout:<string>; var sp1={in=sin;out=sout};
+    C{ prc_SockUdpClient($sin$, $sout$, "localhost", 10000); C};
+    var sin:<mesgaddr>; var sout:<mesgaddr>; var sp2={in=sin;out=sout};
+    C{ prc_SockUdpServer($sin$, $sout$, 10000); C};
+    UdpClient(sp1,ret1); UdpServer(sp2,ret2);
+    ret1?x; stdout!"3rd message\n";
+    ret2?x; stdout!"4th message\n"
+    
 proc UdpPeer1(sp:SockPair,ret:<unit>) =
     sp.out!"HELLO";
     sp.in?msg; ( msg @ "WORLD" -> skip | _ -> stdout!"unexpected\n" );
@@ -176,3 +188,16 @@ proc UdpPeer2(sp:SockPair,ret:<unit>) =
     sp.in?msg; ( msg @ "WORLD" -> skip | _ -> stdout!"unexpected\n" );
     sp.out!""; ret!()
 
+proc UdpClient(sp:SockPair, ret:<unit>) =
+    sp.out!"HELLO";
+    sp.in?msg; ( msg @ "WORLD" -> skip | _ -> stdout!"unexpected\n" );
+    sp.out!"WORLD";
+    sp.in?msg; ( msg @ "HELLO" -> skip | _ -> stdout!"unexpected\n" );
+    sp.out!""; ret!()
+
+proc UdpServer(sp:UdpSock, ret:<unit>) =
+    sp.in?msg; ( msg.data @ "HELLO" -> skip | _ -> stdout!"unexpected\n" );
+    sp.out!{data="WORLD";saddr=msg.saddr};
+    sp.in?msg; ( msg.data @ "WORLD" -> skip | _ -> stdout!"unexpected\n" );
+    sp.out!{data="HELLO";saddr=msg.saddr};
+    ret!()

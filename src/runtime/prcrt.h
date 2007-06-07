@@ -61,6 +61,7 @@ int __dmatch__(int val, u_int st);
 
 #define STRPTR(s) ((char*)((int*)s)[1]+(((int*)s)[0]>>1))
 #define STRLEN(s) ((((int*)s)[3]-((int*)s)[0])>>1)
+#define RCDIDX(s,i) (((int*)s)[i])
 
 #define TOCINT(i) ((i)>>1)
 #define TOPINT(i) (((i)<<1)^0x01)

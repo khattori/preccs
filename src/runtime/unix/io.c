@@ -106,7 +106,7 @@ void io_complete(ioent_t *io) {
 	    write_exec(io, evt);
 	    return;
 	}
-	io_write_complete(io, len);
+	io_write_complete(io, STRLEN(evt->val));
 	if ((evt = chout_next(io->chan)) != NULL) {
 	    io->iof(io, evt, 0);
 	}

@@ -191,6 +191,12 @@ expect	"1st message\r\n"	{ incr count_ok } \
 expect	"2nd message\r\n"	{ incr count_ok } \
 	"\n"			{ incr count_ng } \
 	timeout			{ incr count_ng }
+expect	"3rd message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
+expect	"4th message\r\n"	{ incr count_ok } \
+	"\n"			{ incr count_ng } \
+	timeout			{ incr count_ng }
 
 puts "\n========================================"
 puts "  Result: $count_ok/[expr $count_ok + $count_ng] passed." 

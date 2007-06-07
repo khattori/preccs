@@ -25,11 +25,40 @@ extern void write_exec(ioent_t *io, event_t *evt);
 extern void io_complete(ioent_t * io);
 static void so_output(ioent_t *io, event_t *evt, int exec);
 static void so_accept(ioent_t *io, event_t *evt, int exec);
+static void so_sendto(ioent_t *io, event_t *evt, int exec);
+static void so_recvfrom(ioent_t *io, event_t *evt, int exec);
 
 void prc_SockStart(void) {
 }
 
 void prc_SockFinish(void) {
+}
+
+/*
+ * Udpサーバソケットのハンドルを返す
+ */
+int prc_SockUdpServer(int ich, int och, int port) {
+    struct sockaddr_in addr;
+    int sock;
+
+    if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        perr(PERR_SYSTEM, "socket", strerror(errno), __FILE__, __LINE__);
+        return -1;
+    }
+
+    addr.sin_port = htons(port);
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+        perr(PERR_SYSTEM, "bind", strerror(errno), __FILE__, __LINE__);
+	close(sock);
+        return -1;
+    }
+
+    ioent_create((chan_t *)ich, sock, IOT_INPUT, so_recvfrom, BUFSIZ);
+    ioent_create((chan_t *)och, sock, IOT_OUTPUT, so_sendto, BUFSIZ);
+
+    return 0;
 }
 
 /*
@@ -64,7 +93,7 @@ int prc_SockUdpClient(int ich, int och, char *host, int port) {
 }
 
 /*
- * Udpクライアントソケットのハンドルを返す
+ * Udp接続済みソケットのハンドルを返す
  */
 int prc_SockUdpOpen(int ich, int och, char *host, int cport, int bport) {
     struct hostent *hent;
@@ -202,12 +231,12 @@ static void accept_exec(ioent_t *io) {
 	return;
     }
     __prc__regs[0] = (int)__chan__();
-    __prc__regs[1] = (int)__chan__();
+    __prc__regs[3] = (int)__chan__();
     ioent_create((chan_t *)__prc__regs[0], so, IOT_INPUT, io_input, BUFSIZ);
-    ioent_create((chan_t *)__prc__regs[1], so, IOT_OUTPUT, so_output, BUFSIZ);
+    ioent_create((chan_t *)__prc__regs[3], so, IOT_OUTPUT, so_output, BUFSIZ);
     __prc__regs[2] = __record__(2);
     ((int*)__prc__regs[2])[0] = __prc__regs[0];
-    ((int*)__prc__regs[2])[1] = __prc__regs[1];
+    ((int*)__prc__regs[2])[1] = __prc__regs[3];
 
     /* 実行可能プロセスをセット */
     prc = proc();
@@ -237,6 +266,98 @@ static void so_output(ioent_t *io, event_t *evt, int exec) {
         }
         io->offset = 0;
         write_exec(io, evt);
+	return;
+    }
+    TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
+}
+
+static void sendto_exec(ioent_t *io, event_t *evt) {
+    struct sockaddr_in addr;
+    int len;
+
+    addr.sin_port = htons(TOCINT(RCDIDX(RCDIDX(evt->val,1),1)));
+    addr.sin_family = AF_INET;
+    memcpy(&addr.sin_addr.s_addr, STRPTR(RCDIDX(RCDIDX(evt->val,1),0)), sizeof(addr.sin_addr.s_addr));
+
+    len = STRLEN(RCDIDX(evt->val,0)) - io->offset;
+    if (len > io->bufsz) {
+	len = io->bufsz;
+    }
+    /* 新規に書き込みIO発行 */
+    memcpy(io->buf, STRPTR(RCDIDX(evt->val,0))+io->offset, len);
+    if ((len = sendto(io->handle, io->buf, len, 0, (struct sockaddr *)&addr, sizeof addr)) < 0) {
+	perr(PERR_SYSTEM, "sendto", strerror(errno), __FILE__, __LINE__);
+        return;
+    }
+    io->offset += len;
+    if (io->offset < STRLEN(RCDIDX(evt->val,0))) {
+        sendto_exec(io, evt);
+        return;
+    }
+    io_write_complete(io, STRLEN(RCDIDX(evt->val,0)));
+    if ((evt = chout_next(io->chan)) != NULL) {
+ 	io->iof(io, evt, 0);
+    }
+}
+
+/**
+ * ソケットIOチャネル出力時(sendto)の処理 
+ */
+static void so_sendto(ioent_t *io, event_t *evt, int exec) {
+    if (evt->trans == 0) {
+        int len = STRLEN(RCDIDX(evt->val,0));
+
+        if (len == 0) {
+            io_write_complete(io, 0);
+	    ioent_delete(io);
+            return;
+        }
+        io->offset = 0;
+        sendto_exec(io, evt);
+	return;
+    }
+    TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
+}
+
+static void so_recvfrom_complete(ioent_t *io, int len, in_addr_t addr, int port) {
+    proc_t *prc;
+    event_t *evt;
+
+    io->ctlblk.aio_offset += len;
+    __prc__regs[0] = __string__(len, (void *)io->buf);
+    __prc__regs[4] = __string__(sizeof addr, (void *)&addr);
+    __prc__regs[3] = __record__(2);
+    __prc__regs[2] = __record__(2);
+    ((int*)__prc__regs[2])[0] = __prc__regs[0];
+    ((int*)__prc__regs[2])[1] = __prc__regs[3];
+    memcpy(STRPTR(__prc__regs[4]), &addr, sizeof addr);
+    ((int*)__prc__regs[3])[0] = __prc__regs[4];
+    ((int*)__prc__regs[3])[1] = TOPINT(port);
+    prc = proc();
+    evt = chin_next(io->chan);
+    prc->clos = evt->clos;
+    prc->val  = __prc__regs[2];
+    TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
+    TAILQ_REMOVE(&io->chan->inq, evt, link);
+}
+
+/**
+ * ソケットIOチャネル入力時(recvfrom)の処理 
+ */
+static void so_recvfrom(ioent_t *io, event_t *evt, int exec) {
+    if (exec) {
+        struct sockaddr_in addr;
+        int fromlen = sizeof addr;
+        int len;
+
+        if ((len = recvfrom(io->handle, io->buf, io->bufsz, 0, (struct sockaddr *)&addr, &fromlen)) < 0) {
+	    perr(PERR_SYSTEM, "sendto", strerror(errno), __FILE__, __LINE__);
+            return;
+        }
+	so_recvfrom_complete(io, len, addr.sin_addr.s_addr, ntohs(addr.sin_port));
+	if ((evt = chin_next(io->chan)) != NULL) {
+	    io->iof(io, evt, 0);
+	}
 	return;
     }
     TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
