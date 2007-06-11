@@ -347,7 +347,7 @@ static void so_recvfrom_complete(ioent_t *io, int len, in_addr_t addr, int port)
 static void so_recvfrom(ioent_t *io, event_t *evt, int exec) {
     if (exec) {
         struct sockaddr_in addr;
-        int fromlen = sizeof addr;
+        socklen_t fromlen = sizeof addr;
         int len;
 
         if ((len = recvfrom(io->handle, io->buf, io->bufsz, 0, (struct sockaddr *)&addr, &fromlen)) < 0) {
