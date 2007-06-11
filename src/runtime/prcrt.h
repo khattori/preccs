@@ -66,7 +66,7 @@ int __dmatch__(int val, u_int st);
 #define TOCINT(i) ((i)>>1)
 #define TOPINT(i) (((i)<<1)^0x01)
 
-#define DEFAULT_HEAP_SIZE (1024*1024*16)
+#define DEFAULT_HEAP_SIZE (1024*1024*64)
 //#define DEFAULT_HEAP_SIZE (1024*64)
 
 #define IADD(a,b) ((a)+(b)-1)
