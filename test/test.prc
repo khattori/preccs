@@ -1,7 +1,6 @@
 C{
 #include <stdio.h>
 C}
-
 import "test1.prc"
 import "test2.prc"
 import "test3.prc"
@@ -14,7 +13,8 @@ var res:<bool>
 
 proc Main() =
     Total();
-    var end:<bool>;
+    var end:<bool>
+
     Test1(end,ok,ng); end?x;
     C{ printf("TEST1 completed\n"); C};
     Test2(end,ok,ng); end?x;
