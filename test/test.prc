@@ -6,6 +6,7 @@ import "test1.prc"
 import "test2.prc"
 import "test3.prc"
 import "test4.prc"
+import "test5.prc"
 
 var ok:<int>
 var ng:<int>
@@ -22,6 +23,8 @@ proc Main() =
     C{ printf("TEST3 completed\n"); C};
     Test4(end,ok,ng); end?x;
     C{ printf("TEST4 completed\n"); C};
+    Test5(end,ok,ng); end?x;
+    C{ printf("TEST5 completed\n"); C};
     res!true;
     stop
 

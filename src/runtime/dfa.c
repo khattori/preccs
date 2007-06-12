@@ -124,7 +124,7 @@ int __dmatch__(int val, u_int st) {
     case ACT_COND_VALZERO: { /* 条件マッチ */
         cond_t *cond = &__prc__dtable.cond[idx];
         u_char lid = cond->lid;
-        __prc__lbl_ptr[lid] = NULL;
+//        __prc__lbl_ptr[lid] = NULL;
         COND_ACT(__prc__lbl_value[lid] == 0,cond)
 
         break;
@@ -132,7 +132,7 @@ int __dmatch__(int val, u_int st) {
     case ACT_COND_VALNONZ: {
         cond_t *cond = &__prc__dtable.cond[idx];
         u_char lid = cond->lid;
-        __prc__lbl_ptr[lid] = NULL;
+//       __prc__lbl_ptr[lid] = NULL;
         COND_ACT(__prc__lbl_value[lid] != 0,cond)
 
         break;

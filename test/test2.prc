@@ -67,11 +67,11 @@ proc Test2(end:<bool>,ok:<int>,ng:<int>) =
     var x:{{l:octet;m:octet[l]}*};
     ( x @ y:{l:octet;m:octet[l]} -> ng!1
         | y:"" -> ok!1
-	 | _ -> ng!1 );
+	| _ -> ng!1 );
 
     var x:{{l:octet;m:octet[l]}};
     ( x @ y:{l:octet;m:octet[l]}* -> ok!1
-	 | _ -> ng!1 );
+	| _ -> ng!1 );
 
     var x:{{l:octet;m:octet[l]}|octet};
     ( x @ y:{l:octet;m:octet[l]} -> ok!1

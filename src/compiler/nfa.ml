@@ -89,6 +89,7 @@ let cprod c tr = normalize (List.map (fun (c',l,p) -> C.conj(c,c'),l,p) tr)
  * 
  *)
 let lprod l tr = List.map (fun (c,ls,p) -> c,Ls.add l ls,p) tr
+let lsprod ls tr = List.map (fun (c,ls',p) -> c,Ls.union ls ls',p) tr
 
 (*
  * 二つの条件付き遷移リストをマージする
@@ -129,6 +130,11 @@ let rec firstpos = function
   | R.LBL (r,lbl) -> lprod lbl (firstpos r)
   | R.REP (r,l)   -> cprod (C.neg(C.Prop(Prop.Atom(C.Value l)))) (firstpos r)
 
+let rec labels = function
+    R.EPS | R.CHARS _ | R.ALT _ | R.CLOS _ | R.REP _ -> Ls.empty
+  | R.SEQ (r1,_) -> labels r1
+  | R.LBL (r,lbl) -> Ls.add lbl (labels r)
+
 (** フォロー位置の集合を返す関数を返す
     Regex.t -> Pos.t -> CPs.t *)
 let followpos (re:Pos.t Regex.t) =
@@ -138,7 +144,8 @@ let followpos (re:Pos.t Regex.t) =
       R.EPS         -> ()
     | R.CHARS p     -> Ht.add tbl p s
     | R.SEQ (r1,r2) ->
-        fill (union (cprod (nullable r2) s) (firstpos r2)) r1;
+        fill (union (lsprod (labels r2) (cprod (nullable r2) s)) (firstpos r2)) r1;
+        (* fill (union (cprod (nullable r2) s) (firstpos r2)) r1; *)
         fill s r2
     | R.ALT (r1,r2) -> fill s r1; fill s r2
     | R.CLOS r      -> fill (union (firstpos r) s) r
