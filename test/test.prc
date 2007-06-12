@@ -13,7 +13,7 @@ var res:<bool>
 
 proc Main() =
     Total();
-    var end:<bool>
+    var end:<bool>;
 
     Test1(end,ok,ng); end?x;
     C{ printf("TEST1 completed\n"); C};
