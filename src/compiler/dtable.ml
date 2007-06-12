@@ -1,5 +1,5 @@
 (**
-   ó‘Ô‘JˆÚ•\ƒ‚ƒWƒ…[ƒ‹
+   çŠ¶æ…‹é·ç§»è¡¨ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
 
    @author Hattori Kenta
    @version $Id: dtable.ml,v 1.3 2006/07/06 04:15:36 hattori Exp $
@@ -13,22 +13,22 @@ module TcondSet  = Set.Make(Tcond)
 module DstateMap = Map.Make(Dstate)
 
 (*
- * ó—ó‘ÔŠÇ—ƒ‚ƒWƒ…[ƒ‹
+ * å—ç†çŠ¶æ…‹ç®¡ç†ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«
  * 
- *   note:  ó—ó‘Ô‚Ìó—”Ô†‚Æ‘g—§‚Ä‚éƒtƒB[ƒ‹ƒh‚ÌŠÇ—
+ *   note:  å—ç†çŠ¶æ…‹æ™‚ã®å—ç†ç•ªå·ã¨çµ„ç«‹ã¦ã‚‹ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã®ç®¡ç†
  *)
 module Accept = struct
-  (* ó—ó‘Ôƒe[ƒuƒ‹ : ˆÊ’u ¨ ó—”Ô†~ƒtƒB[ƒ‹ƒhƒŠƒXƒg *)
+  (* å—ç†çŠ¶æ…‹ãƒ†ãƒ¼ãƒ–ãƒ« : ä½ç½® â†’ å—ç†ç•ªå·Ã—ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ãƒªã‚¹ãƒˆ *)
   let table:(Pos.t, int * T.field list) Ht.t = Ht.create(13)
 
-  (* ó—ó‘Ôƒe[ƒuƒ‹‚É“o˜^‚·‚é *)
+  (* å—ç†çŠ¶æ…‹ãƒ†ãƒ¼ãƒ–ãƒ«ã«ç™»éŒ²ã™ã‚‹ *)
   let register ps fs =
     let idx = ref 0 in
       List.iter2 (fun p f ->
                     Ht.add table p (!idx,f); incr idx
                  ) ps fs
         
-  (* Å¬‚Ìó—”Ô†‚ÆƒtƒB[ƒ‹ƒhƒŠƒXƒg‚ğ’T‚· *)
+  (* æœ€å°ã®å—ç†ç•ªå·ã¨ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ãƒªã‚¹ãƒˆã‚’æ¢ã™ *)
   let find ps =
     let num,fs =
       PosSet.fold (
@@ -40,18 +40,18 @@ module Accept = struct
 end
 
 type act =
-    ACT_NULL          (* –³ˆ— *)
-  | ACT_MATCH         (* •¶šW‡ƒ}ƒbƒ`ˆ— *)
-  | ACT_SKIP          (* ƒXƒLƒbƒvˆ— *)
-  | ACT_TRANS         (* ó‘Ô‘JˆÚ *)
-  | ACT_FINAL         (* I—¹ˆ— *)
-  | ACT_RECORD        (* ƒ‰ƒxƒ‹‹L˜^ˆ— *)
-  | ACT_COND_VALZERO  (* ğŒ”»’è(V_l==0) *)
-  | ACT_COND_VALNONZ  (* ğŒ”»’è(V_l!=0) *)
-  | ACT_COND_CNTZERO  (* ğŒ”»’è(C_l==0) *)
-  | ACT_COND_CNTNONZ  (* ğŒ”»’è(C_l!=0) *)
-  | ACT_COUNT_SET     (* ƒJƒEƒ“ƒ^ˆ—(C_l=V_l-1) *)
-  | ACT_COUNT_DECR    (* ƒJƒEƒ“ƒ^ˆ—(C_l--) *)
+    ACT_NULL          (* ç„¡å‡¦ç† *)
+  | ACT_MATCH         (* æ–‡å­—é›†åˆãƒãƒƒãƒå‡¦ç† *)
+  | ACT_SKIP          (* ã‚¹ã‚­ãƒƒãƒ—å‡¦ç† *)
+  | ACT_TRANS         (* çŠ¶æ…‹é·ç§» *)
+  | ACT_FINAL         (* çµ‚äº†å‡¦ç† *)
+  | ACT_RECORD        (* ãƒ©ãƒ™ãƒ«è¨˜éŒ²å‡¦ç† *)
+  | ACT_COND_VALZERO  (* æ¡ä»¶åˆ¤å®š(V_l==0) *)
+  | ACT_COND_VALNONZ  (* æ¡ä»¶åˆ¤å®š(V_l!=0) *)
+  | ACT_COND_CNTZERO  (* æ¡ä»¶åˆ¤å®š(C_l==0) *)
+  | ACT_COND_CNTNONZ  (* æ¡ä»¶åˆ¤å®š(C_l!=0) *)
+  | ACT_COUNT_SET     (* ã‚«ã‚¦ãƒ³ã‚¿å‡¦ç†(C_l=V_l-1) *)
+  | ACT_COUNT_DECR    (* ã‚«ã‚¦ãƒ³ã‚¿å‡¦ç†(C_l--) *)
 let act_string = function
     ACT_NULL          -> "ACT_NULL        "
   | ACT_MATCH         -> "ACT_MATCH       "
@@ -69,13 +69,13 @@ let act_string = function
 type next  = act  * int
 type stent = next * int
 type fent  = string * int
-type ment  = next * int * int  (* Ÿˆ— * ”ñƒ}ƒbƒ`ƒGƒ“ƒgƒŠ * CsetƒGƒ“ƒgƒŠ *)
+type ment  = next * int * int  (* æ¬¡å‡¦ç† * éãƒãƒƒãƒæ™‚ã‚¨ãƒ³ãƒˆãƒª * Csetã‚¨ãƒ³ãƒˆãƒª *)
 type csent = Cset.t
-type rent  = next * int * int  (* Ÿˆ— * ƒ‰ƒxƒ‹ID * ƒTƒCƒY *)
-type cond  = next * next * int (* TRUEˆ— * FALSEˆ— * ƒ‰ƒxƒ‹ID *)
-type cact  = next * int        (* Ÿˆ— * ƒ‰ƒxƒ‹ID *)
+type rent  = next * int * int  (* æ¬¡å‡¦ç† * ãƒ©ãƒ™ãƒ«ID * ã‚µã‚¤ã‚º *)
+type cond  = next * next * int (* TRUEæ™‚å‡¦ç† * FALSEæ™‚å‡¦ç† * ãƒ©ãƒ™ãƒ«ID *)
+type cact  = next * int        (* æ¬¡å‡¦ç† * ãƒ©ãƒ™ãƒ«ID *)
 
-(* ƒe[ƒuƒ‹ *)
+(* ãƒ†ãƒ¼ãƒ–ãƒ« *)
 class ['a] table =
 object
   val tbl = (Ht.create(29) : (int,'a) Ht.t)
@@ -119,18 +119,18 @@ let max_label = ref 0
 let update_max_label n =
   if n > !max_label then max_label := n
 (*
- * ó‘Ô‘JˆÚ•\‚ğ¶¬‚·‚é
+ * çŠ¶æ…‹é·ç§»è¡¨ã‚’ç”Ÿæˆã™ã‚‹
  * 
- *   ˆø@”Finit_st : Dstate.t    --- ‰Šúó‘Ô”Ô†
- *           init_ls : LabelSet.t  --- ‰Šúƒ‰ƒxƒ‹W‡
- *           st_map  : DstateMap.t --- ‘JˆÚ•\
- *   –ß‚è’lF‰Šúó‘Ô‚ÌID
+ *   å¼•ã€€æ•°ï¼šinit_st : Dstate.t    --- åˆæœŸçŠ¶æ…‹ç•ªå·
+ *           init_ls : LabelSet.t  --- åˆæœŸãƒ©ãƒ™ãƒ«é›†åˆ
+ *           st_map  : DstateMap.t --- é·ç§»è¡¨
+ *   æˆ»ã‚Šå€¤ï¼šåˆæœŸçŠ¶æ…‹ã®ID
  * 
  *)
 let create init_st init_ls st_map =
-  let label_map = Label.map_create() in (* ƒ‰ƒxƒ‹ID -> ƒ‰ƒxƒ‹”Ô†iƒ[ƒJƒ‹j *)
+  let label_map = Label.map_create() in (* ãƒ©ãƒ™ãƒ«ID -> ãƒ©ãƒ™ãƒ«ç•ªå·ï¼ˆãƒ­ãƒ¼ã‚«ãƒ«ï¼‰ *)
   let rec create_next tm =
-    let cset_list = Dtrans.cset_list tm in (* Cset.t‚ÌƒŠƒXƒg‚ğæ“¾ *)
+    let cset_list = Dtrans.cset_list tm in (* Cset.tã®ãƒªã‚¹ãƒˆã‚’å–å¾— *)
       List.fold_left
         (fun next cs -> create_cset_next next cs tm) (ACT_NULL,0) cset_list
   and create_cset_next (nact,nidx) cs tm =
@@ -201,21 +201,21 @@ let create init_st init_ls st_map =
     state_index init_st'
 
 (*
- * DFA‚Ìo—Í
+ * DFAã®å‡ºåŠ›
  *
- *   ˆø@”F‚È‚µ
- *   –ß‚è’lF‚È‚µ
+ *   å¼•ã€€æ•°ï¼šãªã—
+ *   æˆ»ã‚Šå€¤ï¼šãªã—
  * 
  *)
 let emit () =
-  (* ó‘Ôƒe[ƒuƒ‹ *)
+  (* çŠ¶æ…‹ãƒ†ãƒ¼ãƒ–ãƒ« *)
   Printf.printf "state_t __prc__state_table[] = {\n";
   for i = 0 to !state_num do
     let (act,nidx),fidx = Ht.find state_table i in
       Printf.printf "/* [%03d] */ { %s,%4d,%4d },\n" i (act_string act) nidx fidx
   done;
   Printf.printf "};\n";
-  (* I—¹ˆ—ƒGƒ“ƒgƒŠ *)
+  (* çµ‚äº†å‡¦ç†ã‚¨ãƒ³ãƒˆãƒª *)
   Printf.printf "fact_t __prc__fact_table[] = {\n";
   for i = 0 to fact_table#num do
     let cons,num = fact_table#find i in
@@ -225,7 +225,7 @@ let emit () =
         Printf.printf "/* [%03d] */ { %2d, \"%s\" },\n" i num cons
   done;
   Printf.printf "};\n";
-  (* ƒ}ƒbƒ`ƒe[ƒuƒ‹ *)
+  (* ãƒãƒƒãƒãƒ†ãƒ¼ãƒ–ãƒ« *)
   Printf.printf "mact_t __prc__mact_table[] = {\n";
   for i = 0 to mact_table#num do
     let (act,nidx),midx,cidx = mact_table#find i in
@@ -233,14 +233,14 @@ let emit () =
         i (act_string act) nidx midx cidx
   done;
   Printf.printf "};\n";
-  (* •¶šW‡ƒe[ƒuƒ‹ *)
+  (* æ–‡å­—é›†åˆãƒ†ãƒ¼ãƒ–ãƒ« *)
   Printf.printf "cset_t __prc__cset_table[] = {\n";
   for i = 0 to cset_table#num do
     let cs = cset_table#find i in
       Printf.printf "/* [%03d] */ %s,\n" i (Cset.encode cs);
   done;
   Printf.printf "};\n";
-  (* ƒ‰ƒxƒ‹‹L˜^ˆ—ƒe[ƒuƒ‹ *)
+  (* ãƒ©ãƒ™ãƒ«è¨˜éŒ²å‡¦ç†ãƒ†ãƒ¼ãƒ–ãƒ« *)
   Printf.printf "ract_t __prc__ract_table[] = {\n";
   for i = 0 to ract_table#num do
     let (act,nidx),lid,lsiz = ract_table#find i in
@@ -248,7 +248,7 @@ let emit () =
         i (act_string act) nidx lid lsiz
   done;
   Printf.printf "};\n";
-  (* ğŒˆ—ƒe[ƒuƒ‹ *)
+  (* æ¡ä»¶å‡¦ç†ãƒ†ãƒ¼ãƒ–ãƒ« *)
   Printf.printf "cond_t __prc__cond_table[] = {\n";
   for i = 0 to cond_table#num do
     let (tact,tidx),(fact,fidx),lid = cond_table#find i in
@@ -256,7 +256,7 @@ let emit () =
         i (act_string tact) tidx (act_string fact) fidx lid
   done;
   Printf.printf "};\n";
-  (* ƒJƒEƒ“ƒ^ˆ—ƒe[ƒuƒ‹ *)
+  (* ã‚«ã‚¦ãƒ³ã‚¿å‡¦ç†ãƒ†ãƒ¼ãƒ–ãƒ« *)
   Printf.printf "cact_t __prc__cact_table[] = {\n";
   for i = 0 to cact_table#num do
     let (act,nidx),lid = cact_table#find i in
@@ -264,5 +264,5 @@ let emit () =
         i (act_string act) nidx lid
   done;
   Printf.printf "};\n";
-  (* ƒ‰ƒxƒ‹ƒŒƒWƒXƒ^ *)
+  (* ãƒ©ãƒ™ãƒ«ãƒ¬ã‚¸ã‚¹ã‚¿ *)
   Printf.printf "#define MAX_LABEL (%d)\n" !max_label;
