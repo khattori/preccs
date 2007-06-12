@@ -1,5 +1,5 @@
 (**
-   �����t�J�ڃ��W���[��
+   条件付遷移モジュール
 
    @author Hattori Kenta
    @version $Id: dtrans.ml,v 1.3 2006/07/06 04:15:36 hattori Exp $
@@ -9,9 +9,9 @@ module LabelSet  = Set.Make(Label)
 module PosSet    = Set.Make(Pos)
 module DstateSet = Set.Make(Dstate)
 
-(* �����t���J�ڏW���̗v�f *)
+(* 条件付き遷移集合の要素 *)
 module E = struct
-  (* �����W�� �~ �J�ڏ��� �~ �L�^���x���W�� �~ ����� *)
+  (* 文字集合 × 遷移条件 × 記録ラベル集合 × 次状態 *)
   type t = Cset.t * TcondSet.t * LabelSet.t * Dstate.t
 
   let compare (c1,t1,l1,s1) (c2,t2,l2,s2) =
@@ -36,8 +36,8 @@ let tmap f s =
 let tseq (_,t1,_,s1) (_,t2,_,s2) =
   (TcondSet.compare t1 t2) == 0 && (Dstate.compare s1 s2) == 0
 
-(* �J�ڕ\�ɑJ�ڂ�ǉ�����D
-   �� �J�ڏ����Ǝ���Ԃ���������΁C�����W���ƃ��x���W�����}�[�W *)
+(* 遷移表に遷移を追加する．
+   ※ 遷移条件と次状態が等しければ，文字集合とラベル集合をマージ *)
 let add cs ts ls st dt = 
   if S.exists (tseq (cs,ts,ls,st)) dt then
     let s1,s2 = S.partition (tseq (cs,ts,ls,st)) dt in
@@ -47,20 +47,20 @@ let add cs ts ls st dt =
   else
     S.add (cs,ts,ls,st) dt
 
-(* ���̏�Ԃ̃��X�g���擾���� *)
+(* 次の状態のリストを取得する *)
 let next_all dt =
   S.fold (fun (_,_,_,s) ns -> DstateSet.add s ns) dt DstateSet.empty
 
-(* �^����ꂽ�����W���ɂ��Ď��̏����ƃ��x���W���C��Ԃ̃��X�g���擾���� *)
+(* 与えられた文字集合について次の条件とラベル集合，状態のリストを取得する *)
 let next_list cs dt =
   let dt',_ = S.partition (fun (c',_,_,_) -> c' = cs) dt in
     List.map (fun (_,t,l,s) -> (t,l,s)) (S.elements dt')
 
-(* ���J�ڂ̂��߂̕����W���̃��X�g���擾 *)
+(* 次遷移のための文字集合のリストを取得 *)
 let cset_list s =
   S.fold (fun (c,_,_,_) cs -> if List.mem c cs then cs else c::cs) s []
 
-(* �J�ډ\���ǂ����̔��� *)
+(* 遷移可能かどうかの判定 *)
 let transable (cs1,ts1,ls1,ns1) (cs2,ts2,ls2,ns2) lm =
   let ts1' = tmap (Tcond.alpha lm) ts1 in
   let ts2' = tmap (Tcond.alpha lm) ts2 in
@@ -77,13 +77,13 @@ let show dt =
   ) dt
     
 (*
- * �X�L�b�v�������{��
+ * スキップ処理を施す
  * 
- *   ��  ���F dt1 : �X�L�b�v�ΏۂƂȂ��ԑJ��
- *            dt2 : ��r���ƂȂ��ԑJ��
- *            lm  : ���x���}�b�v
+ *   引  数： dt1 : スキップ対象となる状態遷移
+ *            dt2 : 比較元となる状態遷移
+ *            lm  : ラベルマップ
  * 
- *   �߂�l�F�V������ԑJ�ځ~�V�������x���}�b�v�~����ԃy�A�̃��X�g
+ *   戻り値：新しい状態遷移×新しいラベルマップ×次状態ペアのリスト
  *
  *)
 let skip dt1 dt2 lm =
