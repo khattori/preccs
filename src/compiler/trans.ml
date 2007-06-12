@@ -26,7 +26,7 @@ let trans_prim = function
 
 let rec expand_exp o = function
     P.Record es ->
-      let ls,tl = expand_exp_list o es in [P.Int o; P.Cint 0;P.Record ls],tl
+      let ls,tl = expand_exp_list o es in [P.Int o; P.Cint 0;P.Record(ls @ [P.Int tl])],tl
   | P.Int i -> [P.Int o; P.Cint 0;P.Cint 0],o+i
   | _ -> assert false
 and expand_exp_list o =
