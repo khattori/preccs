@@ -156,8 +156,9 @@ int __dmatch__(int val, u_int st) {
     case ACT_COUNT_SET: {
         cact_t *cact = &__prc__dtable.cact[idx];
         u_char lid = cact->lid;
+        u_char lid2 = cact->lid2;
 
-        __prc__lbl_count[lid] = __prc__lbl_value[lid] - 1;
+        __prc__lbl_count[lid] = __prc__lbl_value[lid2] - 1;
         act = cact->nact;
         idx = cact->nidx;
         break;

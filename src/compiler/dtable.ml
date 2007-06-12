@@ -164,18 +164,18 @@ let create init_st init_ls st_map =
       fun tc nxt ->
         match tc with
           | Tcond.ValNonz(l) ->
-              ACT_COUNT_SET,cact_table#add (nxt,Label.map_find label_map l)
+              ACT_COUNT_SET,cact_table#add (nxt,Label.map_find label_map l, Label.map_find label_map (Label.deref l))
           | Tcond.CntNonz(l) ->
-              ACT_COUNT_DECR,cact_table#add (nxt,Label.map_find label_map l)
+              ACT_COUNT_DECR,cact_table#add (nxt,Label.map_find label_map l, Label.map_find label_map l)
           | _ -> nxt
     ) tcset tnxt in
     let next' = TcondSet.fold (
       fun tc nxt ->
         match tc with
             Tcond.ValZero(l) ->
-              ACT_COND_VALZERO,cond_table#add (nxt,fnxt,Label.map_find label_map l)
+              ACT_COND_VALZERO,cond_table#add (nxt,fnxt,Label.map_find label_map (Label.deref l))
           | Tcond.ValNonz(l) ->
-              ACT_COND_VALNONZ,cond_table#add (nxt,fnxt,Label.map_find label_map l)
+              ACT_COND_VALNONZ,cond_table#add (nxt,fnxt,Label.map_find label_map (Label.deref l))
           | Tcond.CntZero(l) ->
               ACT_COND_CNTZERO,cond_table#add (nxt,fnxt,Label.map_find label_map l)
           | Tcond.CntNonz(l) ->
@@ -259,9 +259,9 @@ let emit () =
   (* カウンタ処理テーブル *)
   Printf.printf "cact_t __prc__cact_table[] = {\n";
   for i = 0 to cact_table#num do
-    let (act,nidx),lid = cact_table#find i in
-      Printf.printf "/* [%03d] */ { %s,%4d,%2d },\n"
-        i (act_string act) nidx lid
+    let (act,nidx),lid,lid2 = cact_table#find i in
+      Printf.printf "/* [%03d] */ { %s,%4d,%2d,%2d },\n"
+        i (act_string act) nidx lid lid2
   done;
   Printf.printf "};\n";
   (* ラベルレジスタ *)

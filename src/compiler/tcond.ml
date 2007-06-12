@@ -23,9 +23,8 @@ let show = function
 
 (* アルファ変換 *)
 let alpha lm = function
-    ValZero(l) when Lm.mem l lm -> ValZero(Lm.find l lm)
-  | ValNonz(l) when Lm.mem l lm -> ValNonz(Lm.find l lm)
-  | CntZero(l) when Lm.mem l lm -> CntZero(Lm.find l lm)
-  | CntNonz(l) when Lm.mem l lm -> CntNonz(Lm.find l lm)
+    ValZero(l) when Lm.mem (Label.deref l) lm -> ValZero(Lm.find (Label.deref l) lm)
+  | ValNonz(l) when Lm.mem (Label.deref l) lm -> ValNonz(Lm.find (Label.deref l) lm)
+  | CntZero(l) when Lm.mem (Label.deref l) lm -> CntZero(Lm.find (Label.deref l) lm)
+  | CntNonz(l) when Lm.mem (Label.deref l) lm -> CntNonz(Lm.find (Label.deref l) lm)
   | tc -> tc
-

@@ -107,7 +107,7 @@ let rec rmlabel =
     | R.CLOS(r)    -> R.CLOS(rm false r)
     | R.LBL(r,l)   -> 
         if keep || Ht.mem ltbl l then R.LBL(rm keep r,l) else rm keep r
-    | R.REP(r,l)   -> Ht.add ltbl l true; R.REP(rm false r,l)
+    | R.REP(r,l)   -> Ht.add ltbl (Label.deref l) true; R.REP(rm false r,l)
   in
     rm true
 
@@ -118,7 +118,7 @@ let regexify rt =
     | RARR(r,n) -> R.array (trans tbl r) n
     | RITR(r,s) -> (
         try
-          let l = List.assoc s tbl in R.REP(trans tbl r,l)
+          let l = List.assoc s tbl in R.REP(trans tbl r,Label.mkref l)
         with Not_found -> R.CLOS(trans tbl r)
       )
     | RRCD rs   ->
@@ -139,7 +139,7 @@ let regexify2 rt =
     | REXP re   -> re,[]
     | RARR(r,n) -> R.array (fst (trans tbl r)) n,[] (* 配列はキープせず *)
     | RITR(r,s) ->
-        let l = List.assoc s tbl in R.REP(fst (trans tbl r),l),[]
+        let l = List.assoc s tbl in R.REP(fst (trans tbl r),Label.mkref l),[]
     | RRCD rs   ->
         let re,_,fs =
           List.fold_left (

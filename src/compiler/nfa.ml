@@ -118,7 +118,7 @@ let rec nullable = function
   | R.ALT (r1,r2) -> C.disj (nullable r1, nullable r2)
   | R.CLOS _      -> C.Const true
   | R.LBL (r,_)   -> nullable r
-  | R.REP (r,lbl) -> C.disj (C.Prop(Prop.Atom(C.Value lbl)), nullable r)
+  | R.REP (r,l)   -> C.disj (C.Prop(Prop.Atom(C.Value l)), nullable r)
 
 let rec firstpos = function
     R.EPS         -> []
@@ -127,7 +127,7 @@ let rec firstpos = function
   | R.ALT (r1,r2) -> union (firstpos r1) (firstpos r2)
   | R.CLOS r      -> firstpos r
   | R.LBL (r,lbl) -> lprod lbl (firstpos r)
-  | R.REP (r,lbl) -> cprod (C.neg(C.Prop(Prop.Atom(C.Value lbl)))) (firstpos r)
+  | R.REP (r,l)   -> cprod (C.neg(C.Prop(Prop.Atom(C.Value l)))) (firstpos r)
 
 (** フォロー位置の集合を返す関数を返す
     Regex.t -> Pos.t -> CPs.t *)
@@ -143,12 +143,12 @@ let followpos (re:Pos.t Regex.t) =
     | R.ALT (r1,r2) -> fill s r1; fill s r2
     | R.CLOS r      -> fill (union (firstpos r) s) r
     | R.LBL (r,_)   -> fill s r
-    | R.REP (r,lbl) -> fill (union
+    | R.REP (r,l)   -> fill (union
                                (* 繰返し条件 *)
-                               (cprod (C.neg(C.Prop(Prop.Atom(C.Counter lbl))))
+                               (cprod (C.neg(C.Prop(Prop.Atom(C.Counter l))))
                                   (firstpos r))
                                (* 脱出条件 *)
-                               (cprod (C.Prop(Prop.Atom(C.Counter lbl))) s)) r
+                               (cprod (C.Prop(Prop.Atom(C.Counter l))) s)) r
   in fill [] re; follow
 
 (*

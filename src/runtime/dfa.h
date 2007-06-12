@@ -85,6 +85,7 @@ typedef struct cact_ {
     act_t  nact;      /* 次処理          */
     int    nidx;      /* 次インデックス */
     u_char lid;       /* ラベル識別子   */
+    u_char lid2;      /* ラベル識別子   */
 } cact_t;
 
 typedef struct prc_dtable_ {

@@ -56,8 +56,8 @@ let alpha lm = function
     Const b -> Const b
   | Prop p  -> Prop(P.map (
                       function 
-                          Counter l when Lm.mem l lm -> Counter (Lm.find l lm)
-                        | Value   l when Lm.mem l lm -> Value   (Lm.find l lm)
+                          Counter l when Lm.mem (Label.deref l) lm -> Counter (Lm.find (Label.deref l) lm)
+                        | Value   l when Lm.mem (Label.deref l) lm -> Value   (Lm.find (Label.deref l) lm)
                         | v -> v
                     ) p)
 

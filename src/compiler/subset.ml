@@ -77,10 +77,9 @@ let subset r1 r2 =
  *)
 let inter r1 r2 = false (* not yet *)
 
-
 (* テスト用データ *)
 (*------------------------------------------------------------*)
-
+(*
 open Regex
 
 (* {l:octet;m:octet[l]}* *)
@@ -177,3 +176,4 @@ let () =
   assert(subset p6 p4);
   assert(not(subset p5 p6));
   assert(subset p6 p5)
+*)

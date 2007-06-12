@@ -30,7 +30,7 @@ let size re =
           if s1 == s2 then s1 else raise Exit
     | CLOS r   -> if trav r == 0 then 0 else raise Exit
     | LBL(r,_) -> trav r
-    | REP(_,_) -> raise Exit
+    | REP _    -> raise Exit
   in
     try trav re with Exit -> 0
 
@@ -100,7 +100,7 @@ let rec to_string = function
     CHARS cs -> Printf.sprintf "%c" (Cset.get_char cs)
   | SEQ(r1,r2) -> to_string(r1) ^ to_string(r2)
   | ALT(r,_) | LBL(r,_) -> to_string r
-  | EPS | CLOS _ | REP(_,_) -> ""
+  | EPS | CLOS _ | REP _ -> ""
 
 let rec show = function
     EPS        -> print_string "EPS"

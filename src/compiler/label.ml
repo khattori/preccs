@@ -15,6 +15,11 @@ let create sz = let lid = !lbl in incr lbl; Hashtbl.add size_table lid sz; lid
 let size l = Hashtbl.find size_table l
 let show l = print_int l
 
+(* 参照用のラベル登録 *)
+let ref_table:(t,t)  Hashtbl.t = Hashtbl.create(13)
+let mkref l = let nl = create 0 in Hashtbl.add ref_table nl l; nl
+let deref l = Hashtbl.find ref_table l
+
 (* ラベルID→ラベル番号への変換用 *)
 type map = (t,int) Hashtbl.t * int ref
 let map_create() = Hashtbl.create(13),ref 0
