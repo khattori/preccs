@@ -124,17 +124,23 @@ int __dmatch__(int val, u_int st) {
     case ACT_COND_VALZERO: { /* 条件マッチ */
         cond_t *cond = &__prc__dtable.cond[idx];
         u_char lid = cond->lid;
-//        __prc__lbl_ptr[lid] = NULL;
-        COND_ACT(__prc__lbl_value[lid] == 0,cond)
-
+        //__prc__lbl_ptr[lid] = NULL;
+        if (cond->func) {
+            COND_ACT(cond->func(__prc__lbl_value[lid]) == 0,cond)
+        } else {
+            COND_ACT(__prc__lbl_value[lid] == 0,cond)
+        }
         break;
     }
     case ACT_COND_VALNONZ: {
         cond_t *cond = &__prc__dtable.cond[idx];
         u_char lid = cond->lid;
-//       __prc__lbl_ptr[lid] = NULL;
-        COND_ACT(__prc__lbl_value[lid] != 0,cond)
-
+        //__prc__lbl_ptr[lid] = NULL;
+        if (cond->func) {
+            COND_ACT(cond->func(__prc__lbl_value[lid]) != 0,cond)
+        } else {
+            COND_ACT(__prc__lbl_value[lid] != 0,cond)
+        }
         break;
     }
     case ACT_COND_CNTZERO: {
@@ -158,7 +164,11 @@ int __dmatch__(int val, u_int st) {
         u_char lid = cact->lid;
         u_char lid2 = cact->lid2;
 
-        __prc__lbl_count[lid] = __prc__lbl_value[lid2] - 1;
+        if (cact->func) {
+            __prc__lbl_count[lid] = cact->func(__prc__lbl_value[lid2]) - 1;
+        } else {
+            __prc__lbl_count[lid] = __prc__lbl_value[lid2] - 1;
+        }
         act = cact->nact;
         idx = cact->nidx;
         break;
@@ -229,11 +239,11 @@ static int con_field(char *con) {
         /* フィールドの末尾まで到達した場合 */
         if (cstack[top] == lstack[top]) {
             /* エンドポイントの設定 */
-            // ((int*)stack[top])[cstack[top]*3] = TOPINT((int)__prc__lbl_ptr[lid]-((int*)__prc__temp)[1]);
+	    assert(__prc__lbl_ptr[lid] != NULL);
             ((int*)stack[top])[cstack[top]*3] = TOPINT((int)__prc__lbl_ptr[lid]-(int)origin);
 	    top--;
         }
-        //((int*)stack[top])[cstack[top]++*3] = TOPINT((int)__prc__lbl_ptr[lid]-((int*)__prc__temp)[1]);
+	assert(__prc__lbl_ptr[lid] != NULL);
         ((int*)stack[top])[cstack[top]++*3] = TOPINT((int)__prc__lbl_ptr[lid]-(int)origin);
 
         break;

@@ -23,7 +23,7 @@ type t =
 and rgx = 
     REXP of Cset.t Regex.t
   | RARR of rgx * int                (* R配列       *)
-  | RITR of rgx * Symbol.t           (* R可変長配列 *)
+  | RITR of rgx * Symbol.t * Symbol.t option (* R可変長配列 *)
   | RRCD of (Symbol.t * rgx) list    (* Rレコード   *)
 
 (** フィールド型定義 *)
@@ -90,7 +90,7 @@ let offset typ sym =
 let index typ =
   match typ with
       ARRAY(t,_)                          -> t
-    | REGEX(RARR(r,_)) | REGEX(RITR(r,_)) -> REGEX r
+    | REGEX(RARR(r,_)) | REGEX(RITR(r,_,_)) -> REGEX r
     | _ -> raise Ill_index
 
 (** 不要なラベルの削除 *)
@@ -107,7 +107,7 @@ let rec rmlabel =
     | R.CLOS(r)    -> R.CLOS(rm false r)
     | R.LBL(r,l)   -> 
         if keep || Ht.mem ltbl l then R.LBL(rm keep r,l) else rm keep r
-    | R.REP(r,l)   -> Ht.add ltbl (Label.deref l) true; R.REP(rm false r,l)
+    | R.REP(r,l,f) -> Ht.add ltbl (Label.deref l) true; R.REP(rm false r,l,f)
   in
     rm true
 
@@ -116,9 +116,9 @@ let regexify rt =
   let rec trans tbl = function
     | REXP re   -> re
     | RARR(r,n) -> R.array (trans tbl r) n
-    | RITR(r,s) -> (
+    | RITR(r,s,f) -> (
         try
-          let l = List.assoc s tbl in R.REP(trans tbl r,Label.mkref l)
+          let l = List.assoc s tbl in R.REP(trans tbl r,Label.mkref l,f)
         with Not_found -> R.CLOS(trans tbl r)
       )
     | RRCD rs   ->
@@ -138,8 +138,8 @@ let regexify2 rt =
   let rec trans tbl = function
     | REXP re   -> re,[]
     | RARR(r,n) -> R.array (fst (trans tbl r)) n,[] (* 配列はキープせず *)
-    | RITR(r,s) ->
-        let l = List.assoc s tbl in R.REP(fst (trans tbl r),Label.mkref l),[]
+    | RITR(r,s,f) ->
+        let l = List.assoc s tbl in R.REP(fst (trans tbl r),Label.mkref l,f),[]
     | RRCD rs   ->
         let re,_,fs =
           List.fold_left (
@@ -174,7 +174,8 @@ let rec subtype ty1 ty2 =
 and rsubtype r1 r2 =
   match r1,r2 with
       RARR(r1',n),RARR(r2',m) when n==m -> rsubtype r1' r2'
-    | RITR(r1',s1),RITR(r2',s2) when Symbol.equal s1 s2 -> rsubtype r1' r2'
+    | RITR(r1',s1,None),RITR(r2',s2,None) when Symbol.equal s1 s2 -> rsubtype r1' r2'
+    | RITR(r1',s1,Some f1),RITR(r2',s2,Some f2) when Symbol.equal s1 s2 && Symbol.equal f1 f2 -> rsubtype r1' r2'
     | RRCD(rs1),RRCD(rs2) when List.length rs1 = List.length rs2 ->
         List.fold_left2
           (fun b (s1,r1') (s2,r2') -> b&&(Symbol.equal s1 s2)&&(rsubtype r1' r2'))

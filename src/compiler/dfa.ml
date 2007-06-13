@@ -38,22 +38,6 @@ let show (init,st_map) =
       Dtrans.show dt; print_newline()
   ) st_map
 
-(*
- * 開始ラベルの計算
- *   ( ls2 - ls1を計算する )
- * 
- *   引　数：ls1 : LabelSet.t --- 遷移元ノードに対応するラベル集合
- *           ls2 : LabelSet.t --- 遷移先ノードに対応するラベル集合
- * 
- *   戻り値：開始ラベルの集合
- * 
- *)
-let start_labels ls1 ls2 =
-  LabelSet.fold (
-    fun lbl ls -> if LabelSet.mem lbl ls1 then ls else LabelSet.add lbl ls
-  ) ls2 LabelSet.empty
-
-
 module TS = Set.Make(Tcond)
 module TM = Map.Make(TS)
 (*
@@ -69,9 +53,9 @@ let decomp clps =
       C.Prop(p) ->
         let rec trav ts = function
             P.Atom(C.Counter(l)) -> TS.add (Tcond.CntZero l) ts
-          | P.Atom(C.Value(l))   -> TS.add (Tcond.ValZero l) ts
+          | P.Atom(C.Value(l,f)) -> TS.add (Tcond.ValZero(l,f)) ts
           | P.Neg(P.Atom(C.Counter(l))) -> TS.add (Tcond.CntNonz l) ts
-          | P.Neg(P.Atom(C.Value(l)))   -> TS.add (Tcond.ValNonz l) ts
+          | P.Neg(P.Atom(C.Value(l,f))) -> TS.add (Tcond.ValNonz(l,f)) ts
           | P.Conj(p1,p2) -> trav (trav ts p1) p2
           | _ -> assert false
         in

@@ -58,7 +58,7 @@ typedef struct mact_ {
     int   cidx;      /* 文字集合インデックス */
 } mact_t;
 typedef u_int cset_t[8];
-
+typedef int (*vfunc_t)(int);
 /*
  * ラベル記録処理テーブル
  */
@@ -67,6 +67,7 @@ typedef struct ract_ {
     int   nidx;      /* 次インデックス */
     u_char lid;      /* ラベル識別子   */
     u_char lsiz;     /* ラベルサイズ   */
+    vfunc_t func;
 } ract_t;
 /*
  * 条件処理テーブル
@@ -77,6 +78,7 @@ typedef struct cond_ {
     act_t  fact;     /* 不成立時処理          */
     int    fidx;     /* 不成立時インデックス */
     u_char lid;      /* ラベル識別子         */
+    vfunc_t func;
 } cond_t;
 /*
  * カウンタ処理テーブル
@@ -86,6 +88,7 @@ typedef struct cact_ {
     int    nidx;      /* 次インデックス */
     u_char lid;       /* ラベル識別子   */
     u_char lid2;      /* ラベル識別子   */
+    vfunc_t func;
 } cact_t;
 
 typedef struct prc_dtable_ {

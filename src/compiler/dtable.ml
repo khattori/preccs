@@ -66,6 +66,7 @@ let act_string = function
   | ACT_COUNT_SET     -> "ACT_COUNT_SET   "
   | ACT_COUNT_DECR    -> "ACT_COUNT_DECR  "
 
+(*
 type next  = act  * int
 type stent = next * int
 type fent  = string * int
@@ -74,6 +75,11 @@ type csent = Cset.t
 type rent  = next * int * int  (* 次処理 * ラベルID * サイズ *)
 type cond  = next * next * int (* TRUE時処理 * FALSE時処理 * ラベルID *)
 type cact  = next * int        (* 次処理 * ラベルID *)
+*)
+
+let get_func_name = function
+    None -> "NULL"
+  | Some f -> Symbol.name f
 
 (* テーブル *)
 class ['a] table =
@@ -114,6 +120,7 @@ let cset_table = new table
 let ract_table = new table
 let cond_table = new table
 let cact_table = new table
+let func_table = new table
 
 let max_label = ref 0
 let update_max_label n =
@@ -163,23 +170,26 @@ let create init_st init_ls st_map =
     let next = TcondSet.fold (
       fun tc nxt ->
         match tc with
-          | Tcond.ValNonz(l) ->
-              ACT_COUNT_SET,cact_table#add (nxt,Label.map_find label_map l, Label.map_find label_map (Label.deref l))
+          | Tcond.ValNonz(l,f) ->
+	      ignore (func_table#add f);
+              ACT_COUNT_SET,cact_table#add (nxt,f,Label.map_find label_map l,Label.map_find label_map (Label.deref l))
           | Tcond.CntNonz(l) ->
-              ACT_COUNT_DECR,cact_table#add (nxt,Label.map_find label_map l, Label.map_find label_map l)
+              ACT_COUNT_DECR,cact_table#add (nxt,None,Label.map_find label_map l,Label.map_find label_map l)
           | _ -> nxt
     ) tcset tnxt in
     let next' = TcondSet.fold (
       fun tc nxt ->
         match tc with
-            Tcond.ValZero(l) ->
-              ACT_COND_VALZERO,cond_table#add (nxt,fnxt,Label.map_find label_map (Label.deref l))
-          | Tcond.ValNonz(l) ->
-              ACT_COND_VALNONZ,cond_table#add (nxt,fnxt,Label.map_find label_map (Label.deref l))
+            Tcond.ValZero(l,f) ->
+	      ignore (func_table#add f);
+              ACT_COND_VALZERO,cond_table#add (nxt,fnxt,f,Label.map_find label_map (Label.deref l))
+          | Tcond.ValNonz(l,f) ->
+	      ignore (func_table#add f);
+              ACT_COND_VALNONZ,cond_table#add (nxt,fnxt,f,Label.map_find label_map (Label.deref l))
           | Tcond.CntZero(l) ->
-              ACT_COND_CNTZERO,cond_table#add (nxt,fnxt,Label.map_find label_map l)
+              ACT_COND_CNTZERO,cond_table#add (nxt,fnxt,None,Label.map_find label_map l)
           | Tcond.CntNonz(l) ->
-              ACT_COND_CNTNONZ,cond_table#add (nxt,fnxt,Label.map_find label_map l)
+              ACT_COND_CNTNONZ,cond_table#add (nxt,fnxt,None,Label.map_find label_map l)
     ) tcset next in
       next'
   and create_final st =
@@ -208,6 +218,13 @@ let create init_st init_ls st_map =
  * 
  *)
 let emit () =
+  (* 関数プロトタイプ宣言 *)
+  for i = 0 to func_table#num do
+    let f = func_table#find i in
+      match f with
+	  None -> ()
+	| Some s -> Printf.printf "extern int %s(int l);\n" (Symbol.name s)
+  done;
   (* 状態テーブル *)
   Printf.printf "state_t __prc__state_table[] = {\n";
   for i = 0 to !state_num do
@@ -251,17 +268,17 @@ let emit () =
   (* 条件処理テーブル *)
   Printf.printf "cond_t __prc__cond_table[] = {\n";
   for i = 0 to cond_table#num do
-    let (tact,tidx),(fact,fidx),lid = cond_table#find i in
-      Printf.printf "/* [%03d] */ { %s,%4d, %s,%4d,%2d },\n"
-        i (act_string tact) tidx (act_string fact) fidx lid
+    let (tact,tidx),(fact,fidx),f,lid = cond_table#find i in
+      Printf.printf "/* [%03d] */ { %s,%4d, %s,%4d, %2d, %s },\n"
+        i (act_string tact) tidx (act_string fact) fidx lid (get_func_name f)
   done;
   Printf.printf "};\n";
   (* カウンタ処理テーブル *)
   Printf.printf "cact_t __prc__cact_table[] = {\n";
   for i = 0 to cact_table#num do
-    let (act,nidx),lid,lid2 = cact_table#find i in
-      Printf.printf "/* [%03d] */ { %s,%4d,%2d,%2d },\n"
-        i (act_string act) nidx lid lid2
+    let (act,nidx),f,lid,lid2 = cact_table#find i in
+      Printf.printf "/* [%03d] */ { %s,%4d,%2d,%2d,%s },\n"
+        i (act_string act) nidx lid lid2 (get_func_name f)
   done;
   Printf.printf "};\n";
   (* ラベルレジスタ *)

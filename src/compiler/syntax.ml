@@ -41,7 +41,7 @@ and rgx =
   | RgxPclos  of info * rgx
   | RgxOpt    of info * rgx
   | RgxArray  of info * rgx * int
-  | RgxIter   of info * rgx * Symbol.t
+  | RgxIter   of info * rgx * Symbol.t * Symbol.t option
   | RgxRecord of (info * Symbol.t * rgx) list
 
 (** パターン式 *)

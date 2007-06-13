@@ -156,7 +156,7 @@ and check_regex env = function
       if n > 0
       then T.RARR(check_regex env r,n)
       else errorAt i (ERR_ILLEGAL_ARRLEN n)
-  | A.RgxIter(_,r,s)  -> T.RITR(check_regex env r,s)
+  | A.RgxIter(_,r,s,f)  -> T.RITR(check_regex env r,s,f)
   | A.RgxRecord rs    -> T.RRCD(List.map (fun (_,s,r) -> s,check_regex env r) rs)
 
 (*

@@ -119,7 +119,7 @@ let rec nullable = function
   | R.ALT (r1,r2) -> C.disj (nullable r1, nullable r2)
   | R.CLOS _      -> C.Const true
   | R.LBL (r,_)   -> nullable r
-  | R.REP (r,l)   -> C.disj (C.Prop(Prop.Atom(C.Value l)), nullable r)
+  | R.REP (r,l,f) -> C.disj (C.Prop(Prop.Atom(C.Value(l,f))), nullable r)
 
 let rec firstpos = function
     R.EPS         -> []
@@ -128,7 +128,7 @@ let rec firstpos = function
   | R.ALT (r1,r2) -> union (firstpos r1) (firstpos r2)
   | R.CLOS r      -> firstpos r
   | R.LBL (r,lbl) -> lprod lbl (firstpos r)
-  | R.REP (r,l)   -> cprod (C.neg(C.Prop(Prop.Atom(C.Value l)))) (firstpos r)
+  | R.REP (r,l,f) -> cprod (C.neg(C.Prop(Prop.Atom(C.Value(l,f))))) (firstpos r)
 
 let rec labels = function
     R.EPS | R.CHARS _ | R.ALT _ | R.CLOS _ | R.REP _ -> Ls.empty
@@ -150,7 +150,7 @@ let followpos (re:Pos.t Regex.t) =
     | R.ALT (r1,r2) -> fill s r1; fill s r2
     | R.CLOS r      -> fill (union (firstpos r) s) r
     | R.LBL (r,_)   -> fill s r
-    | R.REP (r,l)   -> fill (union
+    | R.REP (r,l,_) -> fill (union
                                (* 繰返し条件 *)
                                (cprod (C.neg(C.Prop(Prop.Atom(C.Counter l))))
                                   (firstpos r))
@@ -183,3 +183,17 @@ let transable tr1 tr2 =
 let cp2ps cp = List.fold_left (fun ps (_,_,p) -> Ps.add p ps) Ps.empty cp
 let cp2ls cp = List.fold_left (fun ls (_,ls',_) -> Ls.union ls ls') Ls.empty cp
 let ps2cset ps = Ps.fold (fun p cs -> Cset.union (Pos.pos2cs p) cs) ps Cset.empty
+
+(* テスト用データ *)
+(*------------------------------------------------------------*)
+(*
+open Regex
+
+(* {l:octet;m:octet[l]}* *)
+let l1   = Label.create 1
+let l2  = Label.create 2
+let r1 = SEQ(CLOS(SEQ(LBL(CHARS(Cset.all),l1),
+                     LBL(CLOS(CHARS(Cset.all)),l2))),CHARS(Cset.fin))
+let r2 = SEQ(SEQ(LBL(CHARS(Cset.all),l1),
+                LBL(CLOS(CHARS(Cset.all)),l2)),CHARS(Cset.fin))
+*)

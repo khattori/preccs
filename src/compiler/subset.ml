@@ -90,12 +90,12 @@ let l2  = Label.create 2
 let l2' = Label.create 2
 
 let r1 = CLOS(SEQ(LBL(CHARS(Cset.all),l1),
-                  REP(CHARS(Cset.all),l1)))
+                  REP(CHARS(Cset.all),l1,None)))
 (* {l:octet[2];m:octet[l]}|{l:octet;m:octet[l]}* *)
 let r1' = ALT(SEQ(LBL(SEQ(CHARS(Cset.all),CHARS(Cset.all)),l2),
-                  REP(CHARS(Cset.all),l2)),
+                  REP(CHARS(Cset.all),l2,None)),
               CLOS(SEQ(LBL(CHARS(Cset.all),l1'),
-                       REP(CHARS(Cset.all),l1'))))
+                       REP(CHARS(Cset.all),l1',None))))
 let () =
   assert (not (subset r1' r1));
   assert (subset r1 r1')
@@ -116,11 +116,11 @@ let () =
 
 (* {l:(b|c);octet[l]} *)
 let r3 = SEQ(LBL(ALT(CHARS(Cset.singleton 'b'),CHARS(Cset.singleton 'c')),l1),
-             REP(CHARS(Cset.all),l1))
+             REP(CHARS(Cset.all),l1,None))
 (* a*{l:(b|c);octet[l]} *)
 let r3' = SEQ(CLOS(CHARS(Cset.singleton 'a')),
               SEQ(LBL(ALT(CHARS(Cset.singleton 'b'),CHARS(Cset.singleton 'c')),l1'),
-                  REP(CHARS(Cset.all),l1')))
+                  REP(CHARS(Cset.all),l1',None)))
 let () =
   assert (subset r3 r3');
   assert (not (subset r3' r3))
@@ -135,11 +135,11 @@ let () =
   p6  {octet}
 *)
 let p1 = SEQ(LBL(CHARS(Cset.all),l1),
-             REP(CHARS(Cset.all),l1))
+             REP(CHARS(Cset.all),l1,None))
 let p2 = SEQ(LBL(CHARS(Cset.all),l1'),
-             CLOS(REP(CHARS(Cset.all),l1')))
+             CLOS(REP(CHARS(Cset.all),l1',None)))
 let p3 = SEQ(LBL(CHARS(Cset.all),l1''),
-             REP(CLOS(CHARS(Cset.all)),l1''))
+             REP(CLOS(CHARS(Cset.all)),l1'',None))
 let p4 = SEQ(CHARS(Cset.all),
              CLOS(CHARS(Cset.all)))
 let p5 = CLOS(CHARS(Cset.all))

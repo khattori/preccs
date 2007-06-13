@@ -1,3 +1,17 @@
+2007-06-13  Kenta Hattori  <hattori@localhost.localdomain>
+
+	* 可変長データのpadding対応
+
+2007-06-12  Kenta Hattori  <hattori@localhost.localdomain>
+
+	* テストケースを追加
+
+	* 可変長データフィールドが連続するときのバグを修正
+
+	* TLV形式で長さ０の場合に，ラベルポインタが記録されない問題に対応
+
+	* ネストした正規表現レコードの最後のフィールドが不正になるバグを修正
+
 2007-06-07  Kenta Hattori  <hattori@localhost.localdomain>
 
 	* 接続なしのUDPソケットに対応

@@ -15,7 +15,7 @@ type t =
 (* 値参照種別 *)
 and var =
     Counter of Label.t (* カウンタ値を参照 *)
-  | Value   of Label.t (* ラベル値を参照   *)
+  | Value   of Label.t * Symbol.t option (* ラベル値を参照   *)
 
 let conj = function
     c1,Const(b2)      -> if b2 then c1 else Const false
@@ -57,13 +57,13 @@ let alpha lm = function
   | Prop p  -> Prop(P.map (
                       function 
                           Counter l when Lm.mem (Label.deref l) lm -> Counter (Lm.find (Label.deref l) lm)
-                        | Value   l when Lm.mem (Label.deref l) lm -> Value   (Lm.find (Label.deref l) lm)
+                        | Value(l,f) when Lm.mem (Label.deref l) lm -> Value((Lm.find (Label.deref l) lm),f)
                         | v -> v
                     ) p)
 
 let print_var = function
-    Counter l -> Printf.printf "C(%d" l; print_string ")"
-  | Value l   -> Printf.printf "V(%d" l; print_string ")"
+    Counter l  -> Printf.printf "C(%d" l; print_string ")"
+  | Value(l,_) -> Printf.printf "V(%d" l; print_string ")"
 
 let show = function
     Const true -> print_string "T"

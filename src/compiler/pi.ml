@@ -94,7 +94,7 @@ let rec defstr_of_regex = function
   | T.RARR(r,0) -> ""
   | T.RARR(r,1) -> defstr_of_regex r
   | T.RARR(r,n) -> (defstr_of_regex r)^(defstr_of_regex (T.RARR(r,n-1)))
-  | T.RITR(r,_) -> ""
+  | T.RITR _    -> ""
   | T.RRCD fs -> List.fold_left (fun s (_,r) -> s ^ defstr_of_regex r) "" fs
 
 let con_regex =
@@ -109,7 +109,7 @@ let con_regex =
       | T.RARR(r,0) -> String ""
       | T.RARR(r,1) -> String (defstr_of_regex r)
       | T.RARR(r,n) -> String ((defstr_of_regex r)^(defstr_of_regex (T.RARR(r,n-1))))
-      | T.RITR(r,_) -> String ""
+      | T.RITR _    -> String ""
       | T.RRCD fs ->
           let s = List.fold_left (fun s (_,r) -> s ^ defstr_of_regex r) "" fs in
             Rexrcd(s, List.map (fun (_,r) -> trav r) fs)

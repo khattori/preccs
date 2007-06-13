@@ -274,7 +274,9 @@ rgxPostfixExpression
   | rgxPostfixExpression PLUS  { RgxPclos($2,$1) }
   | rgxPostfixExpression QUEST { RgxOpt($2,$1)   }
   | rgxPostfixExpression LSQUARE INTV RSQUARE  { RgxArray($2,$1,$3.v) }
-  | rgxPostfixExpression LSQUARE IDENT RSQUARE { RgxIter($2,$1,$3.v)  }
+  | rgxPostfixExpression LSQUARE IDENT RSQUARE { RgxIter($2,$1,$3.v,None)  }
+  | rgxPostfixExpression LSQUARE IDENT LPAREN IDENT RPAREN RSQUARE
+				{ RgxIter($2,$1,$5.v,Some $3.v)  }
 ;
 rgxAtomicExpression
   : IDENT                       { RgxName($1.i,$1.v)   }

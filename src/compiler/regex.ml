@@ -16,7 +16,7 @@ type 'a t =
   | ALT   of 'a t * 'a t
   | CLOS  of 'a t
   | LBL   of 'a t * Label.t
-  | REP   of 'a t * Label.t (* 参照先インデックス *)
+  | REP   of 'a t * Label.t * Symbol.t option (* 参照先インデックス *)
 
 (** 正規表現のサイズを取得 *)
 let size re =
@@ -93,7 +93,7 @@ let rec posify = function
   | ALT(r1,r2) -> ALT(posify r1,posify r2)
   | CLOS(r)    -> CLOS(posify r)
   | LBL(r,l)   -> LBL(posify r,l)
-  | REP(r,l)   -> REP(posify r,l)
+  | REP(r,l,f) -> REP(posify r,l,f)
 
 (** 正規表現から文字列を取得 *)
 let rec to_string = function
@@ -118,7 +118,12 @@ let rec show = function
       print_string "LBL(";
       show r; print_string ","; Label.show l;
       print_string ")"
-  | REP(r,l) ->
+  | REP(r,l,None) ->
       print_string "REP(";
       show r; print_string ","; Label.show l;
+      print_string ")"
+  | REP(r,l,Some f) ->
+      print_string "REP(";
+      show r; print_string ","; Label.show l;
+      print_string ","; print_string (Symbol.name f);
       print_string ")"
