@@ -1,4 +1,6 @@
-2007-06-13  Kenta Hattori  <hattori@localhost.localdomain>
+2007-06-13  Kenta HATTORI  <hattori@nielsen.lb.isp.co.jp>
+
+	* Version 0.2.4 released.
 
 	* 可変長データのpadding対応
 

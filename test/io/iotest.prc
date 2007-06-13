@@ -127,7 +127,7 @@ proc Server(sp:SockPair,id:string,ret:<unit>) =
 
 proc ClientProc() = stdout!"start ClientProc()\n";
     var sin:<string>; var sout:<string>; var sp={in=sin;out=sout};
-    C{ prc_SockTcpClient($sp.in$,$sp.out$,"localhost",10001); C};
+    C{ prc_SockTcpClient($sp.in$,$sp.out$,"127.0.0.1",10001); C};
     sp.out!"0123456789ABCDEF"; stdout!"Client:1st message\n";
     sp.in?msg; stdout!"Client:2nd message\n";
     ( msg @ "0123456789ABCDEF0123456789ABCDEF" -> stdout!"Client:3rd message\n"
@@ -144,7 +144,7 @@ proc ClientProc() = stdout!"start ClientProc()\n";
 
 proc Client(id:string,ret:<unit>) =
     var sin:<string>; var sout:<string>; var sp={in=sin;out=sout};
-    C{ prc_SockTcpClient($sp.in$,$sp.out$,"localhost",10001); C};
+    C{ prc_SockTcpClient($sp.in$,$sp.out$,"127.0.0.1",10001); C};
     sp.in?msg; ( msg @ id -> skip | _ -> stdout!"Client:unexpected\n" );
     sp.out!id;
     sp.out!id; 
@@ -159,15 +159,15 @@ type UdpSock = { in:<mesgaddr>; out:<mesgaddr> }
 
 proc UdpProc() = stdout!"start UdpProc()\n";
     var sin:<string>; var sout:<string>; var sp1={in=sin;out=sout};
-    C{ prc_SockUdpOpen($sin$, $sout$, "localhost", 10001, 10002); C};
+    C{ prc_SockUdpOpen($sin$, $sout$, "127.0.0.1", 10001, 10002); C};
     var sin:<string>; var sout:<string>; var sp2={in=sin;out=sout};
-    C{ prc_SockUdpOpen($sin$, $sout$, "localhost", 10002, 10001); C};
+    C{ prc_SockUdpOpen($sin$, $sout$, "127.0.0.1", 10002, 10001); C};
     var ret1:<unit>; var ret2:<unit>;
     UdpPeer1(sp1,ret1); UdpPeer2(sp2,ret2);
     ret1?x; stdout!"1st message\n";
     ret2?x; stdout!"2nd message\n";
     var sin:<string>; var sout:<string>; var sp1={in=sin;out=sout};
-    C{ prc_SockUdpClient($sin$, $sout$, "localhost", 10000); C};
+    C{ prc_SockUdpClient($sin$, $sout$, "127.0.0.1", 10000); C};
     var sin:<mesgaddr>; var sout:<mesgaddr>; var sp2={in=sin;out=sout};
     C{ prc_SockUdpServer($sin$, $sout$, 10000); C};
     UdpClient(sp1,ret1); UdpServer(sp2,ret2);
