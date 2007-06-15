@@ -301,14 +301,18 @@ rgxField
  */
 patExpression
   : USCORE { PatAny($1)                  }
+  | expression { PatExp($1) }
+  | IDENT COLON rgxExpression { PatRegex($1.i,$1.v,$3,ref (T.REXP R.EPS)) }
+;
+/*
   | INTV   { PatConst(ConInt($1.i,$1.v)) }
   | DASH INTV { PatConst(ConInt($1,-$2.v)) }
   | STRV   { PatConst(ConStr($1.i,$1.v)) }
   | TRUE   { PatConst(ConBool($1,true))  }
   | FALSE  { PatConst(ConBool($1,false)) }
-  | IDENT COLON rgxExpression { PatRegex($1.i,$1.v,$3,ref (T.REXP R.EPS)) }
-  | IDENT  { PatVar(VarSimple($1.i,$1.v)) }
+  | varExpression  { PatVar($1) }
 ;
+*/
 
 /*****************************************************************
  * プロセス式に関する構文規則

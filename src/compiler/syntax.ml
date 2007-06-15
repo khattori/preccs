@@ -47,8 +47,7 @@ and rgx =
 (** パターン式 *)
 and pat =
     PatAny   of info
-  | PatConst of const
-  | PatVar   of var
+  | PatExp   of exp
   | PatRegex of info * Symbol.t * rgx * Types.rgx ref
 
 (** プロセス式 *)
@@ -100,6 +99,13 @@ and monop = MopNeg | MopNot
 
 let info_of_const = function ConUnit(i) | ConBool(i,_) | ConInt(i,_) | ConStr(i,_) -> i
 let info_of_var = function VarSimple(i,_) | VarField(i,_,_,_,_) | VarSubscr(i,_,_) | VarProj(i,_,_) -> i
+let rec info_of_expr = function
+    ExpConst(c) -> info_of_const c
+  | ExpVar(v)   -> info_of_var v
+  | ExpBinop(i,_,_,_) | ExpMonop(i,_,_) -> i
+  | ExpRecord(ls) ->let i,_,_ = List.hd ls in i
+  | ExpTuple(ls) -> info_of_expr(List.hd ls)
+    
 
 type toplevel = def list
 

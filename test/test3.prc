@@ -1,3 +1,6 @@
+/*
+ * パターンマッチのテスト
+ */
 proc Test3(end:<bool>,ok:<int>,ng:<int>) =
     ( 1+2*3==7 @ true -> ok!1 | false -> ng!1 );
     ( 9/4-1==1 @ true -> ok!1 | false -> ng!1 );
@@ -12,4 +15,7 @@ proc Test3(end:<bool>,ok:<int>,ng:<int>) =
     ( x @ z -> ng!1 | y -> ng!1 | x -> ok!1 );
     var x = 1; var y = 2; var z = 3;
     ( x @ 4 -> ng!1 | z -> ng!1 | y -> ng!1 | x -> ok!1 );
+    var x = {f1="foo";f2="bar";f3="baz"}; var y = "bar";
+    ( y @ x.f1 -> ng!1 | x.f2 -> ok!1 | x.f3 -> ng!1 );
+
     end!true

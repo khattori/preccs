@@ -11,12 +11,35 @@ type Mesg = {{
     tlvs   : TLVP*
 }}
 
+type TLV=TLVP{tag={"00"h[2]}}
+
 type lvv = {{ l:octet; v1:octet[l]; v2:octet[l] }}
 
 type foo = {{ ll:octet[1]; mm:octet[2]; nn:octet[3] }}
 type bar = {{ l :octet[3]; m :octet[2]; n :foo }}
 
+type Foo = {{
+    f1:{b1:"ab";b2:{c1:"cd";c2:"ef"}};
+    f2:"gh"
+}}
+
 proc Test5(end:<bool>,ok:<int>,ng:<int>) =
+    var f:Foo;
+    ( f @ x:Foo -> ok!1;
+                   ( x.f1 @ "abcdef" -> ok!1 | _ -> ng!1 );
+                   ( x.f2 @ "gh" -> ok!1 | _ -> ng!1 );
+                   ( x.f1.b1 @ "ab" -> ok!1 | _ -> ng!1 );
+                   ( x.f1.b2 @ "cdef" -> ok!1 | _ -> ng!1 );
+                   ( x.f1.b2.c1 @ "cd" -> ok!1 | _ -> ng!1 );
+                   ( x.f1.b2.c2 @ "ef" -> ok!1 | _ -> ng!1 )
+        | _ -> ng!1 );
+
+    var tlv:TLV;
+    ( tlv @ x:TLVP -> ok!1 
+          | _      -> ng!1 );
+    ( tlv @ x:TLV  -> ok!1 
+          | _      -> ng!1 );
+
     var x1 = "00"h;
     ( x1 @ x:lvv -> ok!1;
                     ( x.l @ "00"h -> ok!1

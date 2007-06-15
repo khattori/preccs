@@ -182,6 +182,7 @@ and rsubtype r1 r2 =
           true rs1 rs2
     | REXP(re1),REXP(re2) -> Subset.subset re1 re2
     | _,REXP(re)          -> Subset.subset (regexify r1) re
+    | _,RARR(r2',m)       -> Subset.subset (regexify r1) (regexify r2)
     | _                   -> false
 
 (** 型等価判定 *)

@@ -1,4 +1,4 @@
-/* HTTPリクエストの処理 */
+/* HTTP繝ｪ繧ｯ繧ｨ繧ｹ繝医�ｮ蜃ｦ逅� */
 type DG    = { /"0-9" }
 type ALPHA = { /"a-zA-Z" }
 type CRLF  = { "\r\n" } 

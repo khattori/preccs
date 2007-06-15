@@ -1,5 +1,38 @@
+- 再帰型サポート(正規表現は除く)
+	(ex.)
+	type RecCh = { data:<string>; ch:<RecCh> }
+	リストの中間ノードを削除することができるようになる
+	nxtCh.ch!prevCh
+
+- プロセスの戻り値定義
+	proc Proc(x1:T1,..):RetType =
+            ...
+	    return!retVal	// retValを返す
+	// プロセス生成はチャネルを返す
+        Proc(someArgs)?x;
+	// 式の中でプロセスを呼び出すと，プロセスの値を待つ．
+	var x = Proc(n) + 3;
+- 上記と合せて，チャネルの式中での使用
+
+- 参照型
+
+- 無名パターン
+	ch?_ -> //...
+
+- パターンマッチ
+	ch?{data=msg;num=n}
+
 - モジュール機構の導入
 	分割コンパイルなどが出来るように．
+	(ex.)
+	module Foo = struct
+	    type X = {{ ... }}
+	    var x = ..
+	    proc Proc() = ...
+	end
+	moduleへのアクセス
+	M.N.x
+	import Foo // Fooモジュールを取り込む
 
 - 例外処理の導入
 

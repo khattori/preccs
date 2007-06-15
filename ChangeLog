@@ -1,3 +1,12 @@
+2007-06-15  Kenta Hattori  <hattori@localhost.localdomain>
+
+	* 派生型の判定でoctet[4]などのフィールドを"abcd"というように置換で
+	きない問題に対応
+
+	* パターンマッチの節中に式を書けるようにした
+
+	* 正規表現レコードのパタンマッチでアサーション失敗する問題に対応
+
 2007-06-13  Kenta HATTORI  <hattori@nielsen.lb.isp.co.jp>
 
 	* Version 0.2.4 released.

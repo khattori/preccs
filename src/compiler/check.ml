@@ -282,24 +282,13 @@ and check_var env =
 *)
 and check_match env ty = function
     A.PatAny _   -> env
-  | A.PatConst c -> 
-      if T.subtype ty (type_of_const c) then env
-      else errorAt (A.info_of_const c) ERR_ILLEGAL_PATTERN
-  | A.PatVar x ->
-      if T.subtype ty (check_var env x) then env
-      else errorAt (A.info_of_var x) ERR_ILLEGAL_PATTERN
+  | A.PatExp e -> 
+      if T.subtype ty (check_expr env e) then env
+      else errorAt (A.info_of_expr e) ERR_ILLEGAL_PATTERN
   | A.PatRegex(i,s,r,t) ->
       let rt = check_regex env r in
         t := rt;
         E.add s (E.VarEntry(T.REGEX rt)) env
-
-(* 
-      let rt = check_regex env r in
-        if T.subtype (T.REGEX rt) ty then (
-          t := rt;
-          E.add s (E.VarEntry(T.REGEX rt)) env)
-        else errorAt i ERR_ILLEGAL_PATTERN
-*)
 
 (*
  * 型チェックを行う関数
