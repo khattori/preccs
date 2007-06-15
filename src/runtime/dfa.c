@@ -237,7 +237,7 @@ static int con_field(char *con) {
     case 'S':
         lid = ((u_char)*p++);
         /* フィールドの末尾まで到達した場合 */
-        if (cstack[top] == lstack[top]) {
+        while (cstack[top] == lstack[top]) {
             /* エンドポイントの設定 */
 	    assert(__prc__lbl_ptr[lid] != NULL);
             ((int*)stack[top])[cstack[top]*3] = TOPINT((int)__prc__lbl_ptr[lid]-(int)origin);
