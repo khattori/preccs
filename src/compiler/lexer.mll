@@ -77,9 +77,9 @@ and depth    = ref 0   (* コメントの入れ子深さ *)
 and start    = ref 0   (* 行開始位置 *)
 
 and filename = ref ""
-and startLex = ref dummyinfo
+and startLex = ref unknownInfo
 
-let dummytoken lexbuf = Parser.EOF dummyinfo
+let dummytoken lexbuf = Parser.EOF unknownInfo
 let lexentry = ref dummytoken
 let main lexbuf = !lexentry lexbuf
 

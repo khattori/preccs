@@ -11,9 +11,6 @@ let inputFiles = ref []      (* 入力ファイル名のリスト *)
 let outputFile = ref None    (* 出力ファイル名の指定   *)
 let debugMode  = ref false   (* デバッグ出力フラグ     *)
 
-let error s =
-  print_string (Sys.executable_name ^ ": " ^ s); raise (Exit 1)
-
 (* 使用法 *)
 let usageMsg = "Usage: prcc <options> <source-files>\n" ^
   "Options:"
@@ -57,7 +54,7 @@ let parseArgs () =
     (fun s -> inputFiles := s::!inputFiles)
     usageMsg;
   match !inputFiles with
-      [] -> error "no input files"
+      [] -> error ERR_NO_INPUT
     | _  -> inputFiles := List.rev !inputFiles
 
 (** 入力ファイルの解析 *)
@@ -71,7 +68,11 @@ let parseFiles () =
       while not (Stack.is_empty files)
       do
         let file = Stack.pop files in
-        let inp = open_in file in
+        let inp = try
+	    open_in file
+	  with
+	      Sys_error s -> error (ERR_FILE_NOTFOUND file)
+	in
         let lexbuf = Lexer.create file inp in
           try
             let (fs,hd,sy,ft) = Parser.toplevel Lexer.main lexbuf in
