@@ -94,7 +94,7 @@ module R = Regex
 toplevel
   : cblockPart importList definitionList cblockPart EOF { 
     let vars,types,procs = $3 in
-      $2,$1,vars@[DefType types]@[DefProc procs],$4
+      $2,$1,[DefType types]@vars@[DefProc procs],$4
   }
 ;
 definitionList
