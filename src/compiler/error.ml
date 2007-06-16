@@ -21,6 +21,7 @@ type err =
   | ERR_ILLEGAL_VAR     of Symbol.t
   | ERR_ILLEGAL_INDEX   of int
   | ERR_ILLEGAL_CHAR    of string
+  | ERR_ILLEGAL_HEXCHAR of string
   | ERR_ILLEGAL_OCTCHAR of int
   | ERR_ILLEGAL_ESCAPE  of string
   | ERR_ILLEGAL_LABEL
@@ -51,6 +52,7 @@ let errmsg = function
   | ERR_ILLEGAL_VAR(s)     -> "illegal variable \"" ^ Symbol.name(s) ^ "\""
   | ERR_ILLEGAL_INDEX(n)   -> "illegal index " ^ (string_of_int n)
   | ERR_ILLEGAL_CHAR(c)    -> "illegal character '" ^ c ^ "'"
+  | ERR_ILLEGAL_HEXCHAR(c) -> "illegal hex character '" ^ c ^ "'"
   | ERR_ILLEGAL_OCTCHAR(n) -> "illegal octal character '" ^ (string_of_int n) ^ "'"
   | ERR_ILLEGAL_ESCAPE(c)  -> "illegal escape character '" ^ c ^ "'"
   | ERR_ILLEGAL_LABEL      -> "illegal label reference"

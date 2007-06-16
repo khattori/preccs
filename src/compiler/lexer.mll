@@ -198,7 +198,12 @@ and comment = parse
 and string = parse
     '"'	{ Parser.STRV { i = !startLex; v = getStr() }                 }
   | '"'('H'|'h')
-		{ Parser.STRV { i = !startLex; v = string_of_hex (getStr()) } }
+		{ try
+			Parser.STRV { i = !startLex; v = string_of_hex (getStr()) }
+		  with
+			Scanf.Scan_failure s ->
+				errorAt (!startLex) (ERR_ILLEGAL_HEXCHAR s)
+		}
   | '\\'	{ addStr (escaped lexbuf); string lexbuf                      }
   | '\n'	{ addStr '\n'; newline lexbuf; string lexbuf                  }
   | eof	{ errorAt (!startLex) ERR_NONTERM_STRING                      }
