@@ -110,10 +110,19 @@ let printInfo =
 	print_string "<Unknown file and line>: "
     | NOFILE -> ()
 
-let perror s = print_string (Sys.executable_name ^ ": [error] "^s); print_newline()
-let errorAt fi e = printInfo fi; perror(errmsg e); raise (Exit 1)
-let error e = perror(errmsg e); raise (Exit 1)
+let exename =
+  let path = Sys.executable_name in
+    try
+      let idx = String.rindex path '/' in
+      let len = String.length path in
+	String.sub path (idx+1) (len-idx-1)
+    with
+	Not_found -> path
 
-let pwarning s = print_string (Sys.executable_name ^ ": [warning] "^ s); print_newline()
+let perror s = print_string ("[error] "^s); print_newline()
+let errorAt fi e = printInfo fi; perror(errmsg e); raise (Exit 1)
+let error e = print_string (exename^":"); perror(errmsg e); raise (Exit 1)
+
+let pwarning s = print_string ("[warning] "^s); print_newline()
 let warningAt fi w = printInfo fi; pwarning(warmsg w)
-let warning e = pwarning(warmsg e)
+let warning e = print_string (exename^":"); pwarning(warmsg e)

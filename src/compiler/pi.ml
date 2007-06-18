@@ -115,10 +115,9 @@ let con_regex =
             Rexrcd(s, List.map (fun (_,r) -> trav r) fs)
 
 let is_regex_pattern patns =
-  List.exists (
-    function 
-        A.PatAny _ | A.PatExp _ -> false
-      | A.PatRegex _ -> true
+  List.for_all (function
+      A.PatExp(A.ExpConst(A.ConStr _)) | A.PatRegex _ | A.PatAny _ -> true
+    | _ -> false
   ) patns
 
 (*
@@ -248,8 +247,8 @@ and trans_patns ty v patns =
     List.map (
       function 
           A.PatAny _                -> None,T.REXP(R.CLOS(R.oct))
-(*        | A.PatConst(A.ConStr(_,s)) -> None,T.REXP(R.of_string s) *)
         | A.PatRegex(_,s,_,t)       -> Some s,!t
+        | A.PatExp(A.ExpConst(A.ConStr(_,s))) -> None,T.REXP(R.of_string s)
         | _ -> assert false
     ) patns ) in
     match ty with
