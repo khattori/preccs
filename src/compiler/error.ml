@@ -16,6 +16,7 @@ type err =
   | ERR_UNDEF_LABEL     of Symbol.t
   | ERR_UNDEF_PROC      of Symbol.t
   | ERR_UNDEF_TYPE      of Symbol.t
+  | ERR_REDEF_PROC	of Symbol.t
   | ERR_NOT_CHANNEL
   | ERR_NOT_EXHAUSTIVE
   | ERR_ILLEGAL_VAR     of Symbol.t
@@ -52,6 +53,7 @@ let errmsg = function
   | ERR_UNDEF_LABEL(s)     -> "undefined label " ^ (doublequote (Symbol.name s))
   | ERR_UNDEF_PROC(s)      -> "undefined process " ^ (doublequote (Symbol.name s))
   | ERR_UNDEF_TYPE(s)      -> "undefined type " ^ (doublequote (Symbol.name s))
+  | ERR_REDEF_PROC(s)	   -> "redefined process " ^ (doublequote (Symbol.name s))
   | ERR_NOT_CHANNEL        -> "channel is expected here"
   | ERR_NOT_EXHAUSTIVE     -> "pattern is not exahaustive"
   | ERR_ILLEGAL_VAR(s)     -> "illegal variable " ^ (doublequote (Symbol.name s))

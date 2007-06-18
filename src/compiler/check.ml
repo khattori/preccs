@@ -312,8 +312,12 @@ let check defs =
         | A.DefProc procs ->
             (* プロセス定義ヘッダ部のチェック *)
             let e = List.fold_left (
-              fun e (_,s,ds,_) ->
-                E.add s (E.ProcEntry(List.map (fun (_,t) -> check_type e t) ds)) e
+              fun e (i,s,ds,_) -> try
+		  let _ = E.find s e in
+		    errorAt i (ERR_REDEF_PROC s)
+		with
+		    Not_found ->
+		      E.add s (E.ProcEntry(List.map (fun (_,t) -> check_type e t) ds)) e
             ) e procs in
               List.iter (
                 fun (i,s,ds,p) ->
