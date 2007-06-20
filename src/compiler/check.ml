@@ -17,6 +17,13 @@ module R = Regex
 let assert_type i t1 t2 =
   if T.subtype t1 t2 then () else errorAt i (ERR_TYPE_MISMATCH (t1,t2))
 
+(* labelが二重定義されていないことを確認する *)
+let assert_label ls =
+  ignore (List.fold_left (fun ss (i,s,_) ->
+    if List.mem s ss then errorAt i (ERR_REDEF_LABEL s) else s::ss
+  ) [] ls)
+    
+
 (* フィールドを取得する *)
 let get_field info t s =
   try
@@ -117,7 +124,11 @@ let rec check_type env =
       | A.TypChan(_,t)  -> T.CHAN(check_type env t)
       | A.TypRegex(_,r) -> T.REGEX(check_regex env r)
       | A.TypRecord fs  ->
+	  assert_label fs;
           T.RECORD(List.map (fun (_,s,t) -> s,check_type env t) fs)
+      | A.TypVariant vs ->
+	  assert_label vs;
+          T.VARIANT(List.map (fun (_,s,t) -> s,check_type env t) vs)
       | A.TypTuple ts  ->
           T.TUPLE(List.map (fun t -> check_type env t) ts)
       | A.TypArray(i,t,n) ->
@@ -157,7 +168,9 @@ and check_regex env = function
       then T.RARR(check_regex env r,n)
       else errorAt i (ERR_ILLEGAL_ARRLEN n)
   | A.RgxIter(_,r,s,f)  -> T.RITR(check_regex env r,s,f)
-  | A.RgxRecord rs    -> T.RRCD(List.map (fun (_,s,r) -> s,check_regex env r) rs)
+  | A.RgxRecord rs    ->
+      assert_label rs;
+      T.RRCD(List.map (fun (_,s,r) -> s,check_regex env r) rs)
 
 (*
  * プロセス式のチェックを行う
