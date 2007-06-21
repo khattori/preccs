@@ -14,12 +14,13 @@ exception Ill_deriv
 
 (** 型情報の定義 *)
 type t =
-    UNIT | BOOL | INT | STRING       (* 基本型     *)
-  | CHAN   of t                      (* チャネル型 *)
-  | ARRAY  of t * int                (* 配列型     *)
-  | RECORD of (Symbol.t * t) list    (* レコード型 *)
-  | TUPLE  of t list                 (* 組型       *)
-  | REGEX  of rgx                    (* 正規表現型 *)
+    UNIT | BOOL | INT | STRING        (* 基本型       *)
+  | CHAN    of t                      (* チャネル型   *)
+  | ARRAY   of t * int                (* 配列型       *)
+  | RECORD  of (Symbol.t * t) list    (* レコード型   *)
+  | VARIANT of (Symbol.t * t) list    (* バリアント型 *)
+  | TUPLE   of t list                 (* 組型         *)
+  | REGEX   of rgx                    (* 正規表現型   *)
 and rgx = 
     REXP of Cset.t Regex.t
   | RARR of rgx * int                (* R配列       *)
@@ -161,6 +162,7 @@ let rec subtype ty1 ty2 =
   match ty1,ty2 with
       UNIT,UNIT | BOOL,BOOL | INT,INT | STRING,STRING -> true
     | ARRAY(t1,n),ARRAY(t2,m) when n==m -> subtype t1 t2
+    | TUPLE(ts1),TUPLE(ts2) -> List.for_all2 (fun t1 t2 -> subtype t1 t2) ts2 ts2
     | RECORD(fs1),RECORD(fs2) when List.length fs1 = List.length fs2 -> 
         List.fold_left2
           (fun b (s1,t1) (s2,t2) -> b && (Symbol.equal s1 s2) && (subtype t1 t2))
@@ -195,7 +197,7 @@ let deriv ty path ty2 =
   let rec trav ap t =
     if ap==[] then ty2
     else match t with
-        UNIT | BOOL | INT | STRING | CHAN(_) | ARRAY(_,_) | TUPLE _ -> t
+        UNIT | BOOL | INT | STRING | CHAN(_) | ARRAY(_,_) | VARIANT _ | TUPLE _ -> t
       | RECORD(sts) -> RECORD(List.map (fun (s,t') ->
                                           if Symbol.equal (List.hd ap) s then
                                             s,trav (List.tl ap) t'
