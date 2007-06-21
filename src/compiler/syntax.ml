@@ -22,13 +22,14 @@ and param = Symbol.t * typ
 
 (** 型式 *)
 and typ =
-    TypName   of info * Symbol.t
-  | TypDeriv  of info * Symbol.t * (var * typ) list
-  | TypChan   of info * typ
-  | TypRegex  of info * rgx
-  | TypArray  of info * typ * int
-  | TypRecord of (info * Symbol.t * typ) list
-  | TypTuple  of typ list
+    TypName    of info * Symbol.t
+  | TypDeriv   of info * Symbol.t * (var * typ) list
+  | TypChan    of info * typ
+  | TypRegex   of info * rgx
+  | TypArray   of info * typ * int
+  | TypVariant of (info * Symbol.t * typ) list
+  | TypRecord  of (info * Symbol.t * typ) list
+  | TypTuple   of typ list
 
 (** 正規表現式 *)
 and rgx =
