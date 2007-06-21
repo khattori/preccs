@@ -1,3 +1,21 @@
+2007-06-20  Kenta Hattori  <hattori@localhost.localdomain>
+
+	* レコード中のラベルが二重定義されたときのエラーメッセージを追加
+
+2007-06-18  Kenta Hattori  <hattori@localhost.localdomain>
+
+	* プロセスが二重定義されたときのエラーメッセージを追加
+
+2007-06-16  Kenta Hattori  <hattori@localhost.localdomain>
+
+	* 入力ファイルが開けなかったときのエラーメッセージを追加
+
+	* エラーメッセージの表示形式を修正
+
+	* 16進文字列中に不正な文字が含まれていた場合のエラー処理を追加
+
+	* グローバル変数の定義時に型名がUndefinedとなるバグを修正
+
 2007-06-15  Kenta Hattori  <hattori@localhost.localdomain>
 
 	* 派生型の判定でoctet[4]などのフィールドを"abcd"というように置換で
