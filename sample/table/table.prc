@@ -65,27 +65,27 @@ proc Main() =
     TableProc();
     create_table?tbl1;
     var ret:<string>; 
-    tbl1.get!{key="k1";ret=ret};
-    ret?val;
-    stdout!"ret:"^val^"\n";
+    var retb:<bool>;
+
+    tbl1.get!{key="k1";ret=ret}; ret?val; stdout!"ret1:"^val^"\n";
+
     tbl1.add!{key="k1";val="hogehoge"};
     tbl1.add!{key="k2";val="foobar"};
     tbl1.add!{key="k3";val="hattori"};
-    tbl1.get!{key="k1";ret=ret};
-    ret?val;
-    stdout!"ret:"^val^"\n";
-    tbl1.get!{key="k2";ret=ret};
-    ret?val;
-    stdout!"ret:"^val^"\n";
-    tbl1.get!{key="k3";ret=ret};
-    ret?val;
-    stdout!"ret:"^val^"\n";
-    tbl1.get!{key="k1";ret=ret};
-    ret?val;
-    stdout!"ret:"^val^"\n";
-    tbl1.get!{key="k2";ret=ret};
-    ret?val;
-    stdout!"ret:"^val^"\n";
-    tbl1.get!{key="k3";ret=ret};
-    ret?val;
-    stdout!"ret:"^val^"\n"
+
+    tbl1.get!{key="k1";ret=ret}; ret?val; stdout!"ret1:"^val^"\n";
+    tbl1.get!{key="k2";ret=ret}; ret?val; stdout!"ret2:"^val^"\n";
+    tbl1.get!{key="k3";ret=ret}; ret?val; stdout!"ret3:"^val^"\n";
+
+    tbl1.del!{key="k2";ret=retb}; stdout!"delete k2\n";
+
+    tbl1.get!{key="k1";ret=ret}; ret?val; stdout!"ret1:"^val^"\n";
+    tbl1.get!{key="k2";ret=ret}; ret?val; stdout!"ret2:"^val^"\n";
+    tbl1.get!{key="k3";ret=ret}; ret?val; stdout!"ret3:"^val^"\n";
+
+    tbl1.del!{key="k1";ret=retb}; stdout!"delete k1\n";
+    tbl1.get!{key="k1";ret=ret}; ret?val; stdout!"ret1:"^val^"\n";
+    tbl1.get!{key="k3";ret=ret}; ret?val; stdout!"ret3:"^val^"\n";
+
+    tbl1.del!{key="k3";ret=retb}; stdout!"delete k3\n";
+    tbl1.get!{key="k3";ret=ret}; ret?val; stdout!"ret3:"^val^"\n"
