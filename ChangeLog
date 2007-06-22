@@ -1,3 +1,9 @@
+2007-06-22  Kenta Hattori  <hattori@localhost.localdomain>
+
+	* aio_read/writeの同時発行に対応
+
+	* 文字列領域を確保する関数__salloc__を追加
+
 2007-06-20  Kenta Hattori  <hattori@localhost.localdomain>
 
 	* レコード中のラベルが二重定義されたときのエラーメッセージを追加
