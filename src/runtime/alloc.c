@@ -65,7 +65,7 @@ int __salloc__(int len) {
 
     __prc__temp = gc_array(GC_ALIGN(len+1));
     ret = __record__(4);
-    ((int*)ret)[0] = 0;
+    ((int*)ret)[0] = TOPINT(0);
     ((int*)ret)[1] = __prc__temp;
     ((int*)ret)[2] = 0;
     ((int*)ret)[3] = TOPINT(len);
