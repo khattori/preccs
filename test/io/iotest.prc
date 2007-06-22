@@ -114,7 +114,11 @@ proc ServerProc() = stdout!"start ServerProc()\n";
     lsock?csock; Server(csock,"ID1", ret1);
     lsock?csock; Server(csock,"ID2", ret2);
     ret1?x; stdout!"Server:9th message\n";
-    ret2?x; stdout!"Server:10th message\n"
+    ret2?x; stdout!"Server:10th message\n";
+// 読み込みと書き込みの同時処理
+    var ret:<unit>;
+    lsock?csock; ParaServer(csock, ret);
+    ret?x; stdout!"Server:11th message\n"
 
 proc Server(sp:SockPair,id:string,ret:<unit>) =
     sp.out!id;
@@ -124,7 +128,6 @@ proc Server(sp:SockPair,id:string,ret:<unit>) =
     sp.out!""; sp.in?x;
     ret!()
     
-
 proc ClientProc() = stdout!"start ClientProc()\n";
     var sin:<string>; var sout:<string>; var sp={in=sin;out=sout};
     C{ prc_SockTcpClient($sp.in$,$sp.out$,"127.0.0.1",10001); C};
@@ -140,17 +143,53 @@ proc ClientProc() = stdout!"start ClientProc()\n";
     var ret1:<unit>; var ret2:<unit>;
     Client("ID1",ret1); Client("ID2",ret2);
     ret1?x; stdout!"Client:7th message\n";
-    ret2?x; stdout!"Client:8th message\n"
+    ret2?x; stdout!"Client:8th message\n";
+// 読み込みと書き込みの同時処理
+    var ret:<unit>;
+    ParaClient(ret);
+    ret?x; stdout!"Client:9th message\n"
 
 proc Client(id:string,ret:<unit>) =
     var sin:<string>; var sout:<string>; var sp={in=sin;out=sout};
     C{ prc_SockTcpClient($sp.in$,$sp.out$,"127.0.0.1",10001); C};
     sp.in?msg; ( msg @ id -> skip | _ -> stdout!"Client:unexpected\n" );
     sp.out!id;
-    sp.out!id; 
+    timer!1;
+    sp.out!id;
     sp.in?msg; ( msg @ id -> skip | _ -> stdout!"Client:unexpected\n" );
     sp.out!""; sp.in?x;
     ret!() 
+
+proc ParaServer(sp:SockPair,ret:<unit>) =
+    sp.out!"Hello";
+    var rch:<unit>;
+    SrvReceiver(sp.in,rch);
+    SrvSender(sp.out,rch);
+    rch?x;rch?x;
+    ret!()
+
+proc SrvReceiver(sin:<string>,rch:<unit>) =
+    sin?msg; 
+    ( msg @ "from Client" -> skip | _ -> stdout!"SrvReceiver:unexpected\n" );
+    rch!()
+proc SrvSender(sout:<string>,rch:<unit>) =
+    sout!"from Server"; rch!()
+
+proc ParaClient(ret:<unit>) =
+    var sin:<string>; var sout:<string>; var sp={in=sin;out=sout};
+    C{ prc_SockTcpClient($sp.in$,$sp.out$,"127.0.0.1",10001); C};
+    sp.in?msg; ( msg @ "Hello" -> skip | _ -> stdout!"ParaCli:unexpected\n" );
+    var rch:<unit>;
+    CliReceiver(sp.in,rch);
+    CliSender(sp.out,rch);
+    rch?x;rch?x;
+    ret!()
+proc CliReceiver(sin:<string>,rch:<unit>) =
+    sin?msg;
+    ( msg @ "from Server" -> skip | _ -> stdout!"CliReceiver:unexpected\n" );
+    rch!()
+proc CliSender(sout:<string>,rch:<unit>) =
+    sout!"from Client"; rch!()
 
 type ipaddr = { octet[4] }
 type sockaddr = { addr	: ipaddr; port	: int }
