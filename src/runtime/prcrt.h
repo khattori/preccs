@@ -57,6 +57,7 @@ int __stop__(void);
 int __record__(int sz);
 int __rexrcd__(int s, int r);
 int __string__(int len, char *buf);
+int __salloc__(int len);
 int __dmatch__(int val, u_int st);
 
 #define STRPTR(s) ((char*)((int*)s)[1]+(((int*)s)[0]>>1))

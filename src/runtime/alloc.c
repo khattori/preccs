@@ -45,9 +45,22 @@ int __rexrcd__(int s, int r) {
 }
 
 /**
- * 文字列のアロケート
+ * 文字列の初期化
  */
 int __string__(int len, char *buf) {
+    int ret;
+
+    ret = __salloc__(len);
+    memcpy((char*)((int*)ret)[1], buf, len);
+    ((char*)((int*)ret)[1])[len] = '\0';
+
+    return ret;
+}
+
+/**
+ * 文字列のアロケート(非初期化版)
+ */
+int __salloc__(int len) {
     int ret;
 
     __prc__temp = gc_array(GC_ALIGN(len+1));
@@ -56,8 +69,6 @@ int __string__(int len, char *buf) {
     ((int*)ret)[1] = __prc__temp;
     ((int*)ret)[2] = 0;
     ((int*)ret)[3] = TOPINT(len);
-    memcpy((char*)__prc__temp, buf, len);
-    ((char*)__prc__temp)[len] = '\0';
     __prc__temp = (int)NULL;
 
     return ret;
