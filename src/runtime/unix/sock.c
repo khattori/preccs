@@ -39,7 +39,7 @@ void prc_SockFinish(void) {
  */
 int prc_SockUdpServer(int ich, int och, int port) {
     struct sockaddr_in addr;
-    int sock;
+    int sock, sock2;
 
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         perr(PERR_SYSTEM, "socket", strerror(errno), __FILE__, __LINE__);
@@ -54,9 +54,13 @@ int prc_SockUdpServer(int ich, int och, int port) {
 	close(sock);
         return -1;
     }
-
+    if ((sock2 = dup(sock)) < 0) {
+        perr(PERR_SYSTEM, "dup", strerror(errno), __FILE__, __LINE__);
+	close(sock);
+        return -1;
+    }
     ioent_create((chan_t *)ich, sock, IOT_INPUT, so_recvfrom, BUFSIZ);
-    ioent_create((chan_t *)och, sock, IOT_OUTPUT, so_sendto, BUFSIZ);
+    ioent_create((chan_t *)och, sock2, IOT_OUTPUT, so_sendto, BUFSIZ);
 
     return 0;
 }
@@ -67,7 +71,7 @@ int prc_SockUdpServer(int ich, int och, int port) {
 int prc_SockUdpClient(int ich, int och, char *host, int port) {
     struct hostent *hent;
     struct sockaddr_in addr;
-    int sock;
+    int sock, sock2;
 
     if ((hent = gethostbyname(host)) == NULL) {
         perr(PERR_SYSTEM, "gethostbyname", hstrerror(h_errno), __FILE__, __LINE__);
@@ -86,8 +90,13 @@ int prc_SockUdpClient(int ich, int och, char *host, int port) {
 	close(sock);
         return -1;
     }
+    if ((sock2 = dup(sock)) < 0) {
+        perr(PERR_SYSTEM, "dup", strerror(errno), __FILE__, __LINE__);
+	close(sock);
+        return -1;
+    }
     ioent_create((chan_t *)ich, sock, IOT_INPUT, io_input, BUFSIZ);
-    ioent_create((chan_t *)och, sock, IOT_OUTPUT, so_output, BUFSIZ);
+    ioent_create((chan_t *)och, sock2, IOT_OUTPUT, so_output, BUFSIZ);
 
     return 0;
 }
@@ -98,7 +107,7 @@ int prc_SockUdpClient(int ich, int och, char *host, int port) {
 int prc_SockUdpOpen(int ich, int och, char *host, int cport, int bport) {
     struct hostent *hent;
     struct sockaddr_in addr;
-    int sock;
+    int sock, sock2;
 
     if ((hent = gethostbyname(host)) == NULL) {
         perr(PERR_SYSTEM, "gethostbyname", strerror(errno), __FILE__, __LINE__);
@@ -126,8 +135,13 @@ int prc_SockUdpOpen(int ich, int och, char *host, int cport, int bport) {
 	close(sock);
         return -1;
     }
+    if ((sock2 = dup(sock)) < 0) {
+        perr(PERR_SYSTEM, "dup", strerror(errno), __FILE__, __LINE__);
+	close(sock);
+        return -1;
+    }
     ioent_create((chan_t *)ich, sock, IOT_INPUT, io_input, BUFSIZ);
-    ioent_create((chan_t *)och, sock, IOT_OUTPUT, so_output, BUFSIZ);
+    ioent_create((chan_t *)och, sock2, IOT_OUTPUT, so_output, BUFSIZ);
 
     return 0;
 }
@@ -138,7 +152,7 @@ int prc_SockUdpOpen(int ich, int och, char *host, int cport, int bport) {
 int prc_SockTcpClient(int ich, int och, char *host, int port) {
     struct hostent *hent;
     struct sockaddr_in addr;
-    int sock;
+    int sock, sock2;
 
     if ((hent = gethostbyname(host)) == NULL) {
         perr(PERR_SYSTEM, "gethostbyname", hstrerror(h_errno), __FILE__, __LINE__);
@@ -157,9 +171,13 @@ int prc_SockTcpClient(int ich, int och, char *host, int port) {
 	close(sock);
         return -1;
     }
-
+    if ((sock2 = dup(sock)) < 0) {
+        perr(PERR_SYSTEM, "dup", strerror(errno), __FILE__, __LINE__);
+	close(sock);
+        return -1;
+    }
     ioent_create((chan_t *)ich, sock, IOT_INPUT, io_input, BUFSIZ);
-    ioent_create((chan_t *)och, sock, IOT_OUTPUT, so_output, BUFSIZ);
+    ioent_create((chan_t *)och, sock2, IOT_OUTPUT, so_output, BUFSIZ);
 
     return 0;
 }
@@ -209,7 +227,7 @@ void prc_SockClose(int h) {
 static void accept_exec(ioent_t *io) {
     proc_t *prc;
     event_t *evt;
-    int so;
+    int so, so2;
 
     if ((so = accept(io->handle, NULL, NULL)) < 0) {
 	if (errno == EMFILE) {
@@ -232,8 +250,13 @@ static void accept_exec(ioent_t *io) {
     }
     __prc__regs[0] = (int)__chan__();
     __prc__regs[3] = (int)__chan__();
+    if ((so2 = dup(so)) < 0) {
+        perr(PERR_SYSTEM, "dup", strerror(errno), __FILE__, __LINE__);
+	close(so);
+        return;
+    }
     ioent_create((chan_t *)__prc__regs[0], so, IOT_INPUT, io_input, BUFSIZ);
-    ioent_create((chan_t *)__prc__regs[3], so, IOT_OUTPUT, so_output, BUFSIZ);
+    ioent_create((chan_t *)__prc__regs[3], so2, IOT_OUTPUT, so_output, BUFSIZ);
     __prc__regs[2] = __record__(2);
     ((int*)__prc__regs[2])[0] = __prc__regs[0];
     ((int*)__prc__regs[2])[1] = __prc__regs[3];
@@ -261,6 +284,7 @@ static void so_output(ioent_t *io, event_t *evt, int exec) {
         if (len == 0) {
             io_write_complete(io, 0);
             shutdown(io->handle, SHUT_WR);
+            close(io->handle);
 	    ioent_delete(io);
             return;
         }
@@ -309,6 +333,7 @@ static void so_sendto(ioent_t *io, event_t *evt, int exec) {
 
         if (len == 0) {
             io_write_complete(io, 0);
+            close(io->handle);
 	    ioent_delete(io);
             return;
         }
