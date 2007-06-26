@@ -234,33 +234,48 @@ recField
  */
 typeExpression
   : typeTupleExpression { $1 }
-  | typeTupleExpression LSQUARE INTV RSQUARE { TypArray($2,$1,$3.v) }
 ;
 typeTupleExpression
-  : typeAtomicExpression            { $1 }
-  | typeTupleExpression COMMA typeAtomicExpression  {
+  : typePostfixExpression { $1 }
+  | typeTupleExpression COMMA typePostfixExpression  {
       match $3 with
           TypTuple t -> TypTuple($1::t)
         | _          -> TypTuple($1::[$3])
     }
 ;
 
+typePostfixExpression
+  : typeAtomicExpression { $1 }
+  | typePostfixExpression LSQUARE INTV RSQUARE { TypArray($2,$1,$3.v) }
+;
+
 typeAtomicExpression
-  : IDENT                           { TypName($1.i,$1.v) }
-  | LT typeExpression GT            { TypChan($1,$2)     } /* チャネル型 */
-  | LCURLY rgxExpression RCURLY     { TypRegex($1,$2)    } /* 正規表現型 */
-  | LCURLY fieldList RCURLY         { TypRecord($2)      } /* レコード型 */
-
+  : IDENT                            { TypName($1.i,$1.v) }
+  | LT typeExpression GT             { TypChan($1,$2)     } /* チャネル型   */
+  | LCURLY rgxExpression RCURLY      { TypRegex($1,$2)    } /* 正規表現型   */
+  | LCURLY fieldRcd fieldRcdList RCURLY { TypRecord($2::$3)  } /* レコード型   */
+/*  | LSQUARE fieldVar fieldVarList RSQUARE { TypVariant($2::$3) } */ /* バリアント型 */
+  | LPAREN typeExpression RPAREN     { $2 }
 ;
 
-/* レコード型のフィールドリスト */
-fieldList
-  : field { [$1] }
-  | fieldList SEMI field { $1 @ [$3] }
+/* レコード型/バリアント型のフィールドリスト */
+fieldRcdList
+  : SEMI fieldRcd { [$2] }
+  | fieldRcdList fieldRcd { $1 @ [$2] }
 ;
-field
+fieldRcd
   : IDENT COLON typeExpression  { ($1.i,$1.v,$3) }
+;  
+/*
+fieldVarList
+  : VBAR fieldVar { [$2] }
+  | fieldVarList fieldVar { $1 @ [$2] }
 ;
+fieldVar
+  : IDENT { ($1.i,$1.v,TypName($1.i,Symbol.symbol "unit")) }
+  | IDENT COLON typeExpression  { ($1.i,$1.v,$3) }
+;
+*/
 
 /* 正規表現式 */
 rgxExpression
@@ -304,15 +319,6 @@ patExpression
   | expression { PatExp($1) }
   | IDENT COLON rgxExpression { PatRegex($1.i,$1.v,$3,ref (T.REXP R.EPS)) }
 ;
-/*
-  | INTV   { PatConst(ConInt($1.i,$1.v)) }
-  | DASH INTV { PatConst(ConInt($1,-$2.v)) }
-  | STRV   { PatConst(ConStr($1.i,$1.v)) }
-  | TRUE   { PatConst(ConBool($1,true))  }
-  | FALSE  { PatConst(ConBool($1,false)) }
-  | varExpression  { PatVar($1) }
-;
-*/
 
 /*****************************************************************
  * プロセス式に関する構文規則

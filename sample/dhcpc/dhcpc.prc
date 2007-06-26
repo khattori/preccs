@@ -37,15 +37,14 @@ type DhcpPacket = {{
     file	: octet[128];	// ブートファイル名
     option	: DhcpOption
 }}
-/*
 type BoptSubnet    = BootpOption{tag={"01"h},len={"04"h}}
 type BoptRouter    = BootpOption{tag={"03"h},len={"04"h}}
 type BoptDnsServer = BootpOption{tag={"06"h},len={"04"h}}
 type BoptDomain    = BootpOption{tag={"0F"h}}
 type BoptMsgType   = BootpOption{tag={"35"h},len={"01"h}}
 type CliAddr       = {{t:"01"h;addr:octet[6]}}
-type BoptClientID  = BootpOption{tag={"3D"h},len={"07"h},data=CliAddr}
-*/
+type BoptClientID  = BootpOption{tag={"3D"h},len={"07"h}}
+//,data=CliAddr}
 // メインプロセス
 proc Main() =
     var msg =
