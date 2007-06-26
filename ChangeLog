@@ -1,5 +1,7 @@
 2007-06-26  Kenta Hattori  <hattori@localhost.localdomain>
 
+	* 2Gバイトを超えるネットワーク入出力で，aio_errorとなる問題に対応
+
 	* Version 0.2.5 released.
 
 2007-06-22  Kenta Hattori  <hattori@localhost.localdomain>
