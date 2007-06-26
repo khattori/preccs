@@ -23,6 +23,7 @@
 
 extern void write_exec(ioent_t *io, event_t *evt);
 extern void io_complete(ioent_t * io);
+static void so_input(ioent_t *io, event_t *evt, int exec);
 static void so_output(ioent_t *io, event_t *evt, int exec);
 static void so_accept(ioent_t *io, event_t *evt, int exec);
 static void so_sendto(ioent_t *io, event_t *evt, int exec);
@@ -95,7 +96,7 @@ int prc_SockUdpClient(int ich, int och, char *host, int port) {
 	close(sock);
         return -1;
     }
-    ioent_create((chan_t *)ich, sock, IOT_INPUT, io_input, BUFSIZ);
+    ioent_create((chan_t *)ich, sock, IOT_INPUT, so_input, BUFSIZ);
     ioent_create((chan_t *)och, sock2, IOT_OUTPUT, so_output, BUFSIZ);
 
     return 0;
@@ -140,7 +141,7 @@ int prc_SockUdpOpen(int ich, int och, char *host, int cport, int bport) {
 	close(sock);
         return -1;
     }
-    ioent_create((chan_t *)ich, sock, IOT_INPUT, io_input, BUFSIZ);
+    ioent_create((chan_t *)ich, sock, IOT_INPUT, so_input, BUFSIZ);
     ioent_create((chan_t *)och, sock2, IOT_OUTPUT, so_output, BUFSIZ);
 
     return 0;
@@ -176,7 +177,7 @@ int prc_SockTcpClient(int ich, int och, char *host, int port) {
 	close(sock);
         return -1;
     }
-    ioent_create((chan_t *)ich, sock, IOT_INPUT, io_input, BUFSIZ);
+    ioent_create((chan_t *)ich, sock, IOT_INPUT, so_input, BUFSIZ);
     ioent_create((chan_t *)och, sock2, IOT_OUTPUT, so_output, BUFSIZ);
 
     return 0;
@@ -255,7 +256,7 @@ static void accept_exec(ioent_t *io) {
 	close(so);
         return;
     }
-    ioent_create((chan_t *)__prc__regs[0], so, IOT_INPUT, io_input, BUFSIZ);
+    ioent_create((chan_t *)__prc__regs[0], so, IOT_INPUT, so_input, BUFSIZ);
     ioent_create((chan_t *)__prc__regs[3], so2, IOT_OUTPUT, so_output, BUFSIZ);
     __prc__regs[2] = __record__(2);
     ((int*)__prc__regs[2])[0] = __prc__regs[0];
@@ -275,6 +276,21 @@ static void accept_exec(ioent_t *io) {
     }
 }
 /**
+ * IOチャネル入力時の処理
+ */
+void so_input(ioent_t *io, event_t *evt, int exec) {
+    if (evt->trans == 0) {
+        aio_count++;
+        io->ctlblk.aio_offset = 0;
+        if (aio_read(&io->ctlblk) < 0) {
+            perr(PERR_SYSTEM, "aio_read", strerror(errno), __FILE__, __LINE__);
+        }
+        return;
+    }
+    TAILQ_INSERT_TAIL(&__prc__mioq, io, mlink);
+}
+
+/**
  * ソケットIOチャネル出力時の処理 
  */
 static void so_output(ioent_t *io, event_t *evt, int exec) {
@@ -289,6 +305,7 @@ static void so_output(ioent_t *io, event_t *evt, int exec) {
             return;
         }
         io->offset = 0;
+        io->ctlblk.aio_offset = 0;
         write_exec(io, evt);
 	return;
     }
@@ -348,7 +365,6 @@ static void so_recvfrom_complete(ioent_t *io, int len, in_addr_t addr, int port)
     proc_t *prc;
     event_t *evt;
 
-    io->ctlblk.aio_offset += len;
     __prc__regs[0] = __string__(len, (void *)io->buf);
     __prc__regs[4] = __string__(sizeof addr, (void *)&addr);
     __prc__regs[3] = __record__(2);

@@ -77,10 +77,11 @@ void io_write_complete(ioent_t *io, int len) {
 void io_complete(ioent_t *io) {
     event_t *evt;
     int len;
+    int ret;
 
     aio_count--;
-    if (aio_error(&io->ctlblk) != 0) {
-	perr(PERR_SYSTEM, "aio_error", strerror(errno), __FILE__, __LINE__);
+    if ((ret = aio_error(&io->ctlblk)) != 0) {
+	perr(PERR_SYSTEM, "aio_error", strerror(ret), __FILE__, __LINE__);
 	return;
     }
     len = aio_return(&io->ctlblk);
@@ -151,7 +152,7 @@ void write_exec(ioent_t *io, event_t *evt) {
 
     aio_count++;
     len = STRLEN(evt->val) - io->offset;
-    // fprintf(stderr,"write_exec: len=%d\n", len);
+    // fprintf(stderr,"write_exec: len=%d, aio_count=%d\n", len, aio_count);
     // fflush(stderr);
     if (len > io->bufsz) {
 	len = io->bufsz;
