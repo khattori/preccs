@@ -1,3 +1,7 @@
+2007-06-26  Kenta Hattori  <hattori@localhost.localdomain>
+
+	* Version 0.2.5 released.
+
 2007-06-22  Kenta Hattori  <hattori@localhost.localdomain>
 
 	* aio_read/writeの同時発行に対応
