@@ -261,7 +261,7 @@ typeAtomicExpression
 /* レコード型/バリアント型のフィールドリスト */
 fieldRcdList
   : SEMI fieldRcd { [$2] }
-  | fieldRcdList fieldRcd { $1 @ [$2] }
+  | fieldRcdList SEMI fieldRcd { $1 @ [$3] }
 ;
 fieldRcd
   : IDENT COLON typeExpression  { ($1.i,$1.v,$3) }
@@ -269,7 +269,7 @@ fieldRcd
 /*
 fieldVarList
   : VBAR fieldVar { [$2] }
-  | fieldVarList fieldVar { $1 @ [$2] }
+  | fieldVarList VBAR fieldVar { $1 @ [$3] }
 ;
 fieldVar
   : IDENT { ($1.i,$1.v,TypName($1.i,Symbol.symbol "unit")) }
