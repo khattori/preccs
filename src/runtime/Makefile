@@ -27,6 +27,7 @@ endif
 SRCS	=		\
 	perr.c		\
 	alloc.c	\
+	string.c	\
 	gc.c		\
 	chan.c		\
 	proc.c		\

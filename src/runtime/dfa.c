@@ -38,6 +38,7 @@ int __dmatch__(int val, u_int st) {
     int tmp;
     int *retval;
 
+    val = __pullup__(val);
     __prc__temp = val;
     __prc__temp1 = (int)NULL;
     __prc__temp2 = (int)NULL;
@@ -46,8 +47,8 @@ int __dmatch__(int val, u_int st) {
         __prc__lbl_ptr[i] = NULL;
     }
     origin = (u_char *)((int*)val)[1];
-    p = STRPTR(val);              /* データ   */
-    ep     = STRPTR(val)+STRLEN(val);  /* 終了位置 */
+    p  = SSTRPTR(val);               /* データ   */
+    ep = SSTRPTR(val)+SSTRLEN(val);  /* 終了位置 */
 
     for (;;) switch (act) {
     case ACT_MATCH: { /* 文字列マッチ */

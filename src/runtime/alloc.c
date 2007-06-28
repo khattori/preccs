@@ -74,37 +74,3 @@ int __salloc__(int len) {
     return ret;
 }
 
-/**
- * 文字列の連結
- */
-int __concat__(int s1, int s2) {
-    int len1, len2;
-    int ret;
-
-    len1 = STRLEN(s1);
-    len2 = STRLEN(s2);
-
-    __prc__temp = gc_array(GC_ALIGN(len1+len2+1));
-    s1 = (int)gc_forward((int*)s1);
-    s2 = (int)gc_forward((int*)s2);
-    memcpy((char*)__prc__temp, STRPTR(s1), len1);
-    memcpy(((char*)__prc__temp)+len1, STRPTR(s2), len2);
-    ((char*)__prc__temp)[len1+len2] = '\0';
-    ret = __record__(4);
-    ((int*)ret)[0] = 0;
-    ((int*)ret)[1] = __prc__temp;
-    ((int*)ret)[2] = 0;
-    ((int*)ret)[3] = TOPINT(len1+len2);
-    __prc__temp = (int)NULL;
-
-    return ret;
-}
-/**
- * 文字列の中身の比較
- */
-int __equals__(int s1, int s2) {
-    int len1 = STRLEN(s1);
-    int len2 = STRLEN(s2);
-    
-    return len1==len2 ? memcmp(STRPTR(s1),STRPTR(s2),len1)==0 : 0;
-}

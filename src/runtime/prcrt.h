@@ -50,6 +50,9 @@ extern int __prc__temp1;
 extern int __prc__temp2;
 
 /* 組込み関数 */
+int __pullup__(int s);
+int __strlen__(int s);
+char *__strptr__(int s);
 int __concat__(int s1, int s2);
 int __equals__(int s1, int s2);
 int __disp__(void);
@@ -60,9 +63,18 @@ int __string__(int len, char *buf);
 int __salloc__(int len);
 int __dmatch__(int val, u_int st);
 
-#define STRPTR(s) ((char*)((int*)s)[1]+(((int*)s)[0]>>1))
-#define STRLEN(s) ((((int*)s)[3]-((int*)s)[0])>>1)
+#define STRPTR(s) __strptr__(s)
+#define STRLEN(s) __strlen__(s)
 #define RCDIDX(s,i) (((int*)s)[i])
+
+#define IS_SSTR(s) (((int*)s)[3]&0x1)
+/* 文字列データの単体ノード */
+#define SSTRLEN(s) ((((int*)s)[3]-((int*)s)[0])>>1)
+#define SSTRPTR(s) ((char*)((int*)s)[1]+(((int*)s)[0]>>1))
+/* 文字列データの中間ノード */
+#define NSTRLEN(s) ((((int*)s)[2]-((int*)s)[0])>>1)
+#define NSTRPTR(s) ((char*)((int*)s)[1]+(((int*)s)[0]>>1))
+#define NSTRNXT(s) (((int*)s)[3])
 
 #define TOCINT(i) ((i)>>1)
 #define TOPINT(i) (((i)<<1)^0x01)
