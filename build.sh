@@ -7,7 +7,7 @@
 # $Id$
 #
 
-prc_version=0.2.5p1
+prc_version=0.2.6
 prc_blddir=build
 prc_pkglist=pkglist
 
