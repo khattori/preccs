@@ -1,3 +1,9 @@
+2007-06-29  Kenta Hattori  <hattori@localhost.localdomain>
+
+	* 3つ以上のフィールドを持つレコードのコンパイルエラーを修正
+
+	* 文字列連結の処理をコピー方式から連鎖方式に変更
+
 2007-06-26  Kenta Hattori  <hattori@localhost.localdomain>
 
 	* 2Gバイトを超えるネットワーク入出力で，aio_errorとなる問題に対応
