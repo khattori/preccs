@@ -17,7 +17,13 @@
  * レコード生成と初期化
  */
 int __record__(int sz) {
-    return (int)gc_record(sz);
+    int *ret;
+    int i;
+    ret = gc_record(sz);
+    for (i = 0; i < sz; i++) {
+        ret[i] = 0;
+    }
+    return (int)ret;
 }
 
 /**

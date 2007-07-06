@@ -41,8 +41,9 @@ int __pullup__(int s) {
 	return s;
     }
     len = __strlen__(s);
+    __prc__temp1 = s;
     ret = __salloc__(len);
-    s = (int)gc_forward((int*)s);
+    s = __prc__temp1;
     do {
 	len = NSTRLEN(s);
 	memcpy(SSTRPTR(ret)+offset, NSTRPTR(s), len);
@@ -60,7 +61,6 @@ int __pullup__(int s) {
 int __concat__(int s1, int s2) {
     int len1, len2;
     int s;
-    int ret;
 
     len1 = __strlen__(s1);
     len2 = __strlen__(s2);
@@ -70,23 +70,25 @@ int __concat__(int s1, int s2) {
     } else if (len2 == 0) {
         return s1;
     }
-    __prc__temp = s2;
-    s = ret = __record__(4);
-    s1 = (int)gc_forward((int*)s1);
-    while (!IS_SSTR(s1)) {
-	((int*)s)[0] = ((int*)s1)[0];
-	((int*)s)[1] = ((int*)s1)[1];
-	((int*)s)[2] = ((int*)s1)[2];
-	s = ((int*)s)[3] = __record__(4);
-	s1 = (int)gc_forward((int*)s1);
-	s1 = NSTRNXT(s1);
+    __prc__temp1 = s1;
+    __prc__temp2 = s2;
+    __prc__temp3 = __prc__temp = __record__(4);
+    while (!IS_SSTR(__prc__temp1)) {
+	((int*)__prc__temp)[0] = ((int*)__prc__temp1)[0];
+	((int*)__prc__temp)[1] = ((int*)__prc__temp1)[1];
+	((int*)__prc__temp)[2] = ((int*)__prc__temp1)[2];
+	((int*)__prc__temp)[3] = 0;
+        s = __record__(4);
+        ((int*)__prc__temp)[3] = s;
+        __prc__temp = s;
+	__prc__temp1 = NSTRNXT(__prc__temp1);
     }
-    ((int*)s)[0] = ((int*)s1)[0];
-    ((int*)s)[1] = ((int*)s1)[1];
-    ((int*)s)[2] = ((int*)s1)[3];
-    ((int*)s)[3] = __prc__temp;
+    ((int*)__prc__temp)[0] = ((int*)__prc__temp1)[0];
+    ((int*)__prc__temp)[1] = ((int*)__prc__temp1)[1];
+    ((int*)__prc__temp)[2] = ((int*)__prc__temp1)[3];
+    ((int*)__prc__temp)[3] = __prc__temp2;
 
-    return ret;
+    return __prc__temp3;
 }
 
 /**

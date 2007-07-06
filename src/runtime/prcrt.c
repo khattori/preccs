@@ -26,6 +26,7 @@ int __prc__null;
 int __prc__temp;
 int __prc__temp1;
 int __prc__temp2;
+int __prc__temp3;
 
 static int disp_clos[1] = { (int)__disp__ };
 int __prc__disp = (int)disp_clos;

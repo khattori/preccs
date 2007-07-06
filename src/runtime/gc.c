@@ -8,6 +8,7 @@
  */
 #include <stdlib.h>
 #include <stdio.h>
+#include <execinfo.h>
 #include "prcrt.h"
 #include "proc.h"
 #include "timer.h"
@@ -19,6 +20,9 @@ static int *heap_bottom;
 
 static int *to_space;
 static int *from_space;
+
+#define DEFAULT_HEAP_SIZE (1024*1024*64)
+#define MIN_HEAP_SIZE (1024*64)
 
 static int heap_size  = DEFAULT_HEAP_SIZE;
 static int space_size = DEFAULT_HEAP_SIZE / 2;
@@ -51,6 +55,13 @@ from_space --> |                |
 //static void flip(void);
 void flip(void);
 static int *copy(int *p);
+
+void __prc__set_heapsz(int size) {
+    if (size >= MIN_HEAP_SIZE && heap_bottom == NULL) {
+        heap_size  = size;
+	space_size = size / 2;
+    }
+}
 
 /**
  * GCの初期化
@@ -142,8 +153,9 @@ void flip(void) {
 
     printf("GC started...\n");
     fflush(stdout);
-
-    //validate();
+#ifdef DEBUG
+    validate();
+#endif
     /* TOとFROMの入れ替え */
     t = from_space;
     from_space = to_space;
@@ -165,6 +177,7 @@ void flip(void) {
     __prc__temp   = (int)copy((int*)__prc__temp);
     __prc__temp1  = (int)copy((int*)__prc__temp1);
     __prc__temp2  = (int)copy((int*)__prc__temp2);
+    __prc__temp3  = (int)copy((int*)__prc__temp3);
 
     /* ハンドルの走査 */
     for (io = __prc__ioq.tqh_first; io != NULL; io = io->link.tqe_next) {
@@ -181,7 +194,9 @@ void flip(void) {
         assert(GET_SIZE(scan) != 0);
         scan += GET_SIZE(scan);
     }
-    //validate();
+#ifdef DEBUG
+    validate();
+#endif
 
     printf("GC finished(%d reclaimed).\n", heap_top - heap_free);
     fflush(stdout);
@@ -228,11 +243,9 @@ static int *copy(int *p) {
 
 /* すべてのポインタがto_spaceに収まっていることを確認 */
 void validate(void) {
-    static int num;
     int *scan = to_space;
+    void *trace[128];
 
-    printf("validate:%d\n", num++);
-    fflush(stdout);
     while (scan < heap_free) {
         int *p;
         if (!IS_ARRY(scan))
@@ -240,10 +253,12 @@ void validate(void) {
                 if (IS_VALUE((int*)*p)) continue;
                 if (IS_NOPTR((int*)*p)) continue;
                 if (!((int*)*p >= to_space && (int*)*p < heap_top)) {
+                    int n = backtrace(trace, sizeof(trace) / sizeof(trace[0]));
                     printf("p=%p,*p=%p --- <%p:%p>\n",
                            p, (int*)*p,
                            to_space, heap_top);
                     fflush(stdout);
+                    backtrace_symbols_fd(trace, n, 1);
                     assert(0);
                 }
             }

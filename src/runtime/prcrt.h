@@ -27,6 +27,7 @@ int prc_main(void);	/* コンパイラが生成する関数 */
 
 typedef int (*prc_func_t)(void);
 int __prc__main__(int rnum, prc_func_t init, prc_dtable_t *dtbl);
+void __prc__set_heapsz(int size);
 
 /* グローバルチャネルの宣言 */
 extern int __prc__stdout;
@@ -48,6 +49,7 @@ extern int __prc__run;
 extern int __prc__temp;
 extern int __prc__temp1;
 extern int __prc__temp2;
+extern int __prc__temp3;
 
 /* 組込み関数 */
 int __pullup__(int s);
@@ -79,9 +81,6 @@ int __dmatch__(int val, u_int st);
 #define TOCINT(i) ((i)>>1)
 #define TOPINT(i) (((i)<<1)^0x01)
 
-#define DEFAULT_HEAP_SIZE (1024*1024*64)
-//#define DEFAULT_HEAP_SIZE (1024*64)
-
 #define IADD(a,b) ((a)+(b)-1)
 #define ISUB(a,b) ((a)-(b)+1)
 #define IMUL(a,b) ((((a/2)*(b/2))<<1)^1)
@@ -95,7 +94,8 @@ int __dmatch__(int val, u_int st);
 #define GEQ(a,b) ((a)>=(b)?~0:1)
 #define AND(a,b) ((a)&(b))
 #define OR(a,b)  ((a)|(b))
-#define EQS(a,b)  (__equals__(a,b)?~0:1)
+#define EQS(a,b)  (__prc__temp1=a,__prc__temp2=b,__equals__(__prc__temp1,__prc__temp2)?~0:1)
+#define CONCAT(a,b) (__prc__temp1=a,__prc__temp2=b,__concat__(__prc__temp1,__prc__temp2))
 
 #define INEG(a)  TOPINT(-TOCINT(a))
 #define NOT(a)  (-(a))

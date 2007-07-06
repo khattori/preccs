@@ -68,7 +68,7 @@ let binop2str = function
   | C.And -> "AND"
   | C.Or  -> "OR"
   | C.Eqs -> "EQS"
-  | C.Cat   -> "__concat__"
+  | C.Cat   -> "CONCAT"
   | C.Match -> "__dmatch__"
   | _     -> assert false
 
@@ -201,7 +201,9 @@ and emitPrim rm = function
 	*)
 	Printf.printf "%s=__record__(%d);\n" rs l;
 	for i = 0 to (List.length vs) - 1 do
-	    Printf.printf "((int*)%s)[%d]=%s;\n" rs i (val2str rm (List.nth vs i))
+	    Printf.printf "__prc__temp=%s;\n" (val2str rm (List.nth vs i));
+	    Printf.printf "((int*)%s)[%d]=__prc__temp;\n" rs i
+	   (* Printf.printf "((int*)%s)[%d]=%s;\n" rs i (val2str rm (List.nth vs i)) *)
 	done;
         emit rm'' (c,fv)
   | C.Rexrcd,[s;x],[r],[c,fv] ->
@@ -230,9 +232,15 @@ and emitPrim rm = function
         emit rm' (c,fv)
   | C.Update,[v1;o;v2],[],[c,fv] ->
       let rm'  = Rmap.release rm !fv in
+        Printf.printf "__prc__temp=%s;\n" (val2str rm v2);
+        Printf.printf "((int *)%s)[TOCINT(%s)]=__prc__temp;\n"
+          (val2str rm v1) (val2str rm o);
+        emit rm' (c,fv)
+(*
         Printf.printf "((int *)%s)[TOCINT(%s)]=%s;\n"
           (val2str rm v1) (val2str rm o) (val2str rm v2);
         emit rm' (c,fv)
+*)
   | binop,[v1;v2],[r],[c,fv] ->
       let rm'  = Rmap.release rm !fv in
       let rm'' = Rmap.assign rm' r in
