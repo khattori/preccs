@@ -1,5 +1,7 @@
 2007-07-06  Kenta Hattori  <hattori@localhost.localdomain>
 
+	* GCのヒープサイズを指定できるようにした
+
 	* GC時に古い領域にデータを代入するケースに対処
 
 2007-06-29  Kenta Hattori  <hattori@localhost.localdomain>
