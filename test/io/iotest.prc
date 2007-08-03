@@ -31,8 +31,8 @@ proc StdinProc() = stdout!"start StdinProc()\n";
     | stdin?msg -> stdout!"unexpected\n" );
 
     ( stdin?msg -> stdout!msg
-    | timer!1   -> stdout!"unexpected\n" );
-    ( timer!1   -> stdout!"unexpected\n"
+    | timer!10   -> stdout!"unexpected\n" );
+    ( timer!10   -> stdout!"unexpected\n"
     | stdin?msg -> stdout!msg);
 
     ( sink!()	-> stdout!"3rd message\n"

@@ -15,40 +15,38 @@ expect "start StdinProc\\\(\\\)\r\n"
 
 send	"OK1\r"
 expect	"OK1\r\n"	{ incr count_ok } \
-	"\n"		{ incr count_ng }
+	timeout		{ incr count_ng }
 
 send	"OK2\r"
 expect	"OK2\r\n"	{ incr count_ok } \
-	"\n"		{ incr count_ng }
+	timeout		{ incr count_ng }
 
-expect	"OK1\r\nOK2\r\n"
 expect	"1st message\r\n"	{ incr count_ok } \
-	"\n"			{ incr count_ng }
+	timeout			{ incr count_ng }
 
 expect	"2nd message\r\n"	{ incr count_ok } \
-	"\n"			{ incr count_ng }
+	timeout			{ incr count_ng }
 
 send	"OK3\r"
 expect	"OK3\r\n"	{ incr count_ok } \
-	"\n"		{ incr count_ng }
+	timeout		{ incr count_ng }
 
 send	"OK4\r"
 expect	"OK4\r\n"	{ incr count_ok } \
-	"\n"		{ incr count_ng }
+	timeout		{ incr count_ng }
 
-expect	"OK3\r\nOK4\r\n"
 expect	"3rd message\r\n"	{ incr count_ok } \
-	"\r\n"			{ incr count_ng }
+	timeout			{ incr count_ng }
 expect	"4th message\r\n"	{ incr count_ok } \
-	"\r\n"			{ incr count_ng }
+	timeout			{ incr count_ng }
 expect	"5th message\r\n"	{ incr count_ok } \
-	"\r\n"			{ incr count_ng }
+	timeout			{ incr count_ng }
 expect	"6th message\r\n"	{ incr count_ok } \
-	"\r\n"			{ incr count_ng }
+	timeout			{ incr count_ng }
 expect	"7th message\r\n"	{ incr count_ok } \
-	"\r\n"			{ incr count_ng }
+	timeout			{ incr count_ng }
 expect	"8th message\r\n"	{ incr count_ok } \
-	"\r\n"			{ incr count_ng }
+	timeout			{ incr count_ng }
 
 #
 # 標準出力IOのテスト
