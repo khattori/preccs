@@ -21,13 +21,10 @@ send	"OK2\r"
 expect	"OK2\r\n"	{ incr count_ok } \
 	"\n"		{ incr count_ng }
 
-send	"OK\r"
 expect	"OK1\r\nOK2\r\n"
 expect	"1st message\r\n"	{ incr count_ok } \
 	"\n"			{ incr count_ng }
 
-send	"OK\r"
-expect	"OK\r\n"
 expect	"2nd message\r\n"	{ incr count_ok } \
 	"\n"			{ incr count_ng }
 
@@ -35,7 +32,11 @@ send	"OK3\r"
 expect	"OK3\r\n"	{ incr count_ok } \
 	"\n"		{ incr count_ng }
 
-expect	"OK\r\nOK\r\n"
+send	"OK4\r"
+expect	"OK4\r\n"	{ incr count_ok } \
+	"\n"		{ incr count_ng }
+
+expect	"OK3\r\nOK4\r\n"
 expect	"3rd message\r\n"	{ incr count_ok } \
 	"\r\n"			{ incr count_ng }
 expect	"4th message\r\n"	{ incr count_ok } \
