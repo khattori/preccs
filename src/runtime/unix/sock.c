@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <netdb.h>
 
 #include "prcrt.h"
@@ -196,6 +198,10 @@ int prc_SockTcpServer(int ch, int port) {
         return -1;
     }
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) < 0) {
+        perr(PERR_SYSTEM, "setsockopt", strerror(errno), __FILE__, __LINE__);
+        return -1;
+    }
+    if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &option, sizeof(option)) < 0) {
         perr(PERR_SYSTEM, "setsockopt", strerror(errno), __FILE__, __LINE__);
         return -1;
     }
