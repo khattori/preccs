@@ -22,7 +22,8 @@ let symbol name =
       incr nextsym; Ht.add symtbl name i; name,i
 
 (** シンボルから文字列を取り出す *)
-let name (s,n) = s
-
+let name (s,_) = s
+(** シンボルから識別番号を取り出す *)
+let id (_,n) = n
 (** シンボルの等価判定 *)
 let equal (s1,n1) (s2,n2) = n1==n2

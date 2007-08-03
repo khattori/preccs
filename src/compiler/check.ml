@@ -225,6 +225,7 @@ and check_expr env = function
     A.ExpConst(c) -> type_of_const c
   | A.ExpVar(v)   -> check_var env v
   | A.ExpRecord(fs) -> T.RECORD(List.map (fun (_,s,e) -> s,check_expr env e) fs)
+  | A.ExpVariant(_,s,e) -> T.VARIANT([s,check_expr env e])
   | A.ExpTuple es   -> T.TUPLE(List.map (fun e -> check_expr env e) es)
   | A.ExpBinop(i,A.BopAdd,e1,e2) | A.ExpBinop(i,A.BopSub,e1,e2)
   | A.ExpBinop(i,A.BopMul,e1,e2) | A.ExpBinop(i,A.BopDiv,e1,e2)

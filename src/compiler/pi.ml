@@ -39,18 +39,18 @@ and guard =
 
 (* 式定義 *)
 and exp =
-    Var    of var
+    Var     of var
   | Unit
-  | Bool   of bool
-  | Int    of int
-  | Cint   of int
-  | String of string
-  | If     of exp * exp * exp
-  | Record of exp list          (* レコード値         *)
-  | Rexrcd of string * exp list (* 正規表現レコード   *)
-  | Select of exp * exp         (* フィールド選択     *)
-  | Offset of exp * exp         (* レコードオフセット *)
-  | Prim   of prim * exp list
+  | Bool    of bool
+  | Int     of int
+  | Cint    of int
+  | String  of string
+  | If      of exp * exp * exp
+  | Record  of exp list          (* レコード値         *)
+  | Rexrcd  of string * exp list (* 正規表現レコード   *)
+  | Select  of exp * exp         (* フィールド選択     *)
+  | Offset  of exp * exp         (* レコードオフセット *)
+  | Prim    of prim * exp list
 
 and prim =
     Add | Sub | Mul | Div | Mod
@@ -133,6 +133,7 @@ let rec trans_expr env = function
   | A.ExpVar v     -> trans_var env v
   | A.ExpRecord fs -> Record(List.map (fun (_,_,e) -> trans_expr env e) fs)
   | A.ExpTuple es  -> Record(List.map (fun e -> trans_expr env e) es)
+  | A.ExpVariant(_,s,e) -> Record([Int(Symbol.id s);trans_expr env e])
   | A.ExpBinop(_,bop,e1,e2) ->
       Prim(trans_bop bop,[trans_expr env e1; trans_expr env e2])
   | A.ExpMonop(_,mop,e) -> Prim(trans_mop mop,[trans_expr env e])
@@ -285,6 +286,8 @@ and trans_type = function
   | T.STRING -> String ""
   | T.ARRAY(t,n) -> Record (make_list (trans_type t) n)
   | T.RECORD ts  -> Record (List.map (fun (_,t) -> trans_type t) ts)
+  | T.TUPLE ts   -> Record (List.map trans_type ts)
+  | T.VARIANT ((s,t)::_) -> Record ([Int(Symbol.id s);trans_type t])
   | T.REGEX r    -> con_regex r
   | _ -> assert false
 

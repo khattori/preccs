@@ -207,6 +207,7 @@ atomicExpression
   : LPAREN expression RPAREN { $2 }
   | varExpression { ExpVar($1) }
   | LCURLY recFieldList RCURLY { ExpRecord($2) }
+  | LSQUARE variantExp RSQUARE { $2 }
   | INTV  { ExpConst(ConInt($1.i,$1.v)) }
   | STRV  { ExpConst(ConStr($1.i,$1.v)) }
   | TRUE  { ExpConst(ConBool($1,true))  }
@@ -227,6 +228,11 @@ recFieldList
 ;
 recField
   : IDENT EQ expression { ($1.i,$1.v,$3) }
+;
+
+variantExp
+  : IDENT { ExpVariant($1.i,$1.v,ExpConst(ConUnit($1.i))) }
+  | IDENT EQ expression { ExpVariant($1.i,$1.v,$3) }
 ;
 
 /*****************************************************************
@@ -253,29 +259,27 @@ typeAtomicExpression
   : IDENT                            { TypName($1.i,$1.v) }
   | LT typeExpression GT             { TypChan($1,$2)     } /* チャネル型   */
   | LCURLY rgxExpression RCURLY      { TypRegex($1,$2)    } /* 正規表現型   */
-  | LCURLY fieldRcd fieldRcdList RCURLY { TypRecord($2::$3)  } /* レコード型   */
-/*  | LSQUARE fieldVar fieldVarList RSQUARE { TypVariant($2::$3) } */ /* バリアント型 */
+  | LCURLY fieldRcdList RCURLY       { TypRecord($2)      } /* レコード型   */
+  | LSQUARE fieldVarList RSQUARE     { TypVariant($2)     } /* バリアント型 */
   | LPAREN typeExpression RPAREN     { $2 }
 ;
 
 /* レコード型/バリアント型のフィールドリスト */
 fieldRcdList
-  : SEMI fieldRcd { [$2] }
+  : fieldRcd { [$1] }
   | fieldRcdList SEMI fieldRcd { $1 @ [$3] }
 ;
 fieldRcd
   : IDENT COLON typeExpression  { ($1.i,$1.v,$3) }
-;  
-/*
+;
 fieldVarList
-  : VBAR fieldVar { [$2] }
+  : fieldVar { [$1] }
   | fieldVarList VBAR fieldVar { $1 @ [$3] }
 ;
 fieldVar
   : IDENT { ($1.i,$1.v,TypName($1.i,Symbol.symbol "unit")) }
   | IDENT COLON typeExpression  { ($1.i,$1.v,$3) }
 ;
-*/
 
 /* 正規表現式 */
 rgxExpression

@@ -67,12 +67,13 @@ and proc =
 
 (** 算術式 *)
 and exp =
-    ExpConst  of const
-  | ExpVar    of var
-  | ExpBinop  of info * binop * exp * exp
-  | ExpMonop  of info * monop * exp
-  | ExpRecord of record list
-  | ExpTuple  of exp list
+    ExpConst   of const
+  | ExpVar     of var
+  | ExpBinop   of info * binop * exp * exp
+  | ExpMonop   of info * monop * exp
+  | ExpRecord  of record list
+  | ExpVariant of info * Symbol.t * exp
+  | ExpTuple   of exp list
 and record = info * Symbol.t * exp
 
 (** 定数リテラル *)
@@ -103,7 +104,7 @@ let info_of_var = function VarSimple(i,_) | VarField(i,_,_,_,_) | VarSubscr(i,_,
 let rec info_of_expr = function
     ExpConst(c) -> info_of_const c
   | ExpVar(v)   -> info_of_var v
-  | ExpBinop(i,_,_,_) | ExpMonop(i,_,_) -> i
+  | ExpBinop(i,_,_,_) | ExpMonop(i,_,_) | ExpVariant(i,_,_) -> i
   | ExpRecord(ls) ->let i,_,_ = List.hd ls in i
   | ExpTuple(ls) -> info_of_expr(List.hd ls)
     
