@@ -30,7 +30,7 @@ void timer_add(event_t *evt) {
     DWORD now;
 
     now = GetTickCount();
-    evt->val = now + TOCINT(evt->val)*1000;
+    evt->val = now + TOCINT(RCDIDX(evt->val,0))*1000 + TOCINT(RCDIDX(evt->val,1));
 
     /* 挿入場所を探索 */
     for (e = __prc__tmrq->tqh_first; e != NULL; e = e->link.tqe_next) {

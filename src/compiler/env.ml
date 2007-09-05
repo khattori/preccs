@@ -28,8 +28,8 @@ let base_env =
       (* 予約済み変数（チャネル） *)
       ("stdin",  VarEntry(T.CHAN T.STRING));
       ("stdout", VarEntry(T.CHAN T.STRING));
-      ("timer",  VarEntry(T.CHAN T.INT));
-      ("utimer", VarEntry(T.CHAN T.INT));
+      ("timer",  VarEntry(T.CHAN (T.TUPLE [T.INT;T.INT])));
+(*      ("utimer", VarEntry(T.CHAN T.INT)); *)
       ("cond",   VarEntry(T.CHAN T.BOOL));
       ("null",   VarEntry(T.CHAN T.UNIT));
       (* 予約済み型名 *)

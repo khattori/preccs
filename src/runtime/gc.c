@@ -8,7 +8,6 @@
  */
 #include <stdlib.h>
 #include <stdio.h>
-#include <execinfo.h>
 #include "prcrt.h"
 #include "proc.h"
 #include "timer.h"
@@ -244,7 +243,6 @@ static int *copy(int *p) {
 /* すべてのポインタがto_spaceに収まっていることを確認 */
 void validate(void) {
     int *scan = to_space;
-    void *trace[128];
 
     while (scan < heap_free) {
         int *p;
@@ -253,12 +251,6 @@ void validate(void) {
                 if (IS_VALUE((int*)*p)) continue;
                 if (IS_NOPTR((int*)*p)) continue;
                 if (!((int*)*p >= to_space && (int*)*p < heap_top)) {
-                    int n = backtrace(trace, sizeof(trace) / sizeof(trace[0]));
-                    printf("p=%p,*p=%p --- <%p:%p>\n",
-                           p, (int*)*p,
-                           to_space, heap_top);
-                    fflush(stdout);
-                    backtrace_symbols_fd(trace, n, 1);
                     assert(0);
                 }
             }
