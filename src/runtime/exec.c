@@ -224,20 +224,6 @@ int __run__(void) {
     return ((int*)__prc__regs[0])[0];
 }
 
-/*
- * プロセス生成
- */
-#if 0
-void __run__(int clos) {
-    proc_t *prc;
-
-    prc = proc();
-    prc->clos = clos;
-    prc->val  = 0;
-    TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
-}
-#endif
-
 int __stop__(void) {
     exit(0);
 }

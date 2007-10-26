@@ -6,7 +6,7 @@
  * @date   2006/04/24
  * $Id: timer.c,v 1.2 2006/06/21 00:13:06 hattori Exp $
  */
-#include <time.h>
+#include <sys/time.h>
 #include <errno.h>
 #include "prcrt.h"
 #include "queue.h"
@@ -30,12 +30,13 @@ void timer_init(void) {
  */
 void timer_add(event_t *evt) {
     event_t *e;
-    time_t now;
+    struct timeval now;
 
-    if (time(&now) == (time_t)-1) {
-        perr(PERR_SYSTEM, "time()", errno, __FILE__, __LINE__);
+    if (gettimeofday(&now, NULL) < 0) {
+        perr(PERR_SYSTEM, "gettimeofday()", errno, __FILE__, __LINE__);
     }
-    evt->val = now + TOCINT(evt->val);
+    RCDIDX(evt->val,0) = now.tv_sec + TOCINT(RCDIDX(evt->val,0));
+    RCDIDX(evt->val,1) = now.tv_usec + TOCINT(RCDIDX(evt->val,1)) * 1000;
 
     /* 挿入場所を探索 */
     for (e = __prc__tmrq->tqh_first; e != NULL; e = e->link.tqe_next) {
@@ -73,21 +74,23 @@ const struct timespec *timer_next(void) {
     static struct timespec ts_zero = {0,0};
     static struct timespec ts;
     event_t *evt;
-    time_t now;
+    struct timeval now, fire;
 
     /* タイマー待ちプロセスが無い場合 */
     if ((evt = tmrq_next()) == NULL) {
         return NULL;
     }
 
-    if (time(&now) == (time_t)-1) {
-        perr(PERR_SYSTEM, "time()", errno, __FILE__, __LINE__);
+    if (gettimeofday(&now, NULL) < 0) {
+        perr(PERR_SYSTEM, "gettimeofday()", errno, __FILE__, __LINE__);
     }
-    if (now > evt->val) {
+    fire.tv_sec = RCDIDX(evt->val,0);
+    fire.tv_usec = RCDIDX(evt->val,1);
+    if (timercmp(&now,&fire,>)) {
         return &ts_zero;  /* 既に発火時刻を過ぎた場合 */
     }
-    ts.tv_sec  = evt->val - now;
-    ts.tv_nsec = 0;
+    ts.tv_sec  = fire.tv_sec - now.tv_sec;
+    ts.tv_nsec = (fire.tv_usec - now.tv_usec)*1000;
 
     return &ts;
 }
