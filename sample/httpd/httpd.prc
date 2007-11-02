@@ -22,7 +22,8 @@ type RequestLine = {{
 	method	: Method;
 	sp1	: SP;
 	path	: Path;
-	sp2	: (SP; HttpVersion; CRLF) }}
+	sp2	: (SP; HttpVersion; CRLF)
+}}
 type RequestLineGet = RequestLine{method={"GET"}}
 type HttpRequest = {{
 	start	: RequestLine;
@@ -33,26 +34,29 @@ type HttpRequest = {{
 type HttpRequestGet = HttpRequest{start=RequestLineGet}
 type SocketPair = {in:<string>;out:<string>}
 type FileIn = {ok:bool;in:<string>}
-
 proc Main() =
     var lsock:<SocketPair>;
     C{	prc_SockTcpServer($lsock$, 8080); C};
     HttpSrv(lsock)
 proc HttpSrv(lsock:<SocketPair>) =
-    (
-      stdin?msg   -> stdout!"BYE\n"; stop
-    | lsock?csock -> HttpOnAcc(csock); HttpSrv(lsock) )
+    ( stdin?msg   -> stdout!"BYE\n";
+                     stop
+    | lsock?csock -> HttpOnAcc(csock);
+                     HttpSrv(lsock) )
 proc HttpOnAcc(sp:SocketPair) =
     sp.in?msg;
     ( msg @ "" -> stdout!"CLOSED\n"
           | _  -> ( msg @ x:HttpRequestGet -> HttpOnRead(sp, x.start.path)
-                  | _ -> stdout!"unknown request: "^msg; sp.out!"" ) )
+                  | _ -> stdout!"unknown request: "^msg;
+                         sp.out!"" ) )
 proc HttpOnRead(sp:SocketPair, path:string) =
     var ret:<FileIn>;
     PrcFileOpenR(ret, "."^path);
     ret?fr;
-    ( fr.ok @ true  -> sp.out!"HTTP/1.1 200 OK\r\n\r\n"; ReadFile(fr.in, sp.in, sp.out)
-            | false -> sp.out!"HTTP/1.1 404 Not found\r\n"; sp.out!"" )
+    ( fr.ok @ true  -> sp.out!"HTTP/1.1 200 OK\r\n\r\n";
+                       ReadFile(fr.in, sp.in, sp.out)
+            | false -> sp.out!"HTTP/1.1 404 Not found\r\n";
+                       sp.out!"" )
 proc ReadFile(in:<string>,sin:<string>,out:<string>) =
     in?buf; out!buf;
     ( buf @ "" -> sin?msg
