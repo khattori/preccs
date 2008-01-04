@@ -15,16 +15,16 @@ and cexp =
     Prim of prim * value list * lvar list * cexp' list
   | App  of value * value list
   | Fix  of bind list * cexp'
+  | Switch of value * (const * cexp') list
   | Cblk of string list * value list * cexp'
 
 (* プリミティブ演算子 *)
 and prim =
     Disp          (* ディスパッチ: ()->() *)
-  | If            (* 条件分岐 *)
-  | Switch        (* 値分岐   *)
+  | Run		  (* プロセス起動 *)
   | Match         (* パターンマッチ: (DFA ID, String val)->lvar list*)
   | Set           (* 値セット: (lvar, value) *)
-  | Asign         (* 値更新 *)
+  | Asgn          (* 値更新 *)
   | Update        (* フィールド更新 *)
   | New           (* チャネル生成 *)
   | Alloc
@@ -37,6 +37,9 @@ and prim =
 and value =
     Var    of lvar
   | Label  of lvar
+  | Const  of const
+and const =
+    Unit
   | Bool   of bool
   | Int    of int
   | String of string
@@ -45,12 +48,6 @@ and value =
 and bind = lvar * lvar list * cexp'
 
 and lvar = Symbol.t
-
-(** 識別子生成 *)
-let counter = ref 0
-let genid s =
-  incr counter;
-  S.symbol (Printf.sprintf "%s%d" s !counter)
 
 (* let disp:cexp' = Prim(Disp,[],[],[]),ref [] *)
 let disp:cexp' = App(Label(S.symbol "disp"),[]),ref []
@@ -70,6 +67,8 @@ let rec showCexp (cexp,fv) =
         "App(" ^showValue v ^","^ shows showValue vs ^ ")"
     | Fix(bs,c) ->
         "Fix(" ^shows showBind bs ^","^ showCexp c ^ ")"
+    | Switch(v,cs) ->
+	"Switch(" ^showValue v^","^ shows showConCexp cs ^ ")"
     | Cblk(cs,vs,c) ->
         "Cblk({" ^ ( List.fold_left2
                        (fun s c v -> s^showValue v^c)
@@ -78,11 +77,10 @@ let rec showCexp (cexp,fv) =
         
 and showPrim = function
     Disp   -> "Disp"
-  | If     -> "If"
-  | Switch -> "Switch"
+  | Run    -> "Run"
   | Match  -> "Match"
   | Set    -> "Set"
-  | Asign  -> "Asign"
+  | Asgn   -> "Asgn"
   | Update -> "Update"
   | New    -> "New"
   | Record -> "Record"
@@ -98,11 +96,15 @@ and showPrim = function
 and showValue = function
     Var l    -> "Var(" ^ showLvar l ^ ")"
   | Label l  -> "Label(" ^ showLvar l ^ ")"
+  | Const c  -> "Const(" ^ showConst c ^ ")"
+and showConst = function
+    Unit     -> "Unit()"
   | Bool b   -> "Bool(" ^ string_of_bool b ^ ")"
   | Int i    -> "Int(" ^ string_of_int i ^ ")"
   | Cint i   -> "Cint(" ^ string_of_int i ^ ")"
   | String s -> "String(\"" ^ s ^ "\")"
 and showLvar (s,_) = "\"" ^ s ^ "\""
+and showConCexp(a,c) = "(" ^ showConst a ^","^ showCexp c ^ ")"
 and showBind (lv,lvs,c) =
   "(" ^ showLvar lv ^","^ shows showLvar lvs ^","^ showCexp c ^ ")"
 
@@ -121,10 +123,12 @@ and etaReducFbs bsr c = function
 
 (** η簡約のための置換関数 *)
 and subst a b = function
-    Prim(p,ops,rs,cs),_ 
-      -> Prim(p,(List.map (substOp a b) ops),rs,List.map (subst a b) cs), ref []
+    Prim(p,ops,rs,cs),_ ->
+      Prim(p,(List.map (substOp a b) ops),rs,List.map (subst a b) cs), ref []
   | Fix(bs,c'),_ -> Fix(List.map (substBind a b) bs, subst a b c'), ref []
   | App(f,vs),_  -> App(substOp a b f, List.map (substOp a b) vs), ref []
+  | Switch(v,cs),_ ->
+      Switch(substOp a b v, List.map (fun (c,e) -> c,subst a b e) cs), ref []
   | Cblk(cs,vs,c'),_ -> Cblk(cs,vs,subst a b c'),ref []
 and substOp a b = function
     Var s when s=a -> b

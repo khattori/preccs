@@ -20,6 +20,7 @@ module R = Regex
 %token <Error.info> SKIP
 %token <Error.info> STOP
 %token <Error.info> RUN
+%token <Error.info> RETURN
 /* %token <Error.info> NULL */
 %token <Error.info> IMPORT
 
@@ -59,6 +60,7 @@ module R = Regex
 %token <Error.info> CARET
 %token <Error.info> SLASH
 %token <Error.info> AT
+%token <Error.info> ATAT
 %token <Error.info> DOLLAR
 %token <Error.info> USCORE
 %token <Error.info> VBAR
@@ -152,13 +154,13 @@ derivList
   | derivList COMMA derivPattern { $1 @ [$3] }
 ;
 derivPattern
-  : varExpression EQ typeAtomicExpression { ($1,$3) }
+  : IDENT EQ typeAtomicExpression { (VarSimple($1.i,$1.v),$3) }
 ;
 
 /* プロセス定義 */
 procDefinition
-  : PROC IDENT LPAREN RPAREN EQ procExpression               { $1,$2.v,[],$6 }
-  | PROC IDENT LPAREN parameterList RPAREN EQ procExpression { $1,$2.v,$4,$7 }
+  : PROC IDENT LPAREN RPAREN typeOption EQ procExpression               { $1,$2.v,[],$5,$7 }
+  | PROC IDENT LPAREN parameterList RPAREN typeOption EQ procExpression { $1,$2.v,$4,$6,$8 }
 ;
 parameterList
   : parameter { [$1] }
@@ -166,17 +168,17 @@ parameterList
 ;
 parameter
   : IDENT COLON typeAtomicExpression { ($1.v,$3) }
+;
+typeOption
+  : /* empty */ { None }
+  | COLON typeExpression { Some $2 }
+;
 
 /*****************************************************************
  * 算術式に関する規則
  */
 expression
   : arithExpression { $1 }
-  | arithExpression COMMA expression { 
-      match $3 with
-          ExpTuple e -> ExpTuple($1::e)
-        | _          -> ExpTuple($1::[$3])
-    }
 ;
 
 arithExpression
@@ -198,41 +200,52 @@ arithExpression
 ;
 
 unaryExpression 
-  : atomicExpression { $1 }
+  : postfixExpression { $1 }
   | DASH   unaryExpression %prec UMIN { ExpMonop($1,MopNeg,$2) }
   | EXCLM  unaryExpression %prec LNOT { ExpMonop($1,MopNot,$2) }
 ;
 
+postfixExpression
+  : atomicExpression		                 { $1 }
+  | postfixExpression DOT IDENT                  { ExpVar(VarField($3.i,$1,$3.v,ref 0,ref Types.INT)) } 
+  | postfixExpression SHARP INTV                 { ExpVar(VarProj($2,$1,$3.v))      } 
+  | postfixExpression DOT LSQUARE expression RSQUARE { ExpVar(VarSubscr($2,$1,$4))      } 
+;
 atomicExpression
-  : LPAREN expression RPAREN { $2 }
-  | varExpression { ExpVar($1) }
-  | LCURLY recFieldList RCURLY { ExpRecord($2) }
-  | LSQUARE variantExp RSQUARE { $2 }
-  | INTV  { ExpConst(ConInt($1.i,$1.v)) }
-  | STRV  { ExpConst(ConStr($1.i,$1.v)) }
-  | TRUE  { ExpConst(ConBool($1,true))  }
-  | FALSE { ExpConst(ConBool($1,false)) }
-  | LPAREN RPAREN { ExpConst(ConUnit($1)) }
+  : LPAREN expression RPAREN    { $2 } 
+  | IDENT LPAREN argumentListOpt RPAREN { ExpCall($1.i,$1.v,$3)        } 
+  | IDENT			{ ExpVar(VarSimple($1.i,$1.v)) }
+  | INTV                        { ExpConst(ConInt($1.i,$1.v)) }
+  | STRV                        { ExpConst(ConStr($1.i,$1.v)) }
+  | TRUE                        { ExpConst(ConBool($1,true))  }
+  | FALSE                       { ExpConst(ConBool($1,false)) }
+  | LPAREN RPAREN               { ExpConst(ConUnit($1)) } 
+  | LPAREN expTupleList RPAREN  { ExpTuple($2) } 
+  | LSQUARE expList RSQUARE     { ExpArray($2) }  
+  | LCURLY expFieldList RCURLY  { ExpRecord($2) }
+  | VBAR expVariant VBAR        { let i,v,e = $2 in ExpVariant(i,v,e) } 
 ;
 
-varExpression
-  : IDENT                                    { VarSimple($1.i,$1.v)         }
-  | varExpression DOT IDENT                  { VarField($3.i,$1,$3.v,ref 0,ref Types.INT) }
-  | varExpression INTV                       { VarProj($2.i, $1, $2.v)      }
-  | varExpression LSQUARE expression RSQUARE { VarSubscr($2,$1,$3)          }
+expList
+  : expression { [$1] }
+  | expList SEMI expression  { $1 @ [$3] }
+;
+expTupleList
+  : expression COMMA expression { [$1;$3] }
+  | expTupleList COMMA expression { $1 @ [$3] }
+;
 
+expFieldList
+  : expField { [$1] }
+  | expFieldList SEMI expField { $1 @ [$3] }
 ;
-recFieldList
-  : recField { [$1] }
-  | recFieldList SEMI recField { $1 @ [$3] }
-;
-recField
+expField
   : IDENT EQ expression { ($1.i,$1.v,$3) }
 ;
 
-variantExp
-  : IDENT { ExpVariant($1.i,$1.v,ExpConst(ConUnit($1.i))) }
-  | IDENT EQ expression { ExpVariant($1.i,$1.v,$3) }
+expVariant
+  : IDENT { ($1.i,$1.v,ExpConst(ConUnit($1.i))) }
+  | IDENT EQ expression { ($1.i,$1.v,$3) }
 ;
 
 /*****************************************************************
@@ -244,8 +257,8 @@ typeExpression
 typeTupleExpression
   : typePostfixExpression { $1 }
   | typeTupleExpression COMMA typePostfixExpression  {
-      match $3 with
-          TypTuple t -> TypTuple($1::t)
+      match $1 with
+          TypTuple t -> TypTuple(t @ [$3])
         | _          -> TypTuple($1::[$3])
     }
 ;
@@ -260,7 +273,7 @@ typeAtomicExpression
   | LT typeExpression GT             { TypChan($1,$2)     } /* チャネル型   */
   | LCURLY rgxExpression RCURLY      { TypRegex($1,$2)    } /* 正規表現型   */
   | LCURLY fieldRcdList RCURLY       { TypRecord($2)      } /* レコード型   */
-  | LSQUARE fieldVarList RSQUARE     { TypVariant($2)     } /* バリアント型 */
+  | VBAR fieldVarList VBAR           { TypVariant($2)     } /* バリアント型 */
   | LPAREN typeExpression RPAREN     { $2 }
 ;
 
@@ -314,22 +327,51 @@ rgxField
   : IDENT COLON rgxPostfixExpression  { ($1.i,$1.v,$3) }
 ;
 
-
 /*****************************************************************
  * パターン式に関する構文規則
  */
 patExpression
-  : USCORE { PatAny($1)                  }
-  | expression { PatExp($1) }
-  | IDENT COLON rgxExpression { PatRegex($1.i,$1.v,$3,ref (T.REXP R.EPS)) }
+  : patAtomic { $1 }
+;
+patFieldList
+  : patField { [$1] }
+  | patFieldList SEMI patField { $1 @ [$3] }
+;
+patField
+  : IDENT { ($1.i,$1.v,PatConst(ConUnit($1.i))) }
+  | IDENT EQ patExpression { ($1.i,$1.v,$3) }
+;
+patTupleList
+  : patExpression COMMA patExpression { [$1;$3] }
+  | patTupleList COMMA patExpression { $1 @ [$3] }
+;
+patVariant
+  : IDENT { PatVariant($1.i,$1.v,PatConst(ConUnit($1.i))) }
+  | IDENT EQ patExpression { PatVariant($1.i,$1.v,$3) }
+;
+patAtomic
+  : LPAREN patExpression RPAREN { $2 }
+  | LCURLY patFieldList RCURLY  { PatRecord($2) } 
+  | LPAREN patTupleList RPAREN  { PatTuple($2) } 
+  | VBAR patVariant VBAR        { $2 } 
+  | USCORE { PatAny($1)                  }
+  | IDENT  { PatIdent($1.i,$1.v)         }
+  | INTV   { PatConst(ConInt($1.i,$1.v)) }
+  | DASH INTV   { PatConst(ConInt($1,- $2.v)) }
+  | STRV   { PatConst(ConStr($1.i,$1.v)) }
+  | TRUE   { PatConst(ConBool($1,true))  }
+  | FALSE  { PatConst(ConBool($1,false)) }
+;
+patRgxExpression
+  : IDENT COLON rgxExpression { PatRegex($1.i,$1.v,$3,ref (T.REXP R.EPS)) }
 ;
 
 /*****************************************************************
  * プロセス式に関する構文規則
  */
 procExpression
-  : procMatchExpression  { $1 }
-  | procChoiceExpression { $1 }
+  : procChoiceExpression { $1 }
+  | procMatchExpression { $1 }
 ;
 
 /* 選択実行プロセス */
@@ -349,7 +391,7 @@ procGuardAction
 /* パタンマッチプロセス */
 procMatchExpression
   : procSeqExpression { $1 }
-  | expression AT procMatchActionList { ProcMatch($2,$1,$3,ref T.STRING) }
+  | expression AT procMatchActionList { ProcMatch($2,$1,$3,ref T.UNIT) }
 ;
 procMatchActionList
   : procMatchAction { [$1] }
@@ -357,12 +399,13 @@ procMatchActionList
 ;
 procMatchAction
   : patExpression ARROW procSeqExpression { ($1, $3) }
+  | patRgxExpression ARROW procSeqExpression { ($1, $3) } 
 ;
 
 /* 逐次実行プロセス */
 procSeqExpression
   : procAtomExpression { $1 }
-  | procSeqExpression SEMI procAtomExpression
+  | procSeqExpression SEMI procSeqExpression
       { match $1 with
 	    ProcSeq(i, p) -> ProcSeq(i, p @ [$3])
 	  | _             -> ProcSeq($2, [$1; $3])
@@ -371,13 +414,14 @@ procSeqExpression
 
 /* 基本プロセス式 */
 procAtomExpression
-  : LPAREN procExpression RPAREN     { $2 }
-  | procGuardExpression              { $1 }
-  | varExpression COLONEQ expression { ProcAsign($2,$1,$3)          }
-  | VAR IDENT declarator             { ProcVar($1,$2.v,$3)          }
-  | IDENT procInvocation             { ProcRun($1.i,$1.v,$2)        }
+  : LCURLY procExpression RCURLY   { $2 } 
+  | procGuardExpression              { $1 } 
+  | VAR IDENT declarator             { ProcVar($1,$2.v,$3)          } 
+  | IDENT LPAREN argumentListOpt RPAREN { ProcRun($1.i,$1.v,$3)     }  
+  | expression COLONEQ expression    { ProcAssign($2,$1,$3)         }
   | SKIP                             { ProcSkip($1)                 }
   | STOP                             { ProcStop($1)                 }
+  | RETURN expression                { ProcReturn($1,$2)            } 
   | LCBLK codeFragList RCBLK         { ProcCblock($1,fst $2,snd $2) }
 ;
 
@@ -387,21 +431,21 @@ procAtomExpression
  */
 codeFragList
   : CFRAG                            { [$1],[] }
-  | codeFragList varExpression CFRAG { (fst $1)@[$3],(snd $1)@[$2] }
+  | codeFragList expression CFRAG { (fst $1)@[$3],(snd $1)@[$2] }
 ;
 
 /* ガードプロセス */
 procGuardExpression
-  : varExpression EXCLM expression { ProcOutput($2,$1,$3)  } /* 出力 */
-  | varExpression QUEST IDENT      { ProcInput($2,$1,$3.v) } /* 入力 */
+  : expression EXCLM expression { ProcOutput($2,$1,$3)  } /* 出力 */
+  | expression QUEST IDENT      { ProcInput($2,$1,$3.v) } /* 入力 */
 ;
 
-/* プロセス呼出し式 */
-procInvocation
-  : LPAREN RPAREN { [] }
-  | LPAREN argumentList RPAREN { $2 }
-;
 /* 引数リスト */
+argumentListOpt
+  : /* empty */ { [] }
+  | argumentList { $1 }
+;
+
 argumentList
   : arithExpression { [$1] }
   | argumentList COMMA arithExpression { $1 @ [$3] }

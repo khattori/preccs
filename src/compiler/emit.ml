@@ -6,6 +6,7 @@
 *)
 
 module C = Cps
+module E = Exception
 
 let string_hexstr s =
   let h = ref "" in 
@@ -33,25 +34,19 @@ let emitDtable ()    = Printf.printf "prc_dtable_t __prc__dtbl = {\n";
 let emitPrcMain ()   = Printf.printf "int prc_main(void) {\n";
                        Printf.printf "return __prc__main__(%d, __prc__init, &__prc__dtbl);\n" (Rmap.maxreg());
                        Printf.printf "}\n"
-                       
+
+let const2str = function
+    C.Unit     -> "0"
+  | C.Bool b   -> if b then "~0" else "1"
+  | C.Int i    -> string_of_int ((i lsl 1) lxor 1)
+  | C.Cint i   -> string_of_int i
+  | C.String s -> Printf.sprintf "(int)__string__(%d,\"%s\")"
+      (String.length s) (string_hexstr s)
+
 let val2str rmap = function
     C.Var l    -> Rmap.regname (Rmap.find rmap l)
   | C.Label l  -> Printf.sprintf "(int)__prc__%s" (Symbol.name l)
-  | C.Bool b   -> if b then "~0" else "1"
-  | C.Int i    -> string_of_int ((i lsl 1) lxor 1)
-  | C.Cint i   -> string_of_int i
-  | C.String s -> Printf.sprintf "(int)__string__(%d,\"%s\")"
-      (String.length s) (string_hexstr s)
-
-
-let const2str = function
-    C.Var _    -> assert false
-  | C.Label l  -> Printf.sprintf "__prc__%s" (Symbol.name l)
-  | C.Bool b   -> if b then "~0" else "1"
-  | C.Int i    -> string_of_int ((i lsl 1) lxor 1)
-  | C.Cint i   -> string_of_int i
-  | C.String s -> Printf.sprintf "(int)__string__(%d,\"%s\")"
-      (String.length s) (string_hexstr s)
+  | C.Const c  -> const2str c
 
 let binop2str = function
     C.Add -> "IADD"
@@ -98,6 +93,47 @@ let rec emit rmap (cexp,fv) =
       emitPrcMain()
   | C.App(op,ops) ->
       emitApp rmap (op,ops)
+  | C.Switch(v,((C.String _,_)::_ as bcs)) ->
+      (
+	try
+	  List.iter (
+	    fun (b,c) ->
+    	      match b with
+		  C.Unit ->
+		    Printf.printf "if (1) {\n";
+		    emit rm c;
+		    Printf.printf "} else ";
+		    raise E.Break
+		| C.String s ->
+		    Printf.printf "if (EQS(%s,%s)==~0) {\n" (val2str rm v) (const2str b) ;
+		    emit rm c;
+		    Printf.printf "} else "
+		| _ -> assert false
+	  ) bcs
+	with
+	    E.Break -> ()
+      );
+      Printf.printf "{ assert(0); }\n"
+  | C.Switch(v,bcs) ->
+      Printf.printf "switch (%s) {\n" (val2str rm v); (
+	try
+	  List.iter (
+          fun (b,c) ->
+	    match b with
+		C.Unit ->
+		  Printf.printf "default:\n";
+		  emit rm c;
+		  Printf.printf "break;\n";
+		  raise E.Break
+	      | _ ->
+		  Printf.printf "case %s:\n" (const2str b);
+		  emit rm c;
+		  Printf.printf "break;\n";
+	  ) bcs
+	with
+	    E.Break -> ()
+      );
+      Printf.printf "}\nreturn 0;\n"
   | C.Cblk(cs,vs,c) ->
       Printf.printf "{%s}\n"
         ( List.fold_left2
@@ -152,7 +188,9 @@ and emitApp rmap (op,ops) =
     List.fold_left (
       fun i v -> match v with
           C.Var _ -> i+1
-        | _       -> Printf.printf "__prc__regs[%d]=%s;\n" i (const2str v); i+1
+        | C.Label l ->
+	    Printf.printf "__prc__regs[%d]=(int)__prc__%s;\n" i (Symbol.name l); i+1
+        | C.Const c -> Printf.printf "__prc__regs[%d]=%s;\n" i (const2str c); i+1
     ) 0 in
   let rm  = saveop rmap in
   let rm' = permvar rm ops in
@@ -162,43 +200,16 @@ and emitApp rmap (op,ops) =
 (* (p,ops,rs,cs) *)
 and emitPrim rm = function
     C.Disp,[],[],[] -> print_string "return (int)__disp__;\n"
-  | C.If,[b],[],[c1;c2] ->
-      Printf.printf "if (%s==~0) {\n" (val2str rm b);
-      emit rm c1;
-      Printf.printf "}\n";
-      emit rm c2
-  | C.Switch,[n],[],cs ->
-      Printf.printf "switch (TOCINT(%s)) {\n" (val2str rm n);
-      ignore (
-        List.fold_left (
-          fun i c ->
-            Printf.printf "case %d:\n" i;
-            emit rm c;
-            Printf.printf "break;\n";
-            i+1
-        ) 0 cs
-      );
-      Printf.printf "default: assert(0);\n";
-      Printf.printf "}\n"
   | C.New,[],[r],[c,fv] ->
       let rm'  = Rmap.release rm !fv in
       let rm'' = Rmap.assign rm' r in
         Printf.printf "%s=(int)__chan__();\n" (val2str rm'' (C.Var r));
         emit rm'' (c,fv)
   | C.Record,vs,[r],[c,fv] ->
-(*
-      let rm'  = Rmap.release rm !fv in
-      let rm'' = Rmap.assign rm' r in
-*)
       let rm'  = Rmap.assign rm r in
       let rm'' = Rmap.release rm' !fv in
       let rs   = val2str rm' (C.Var r) in
       let l    = List.length vs in
-	(*
-        Printf.printf "%s=__record__(%d" rs l;
-        List.iter (fun v -> Printf.printf ",%s" (val2str rm v)) vs;
-        print_string ");\n";
-	*)
 	Printf.printf "%s=__record__(%d);\n" rs l;
 	for i = 0 to (List.length vs) - 1 do
 	    Printf.printf "__prc__temp=%s;\n" (val2str rm (List.nth vs i));
@@ -220,13 +231,13 @@ and emitPrim rm = function
         Printf.printf "%s=((int *)%s)[TOCINT(%s)];\n"
           rs (val2str rm v) (val2str rm o);
         emit rm'' (c,fv)
-  | C.Offset,[v;C.Int o],[r],[c,fv] ->
+  | C.Offset,[v;C.Const(C.Int o)],[r],[c,fv] ->
       let rm'  = Rmap.release rm !fv in
       let rm'' = Rmap.assign rm' r in
       let rs   = val2str rm'' (C.Var r) in
         Printf.printf "%s=(int)&((int *)%s)[%d];\n" rs (val2str rm v) o;
         emit rm'' (c,fv)
-  | C.Asign,[v1;v2],[],[c,fv] ->
+  | C.Asgn,[v1;v2],[],[c,fv] ->
       let rm'  = Rmap.release rm !fv in
         Printf.printf "%s=%s;\n" (val2str rm v1) (val2str rm v2);
         emit rm' (c,fv)
@@ -236,11 +247,10 @@ and emitPrim rm = function
         Printf.printf "((int *)%s)[TOCINT(%s)]=__prc__temp;\n"
           (val2str rm v1) (val2str rm o);
         emit rm' (c,fv)
-(*
-        Printf.printf "((int *)%s)[TOCINT(%s)]=%s;\n"
-          (val2str rm v1) (val2str rm o) (val2str rm v2);
+  | C.Run,[v],[],[c,fv] ->
+      let rm'  = Rmap.release rm !fv in
+        Printf.printf "__run__(%s);\n" (val2str rm v);
         emit rm' (c,fv)
-*)
   | binop,[v1;v2],[r],[c,fv] ->
       let rm'  = Rmap.release rm !fv in
       let rm'' = Rmap.assign rm' r in

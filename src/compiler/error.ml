@@ -41,6 +41,9 @@ type err =
   | ERR_UNMATCH_COMMENT
   | ERR_FILE_NOTFOUND	of string
   | ERR_NO_INPUT
+  | ERR_NO_RETVAL of Symbol.t
+  | ERR_HAS_RETVAL
+  | ERR_MULT_RETVAL
   | ERR_PARSE_ERROR
   | ERR_UNSUPPORT
   | ERR_INTERNAL
@@ -79,6 +82,9 @@ let errmsg = function
   | ERR_UNMATCH_COMMENT    -> "unmatched end comment"
   | ERR_FILE_NOTFOUND s	   -> (quote s) ^ " file not found"
   | ERR_NO_INPUT	   -> "no input files"
+  | ERR_NO_RETVAL s        -> "process "^(doublequote (Symbol.name s))^"has no return value"
+  | ERR_HAS_RETVAL         -> "unnecessary return value has occurred"
+  | ERR_MULT_RETVAL        -> "return value has multiply occurred"
   | ERR_PARSE_ERROR        -> "parse error"
   | ERR_UNSUPPORT          -> "unsupported"
   | ERR_INTERNAL           -> "internal error"

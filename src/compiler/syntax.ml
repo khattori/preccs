@@ -14,7 +14,7 @@ open Error
 type def =
     DefVar  of (info * Symbol.t * decl)
   | DefType of (info * Symbol.t * typ) list
-  | DefProc of (info * Symbol.t * param list * proc) list
+  | DefProc of (info * Symbol.t * param list * typ option * proc) list
 and decl  =
     DeclExpr of exp
   | DeclType of typ * Types.t ref
@@ -47,23 +47,29 @@ and rgx =
 
 (** パターン式 *)
 and pat =
-    PatAny   of info
-  | PatExp   of exp
-  | PatRegex of info * Symbol.t * rgx * Types.rgx ref
+    PatAny     of info
+  | PatConst   of const
+  | PatIdent   of info * Symbol.t
+  | PatTuple   of pat list
+  | PatRecord  of rcdpat list
+  | PatVariant of info * Symbol.t * pat
+  | PatRegex   of info * Symbol.t * rgx * Types.rgx ref
+and rcdpat = info * Symbol.t * pat
 
 (** プロセス式 *)
 and proc =
-    ProcStop   of info
-  | ProcSkip   of info
-  | ProcSeq    of info * proc list
-  | ProcChoice of info * (proc * proc) list
-  | ProcMatch  of info * exp * (pat * proc) list * Types.t ref
-  | ProcInput  of info * var * Symbol.t
-  | ProcOutput of info * var * exp
-  | ProcRun    of info * Symbol.t * exp list
-  | ProcVar    of info * Symbol.t * decl
-  | ProcAsign  of info * var * exp
-  | ProcCblock of info * string list * var list
+    ProcStop     of info
+  | ProcSkip     of info
+  | ProcReturn   of info * exp
+  | ProcSeq      of info * proc list
+  | ProcChoice   of info * (proc * proc) list
+  | ProcMatch    of info * exp * (pat * proc) list * Types.t ref
+  | ProcInput    of info * exp * Symbol.t
+  | ProcOutput   of info * exp * exp
+  | ProcAssign	 of info * exp * exp
+  | ProcRun      of info * Symbol.t * exp list
+  | ProcVar      of info * Symbol.t * decl
+  | ProcCblock   of info * string list * exp list
 
 (** 算術式 *)
 and exp =
@@ -74,6 +80,8 @@ and exp =
   | ExpRecord  of record list
   | ExpVariant of info * Symbol.t * exp
   | ExpTuple   of exp list
+  | ExpArray   of exp list
+  | ExpCall    of info * Symbol.t * exp list
 and record = info * Symbol.t * exp
 
 (** 定数リテラル *)
@@ -86,9 +94,9 @@ and const =
 (** 変数 *)
 and var =
   | VarSimple of info * Symbol.t      
-  | VarField  of info * var * Symbol.t * int ref * Types.t ref (* ラベル参照 *)
-  | VarSubscr of info * var * exp                (* 配列要素   *)
-  | VarProj   of info * var * int
+  | VarField  of info * exp * Symbol.t * int ref * Types.t ref (* ラベル参照 *)
+  | VarSubscr of info * exp * exp                (* 配列要素   *)
+  | VarProj   of info * exp * int
 
 (** 二項演算子 *)
 and binop =
@@ -107,7 +115,16 @@ let rec info_of_expr = function
   | ExpBinop(i,_,_,_) | ExpMonop(i,_,_) | ExpVariant(i,_,_) -> i
   | ExpRecord(ls) ->let i,_,_ = List.hd ls in i
   | ExpTuple(ls) -> info_of_expr(List.hd ls)
-    
+  | ExpArray(ls) -> info_of_expr(List.hd ls)
+  | ExpCall(i,_,_) -> i
+let rec info_of_pat = function
+    PatAny i -> i
+  | PatConst c -> info_of_const c
+  | PatIdent(i,_) -> i
+  | PatTuple ps -> info_of_pat (List.hd ps)
+  | PatRecord rs -> let i,_,_ = List.hd rs in i
+  | PatVariant(i,_,_) -> i
+  | PatRegex(i,_,_,_) -> i
 
 type toplevel = def list
 

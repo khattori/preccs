@@ -50,7 +50,7 @@ let get_index info t =
  *)
 let lookup_proc info env s =
   try match E.find s env with
-      E.ProcEntry ts -> ts
+      E.ProcEntry(ts,r) -> ts,r
     | _ -> raise Not_found
   with
       Not_found -> errorAt info (ERR_UNDEF_PROC s)
@@ -106,17 +106,11 @@ let type_of_const = function
 let rec check_type env =
   (* 派生型定義用の変数参照 *)
   let rec deriv_var t = function
-      A.VarSimple(i,s)    -> get_field i t s
-    | A.VarField(i,v,s,_,_) ->
-        let t' = get_field i (deriv_var t v) s in
-          (* o := T.offset t' s; *) t'
-    | A.VarProj(i,v,n) -> T.proj (deriv_var t v) n
-    | A.VarSubscr(i,v,e)  ->
-        errorAt i ERR_ILLEGAL_DERIV in
+      A.VarSimple(i,s) -> get_field i t s
+    | v -> errorAt (A.info_of_var v) ERR_ILLEGAL_DERIV in
   let deriv_ap v =
     let rec trav ap = function
         A.VarSimple(_,s) -> s::ap
-      | A.VarField(_,v,s,_,_) -> trav (s::ap) v
       | _ -> assert false in
       trav [] v in
     function
@@ -175,32 +169,38 @@ and check_regex env = function
 (*
  * プロセス式のチェックを行う
  * 
- *   引  数：env: Env.t --- 環境
- *           -  : proc  --- プロセス式
+ *   引  数：env: Env.t   --- 環境
+ *           -  : proc    --- プロセス式
  *   戻り値：環境を返す
  *
  *)
-and check_proc env = function
+and check_proc env r = function
     A.ProcStop _ | A.ProcSkip _ -> env
-  | A.ProcSeq(_,ps) -> List.fold_left (fun e p -> check_proc e p) env ps
+  | A.ProcReturn(i,e) -> (
+      match r with
+        None   -> errorAt i ERR_HAS_RETVAL
+      | Some t -> assert_type i (check_expr env e) t; env
+    )
+  | A.ProcSeq(i,ps) ->
+      List.fold_left (fun e p -> check_proc e r p) env ps
   | A.ProcChoice(_,ps) ->
-      List.iter (fun (g,p) -> ignore (check_proc (check_proc env g) p)) ps; env
-  | A.ProcMatch(_,exp,ps,t) ->
-      t := check_expr env exp;
-      List.iter (
-        fun (patn,proc) ->
-          let env' = check_match env (!t) patn in
-            ignore (check_proc env' proc)
-      ) ps;
-      env
-  | A.ProcInput(i,v,s) ->
-      let t = type_of_chan i (check_var env v) in E.add s (E.VarEntry t) env
-  | A.ProcOutput(i,v,e) ->
-      let t1 = type_of_chan i (check_var env v) in
-      let t2 = check_expr env e in
+      List.iter (fun (g,p) -> ignore (check_proc (check_proc env r g) r p)) ps; env
+  | A.ProcMatch(i,exp,ps,ty) ->
+      let t = check_expr env exp in
+        ty := t;
+        List.iter (
+          fun (patn,proc) ->
+            let env' = check_match env (t,patn) in ignore (check_proc env' r proc)
+        ) ps;
+        env
+  | A.ProcInput(i,e,s) ->
+      let t = type_of_chan i (check_expr env e) in E.add s (E.VarEntry t) env
+  | A.ProcOutput(i,e1,e2) ->
+      let t1 = type_of_chan i (check_expr env e1) in
+      let t2 = check_expr env e2 in
         assert_type i t2 t1; env
   | A.ProcRun(i,s,es) ->
-      let ts = lookup_proc i env s in
+      let ts,_ = lookup_proc i env s in
         if (List.length es) == (List.length ts) then
           (List.iter2 (fun e t -> assert_type i (check_expr env e) t) es ts; env)
         else
@@ -208,10 +208,28 @@ and check_proc env = function
   | A.ProcVar(i,s,A.DeclExpr e) -> E.add s (E.VarEntry(check_expr env e)) env
   | A.ProcVar(i,s,A.DeclType(t,ty)) ->
       ty := check_type env t; E.add s (E.VarEntry !ty) env
-  | A.ProcAsign(i,v,e) ->
-      assert_type i (check_expr env e) (check_var env v); env
-  | A.ProcCblock(i,_,vs) ->
-      List.iter (fun v -> ignore (check_var env v)) vs; env
+  | A.ProcAssign(i,e1,e2) -> 
+      assert_type i (check_expr env e2) (check_expr env e1); env
+  | A.ProcCblock(i,_,es) ->
+      List.iter (fun e -> ignore (check_expr env e)) es; env
+
+and check_proc_no_return = function
+    A.ProcStop _ | A.ProcSkip _ | A.ProcAssign _
+  | A.ProcInput _ | A.ProcOutput _
+  | A.ProcRun _ | A.ProcVar _ | A.ProcCblock _ -> ()
+  | A.ProcReturn(i,_) -> errorAt i ERR_HAS_RETVAL
+  | A.ProcSeq(_,ps) -> List.iter (fun p -> check_proc_no_return p) ps
+  | A.ProcChoice(_,ps) -> List.iter (fun (_,p) -> check_proc_no_return p) ps
+  | A.ProcMatch(_,_,ps,_) -> List.iter (fun (_,p) -> check_proc_no_return p) ps
+
+and check_proc_has_return = function
+    A.ProcStop _ | A.ProcSkip _  | A.ProcAssign _
+  | A.ProcInput _ | A.ProcOutput _
+  | A.ProcRun _ | A.ProcVar _ | A.ProcCblock _ -> false
+  | A.ProcReturn(i,e) -> true
+  | A.ProcSeq(_,ps) -> List.exists (fun p -> check_proc_has_return p) ps
+  | A.ProcChoice(_,ps) -> List.for_all (fun (_,p) -> check_proc_has_return p) ps
+  | A.ProcMatch(_,_,ps,_) -> List.for_all (fun (_,p) -> check_proc_has_return p) ps
 
 (*
  * 式の型チェックを行い，型を返す
@@ -227,6 +245,16 @@ and check_expr env = function
   | A.ExpRecord(fs) -> T.RECORD(List.map (fun (_,s,e) -> s,check_expr env e) fs)
   | A.ExpVariant(_,s,e) -> T.VARIANT([s,check_expr env e])
   | A.ExpTuple es   -> T.TUPLE(List.map (fun e -> check_expr env e) es)
+  | A.ExpArray es   -> T.ARRAY(check_expr env (List.hd es), List.length es)
+  | A.ExpCall(i,s,es) ->
+      let ts,r = lookup_proc i env s in
+        if (List.length es) == (List.length ts) then
+          (List.iter2 (fun e t -> assert_type i (check_expr env e) t) es ts;
+           match r with
+	       None -> errorAt i (ERR_NO_RETVAL s)
+	     | Some t -> t)
+        else
+          errorAt i ERR_INVALID_ARGNUM
   | A.ExpBinop(i,A.BopAdd,e1,e2) | A.ExpBinop(i,A.BopSub,e1,e2)
   | A.ExpBinop(i,A.BopMul,e1,e2) | A.ExpBinop(i,A.BopDiv,e1,e2)
   | A.ExpBinop(i,A.BopMod,e1,e2) ->
@@ -275,34 +303,47 @@ and check_var env =
     (* アクセスパスをたどる *)
     function
         A.VarSimple(i,s)    -> lookup_var i s
-      | A.VarField(i,v,s,o,r) ->
-          let t = check_var env v in
+      | A.VarField(i,e,s,o,r) ->
+          let t = check_expr env e in
           let t' = get_field i t s in
             r := t;
             o := T.offset t s; t'
-      | A.VarProj(i,v,n) -> T.proj (check_var env v) n
-      | A.VarSubscr(i,v,e)  ->
-          assert_type i (check_expr env e) T.INT;  (* eはINT型であること   *)
-          get_index i (check_var env v)
+      | A.VarProj(i,e,n) -> T.proj (check_expr env e) n
+      | A.VarSubscr(i,e1,e2)  ->
+          assert_type i (check_expr env e2) T.INT;  (* eはINT型であること   *)
+          get_index i (check_expr env e1)
 
 
 (*
- * パターン式のチェック
+ * パターン式全体の型チェック
  * 
  *   引　数：env: Env.t   --- 名前環境
- *           ty : Types.t --- パターンマッチする値の型情報
  *           -  : pat     --- パターン構文
  *   戻り値：新しい環境を返す
-*)
-and check_match env ty = function
-    A.PatAny _   -> env
-  | A.PatExp e -> 
-      if T.subtype ty (check_expr env e) then env
-      else errorAt (A.info_of_expr e) ERR_ILLEGAL_PATTERN
-  | A.PatRegex(i,s,r,t) ->
+ *)
+and check_match env = function
+    _,A.PatAny _   -> env
+  | T.REGEX _,A.PatConst c -> assert_type (A.info_of_const c) (type_of_const c) T.STRING; env
+  | t,A.PatConst c -> assert_type (A.info_of_const c) (type_of_const c) t; env
+  | t,A.PatIdent(i,s) -> E.add s (E.VarEntry t) env
+  | T.TUPLE ts,A.PatTuple ps when List.length ts == List.length ps
+      -> List.fold_left2 (fun e t p -> check_match e (t,p)) env ts ps
+  | T.RECORD rs,A.PatRecord ps when List.length rs == List.length ps
+      -> List.fold_left2 (
+           fun e (s,t) (i,s',p) ->
+             if Symbol.equal s s' then
+               check_match env (t,p)
+             else
+               errorAt i ERR_ILLEGAL_PATTERN
+         ) env rs ps
+  | T.VARIANT vs,A.PatVariant(i,s,p) when List.exists (fun (s',_) -> Symbol.equal s s') vs
+      -> let _,t = List.find (fun (s',_) -> Symbol.equal s s') vs in
+           check_match env (t,p)
+  | T.STRING, A.PatRegex(i,s,r,t) | T.REGEX _, A.PatRegex(i,s,r,t) ->
       let rt = check_regex env r in
-        t := rt;
+	t := rt;
         E.add s (E.VarEntry(T.REGEX rt)) env
+  | _,p -> errorAt (A.info_of_pat p) ERR_ILLEGAL_PATTERN
 
 (*
  * 型チェックを行う関数
@@ -326,23 +367,37 @@ let check defs =
         | A.DefProc procs ->
             (* プロセス定義ヘッダ部のチェック *)
             let e = List.fold_left (
-              fun e (i,s,ds,_) -> try
+              fun e (i,s,ds,r,_) -> try
 		  let _ = E.find s e in
 		    errorAt i (ERR_REDEF_PROC s)
 		with
 		    Not_found ->
-		      E.add s (E.ProcEntry(List.map (fun (_,t) -> check_type e t) ds)) e
+		      E.add s (E.ProcEntry(List.map (fun (_,t) -> check_type e t) ds,
+                                          match r with
+					      None -> None
+					    | Some t' -> Some (check_type e t'))) e
             ) e procs in
               List.iter (
-                fun (i,s,ds,p) ->
+                fun (i,s,ds,_,p) ->
                   match (E.find s e) with
                       (* プロセス本体のチェック *)
-                      E.ProcEntry(ts) -> ignore (
+                      E.ProcEntry(ts,None) -> ignore (
                         check_proc (
                           List.fold_left2 (
                             fun e (s,_) t -> E.add s (E.VarEntry t) e
                           ) e ds ts
-                        ) p )
+                        ) None p );
+			check_proc_no_return p
+		    | E.ProcEntry(ts,Some r) ->
+			let e' = List.fold_left2 (
+                            fun e (s,_) t -> E.add s (E.VarEntry t) e
+                          ) e ds ts
+			in
+			  ignore (check_proc e' (Some r) p);
+			  if (check_proc_has_return p) then
+				()
+			  else
+				errorAt i (ERR_NO_RETVAL s)
                     | _ -> assert false
               ) procs; e
     )

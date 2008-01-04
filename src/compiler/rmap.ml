@@ -38,7 +38,11 @@ let regname = function
 let get (_,ls) i = try L.assoc i ls with _ -> assert false
 
 (** シンボルの保持するレジスタ番号を検索 *)
-let find (_,ls) s = let i,_ = L.find (fun (i,s') -> s=s') ls in i
+let find (_,ls) s =
+  try
+    let i,_ = L.find (fun (i,s') -> s=s') ls in i
+  with
+      Not_found -> Printf.printf "Rmap.find: not found %s\n" (Symbol.name s); assert false
 
 let add (n,ls) i s =
   let nl = L.sort (fun (j,_) (k,_) -> Pervasives.compare j k) ((i,s)::ls) in

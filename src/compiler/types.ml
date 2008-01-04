@@ -167,6 +167,10 @@ let rec subtype ty1 ty2 =
         List.fold_left2
           (fun b (s1,t1) (s2,t2) -> b && (Symbol.equal s1 s2) && (subtype t1 t2))
           true fs1 fs2
+    | VARIANT(ts1),VARIANT(ts2) ->
+	List.for_all (fun (s1,t1) ->
+          List.exists (fun (s2,t2) -> (Symbol.equal s1 s2) && (subtype t1 t2)) ts2
+        ) ts1
     | CHAN(t1),CHAN(t2)   -> eqtype t1 t2 (* invariantにする必要あり *)
     | REGEX(r1),REGEX(r2) -> rsubtype r1 r2
     | REGEX(_),STRING     -> true

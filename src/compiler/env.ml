@@ -12,7 +12,7 @@ module Sm = Map.Make(Symbol)
 (* 変数・プロセス・型環境の定義 *)
 type entry =
     VarEntry  of Types.t
-  | ProcEntry of Types.t list
+  | ProcEntry of Types.t list * Types.t option
   | TypeEntry of Types.t
 
 let find = Sm.find

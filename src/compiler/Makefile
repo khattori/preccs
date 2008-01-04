@@ -18,7 +18,8 @@ else
 TARGET = prcc.exe
 endif
 
-OBJS =	symbol.cmo	\
+OBJS =	exception.cmo	\
+	symbol.cmo	\
 	error.cmo	\
 	label.cmo	\
 	prop.cmo	\
@@ -40,6 +41,8 @@ OBJS =	symbol.cmo	\
 	dtable.cmo	\
 	dfa.cmo	\
 	pi.cmo		\
+	match.cmo	\
+	ptrans.cmo	\
 	cps.cmo	\
 	closure.cmo	\
 	rmap.cmo	\
