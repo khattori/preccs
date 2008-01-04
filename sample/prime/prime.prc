@@ -19,9 +19,9 @@ proc Sieve(in:<int>,out:<int>) =
 
 proc Filter(n:int,in:<int>,out:<int>) =
     in?x;
-    ( x%n @
+    { x%n @
       0 -> Filter(n,in,out)
-    | _ -> out!x; Filter(n,in,out) )
+    | _ -> out!x; Filter(n,in,out) }
 
 proc PrintInt(nch:<int>) =
     nch?n;

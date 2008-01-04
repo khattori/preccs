@@ -13,13 +13,9 @@ proc Main() =
 	Match2("a" ^ "01"h^"bb");
 	Match2("a" ^ "01"h^"b" ^ "02"h^"bbb")
 proc Match(msg:string) =
-       (
 	msg @ x : { l: octet; m: ("01"h|"02"h)[l] } -> stdout!"OK\n"
 	    | _ -> stdout!"NG\n"
-  	)
 proc Match2(msg:string) =
-	(
 	msg @ x : "a"; { l: octet; m: "b"[l] }*; "b" -> stdout!"OK\n"
 	    | _ -> stdout!"NG\n"
-	)
 

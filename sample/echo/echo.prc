@@ -9,5 +9,5 @@ proc Main() = Echo()
 
 proc Echo() = 
     stdin?msg;
-    ( msg @ x:{l:("q"|"Q");m:"uit"?;n:NewLine} -> stdout!"Bye!";stop
-          | _ -> stdout!msg; Echo() )
+    { msg @ x:{l:("q"|"Q");m:"uit"?;n:NewLine} -> stdout!"Bye!";stop 
+          | _ -> stdout!msg; Echo() }

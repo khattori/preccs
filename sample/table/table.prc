@@ -43,23 +43,23 @@ proc HasDataHd(tbl:Table, nxt:Table, kv:KeyVal) =
                     HasDataHd(tbl, ntbl, req);
                     HasData__(tbl, ntbl, nxt, kv)
    | tbl.get?req ->
-       ( req.key @ kv.key -> req.ret!kv.val
-                 | _      -> nxt.get!req );
+       ( (req.key == kv.key) @ true -> req.ret!kv.val
+                             | _    -> nxt.get!req );
        HasDataHd(tbl, nxt, kv)
    | tbl.del?req ->
-       ( req.key @ kv.key -> nxt.___!()
-                 | _      -> nxt.del!req;
-                             HasDataHd(tbl, nxt, kv) )
+       ( (req.key == kv.key) @ true -> nxt.___!()
+                             | _    -> nxt.del!req;
+                                       HasDataHd(tbl, nxt, kv) )
 proc HasData__(tbl:Table, pre:Table, nxt:Table, kv:KeyVal) =
      pre.___?req -> HasDataHd(tbl, nxt, kv)
    | pre.get?req ->
-       ( req.key @ kv.key -> req.ret!kv.val
-                 | _      -> nxt.get!req );
+       ( req.key == kv.key @ true -> req.ret!kv.val
+                           | _    -> nxt.get!req );
        HasData__(tbl, pre, nxt, kv)
    | pre.del?req ->     
-       ( req.key @ kv.key -> NoData__(pre,nxt)
-                 | _      -> nxt.del!req;
-                             HasData__(tbl, pre, nxt, kv) )
+       ( req.key == kv.key @ true -> NoData__(pre,nxt)
+                           | _    -> nxt.del!req;
+                                    HasData__(tbl, pre, nxt, kv) )
 
 proc Main() =
     TableProc();
