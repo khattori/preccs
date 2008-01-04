@@ -14,8 +14,8 @@ type RequestLine = {{
 
 proc Test4(end:<bool>,ok:<int>,ng:<int>) =
     var msg = "GET /httpd.prc HTTP/1.1\r\n";
-    ( msg @ x:RequestLine -> ok!1;
-            ( x.path @ "/httpd.prc" -> ok!1
-                     | _            -> ng!1 )
-          | _ -> ng!1);
+    { msg @ x:RequestLine -> ok!1;
+            { x.path @ "/httpd.prc" -> ok!1
+                     | _            -> ng!1 }
+          | _ -> ng!1 };
     end!true

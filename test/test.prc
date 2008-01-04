@@ -6,6 +6,7 @@ import "test2.prc"
 import "test3.prc"
 import "test4.prc"
 import "test5.prc"
+import "test6.prc"
 
 var ok:<int>
 var ng:<int>
@@ -14,7 +15,6 @@ var res:<bool>
 proc Main() =
     Total();
     var end:<bool>;
-
     Test1(end,ok,ng); end?x;
     C{ printf("TEST1 completed\n"); C};
     Test2(end,ok,ng); end?x;
@@ -25,6 +25,8 @@ proc Main() =
     C{ printf("TEST4 completed\n"); C};
     Test5(end,ok,ng); end?x;
     C{ printf("TEST5 completed\n"); C};
+    Test6(end,ok,ng); end?x;
+    C{ printf("TEST6 completed\n"); C};
     res!true;
     stop
 
