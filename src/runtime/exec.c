@@ -208,20 +208,18 @@ int __null_recv__(void) {
 }
 
 /*
-  r0 : run_clos
-  r1 : continuation
-  r2 : 生成するプロセスクロージャ
+  プロセスを生成する
+  s : 生成するプロセスクロージャ
 */
-int __run__(void) {
+int __run__(int s) {
     proc_t *prc;
 
+    __prc__temp = s;
     prc = proc();
-    prc->clos = __prc__regs[2];
+    prc->clos = __prc__temp;
     prc->val  = 0;
     TAILQ_INSERT_TAIL(__prc__rdyq, prc, link);
-
-    __prc__regs[0] = __prc__regs[1];
-    return ((int*)__prc__regs[0])[0];
+    return 0;
 }
 
 int __stop__(void) {

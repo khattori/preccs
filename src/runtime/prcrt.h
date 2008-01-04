@@ -44,7 +44,6 @@ extern int __prc__rnum;
 extern int __prc__disp;
 extern int __prc__send;
 extern int __prc__recv;
-extern int __prc__run;
 
 extern int __prc__temp;
 extern int __prc__temp1;
@@ -52,6 +51,7 @@ extern int __prc__temp2;
 extern int __prc__temp3;
 
 /* 組込み関数 */
+int __run__(int s);
 int __pullup__(int s);
 int __strlen__(int s);
 char *__strptr__(int s);

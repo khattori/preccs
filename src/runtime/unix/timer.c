@@ -30,17 +30,20 @@ void timer_init(void) {
  */
 void timer_add(event_t *evt) {
     event_t *e;
-    struct timeval now;
+    struct timeval now, fire;
 
     if (gettimeofday(&now, NULL) < 0) {
         perr(PERR_SYSTEM, "gettimeofday()", errno, __FILE__, __LINE__);
     }
-    RCDIDX(evt->val,0) = now.tv_sec + TOCINT(RCDIDX(evt->val,0));
-    RCDIDX(evt->val,1) = now.tv_usec + TOCINT(RCDIDX(evt->val,1)) * 1000;
+    RCDIDX(evt->val,0) = fire.tv_sec  = now.tv_sec + TOCINT(RCDIDX(evt->val,0));
+    RCDIDX(evt->val,1) = fire.tv_usec = now.tv_usec + TOCINT(RCDIDX(evt->val,1)) * 1000;
 
     /* 挿入場所を探索 */
     for (e = __prc__tmrq->tqh_first; e != NULL; e = e->link.tqe_next) {
-	if (e->val > evt->val) {
+        struct timeval cur;
+        cur.tv_sec  = RCDIDX(e->val,0);
+        cur.tv_usec = RCDIDX(e->val,1);
+	if (timercmp(&cur,&fire,>)) {
 	    break;
 	}
     }
@@ -74,7 +77,7 @@ const struct timespec *timer_next(void) {
     static struct timespec ts_zero = {0,0};
     static struct timespec ts;
     event_t *evt;
-    struct timeval now, fire;
+    struct timeval now, fire, nxt;
 
     /* タイマー待ちプロセスが無い場合 */
     if ((evt = tmrq_next()) == NULL) {
@@ -89,8 +92,9 @@ const struct timespec *timer_next(void) {
     if (timercmp(&now,&fire,>)) {
         return &ts_zero;  /* 既に発火時刻を過ぎた場合 */
     }
-    ts.tv_sec  = fire.tv_sec - now.tv_sec;
-    ts.tv_nsec = (fire.tv_usec - now.tv_usec)*1000;
+    timersub(&fire, &now, &nxt); 
+    ts.tv_sec  = nxt.tv_sec;
+    ts.tv_nsec = nxt.tv_usec*1000;
 
     return &ts;
 }

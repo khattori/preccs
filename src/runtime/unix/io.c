@@ -286,7 +286,6 @@ int io_exec(void) {
 	return (int)__stop__;
     }
     if (sigsetjmp(sj_buf, 1) == 0) {
-	//printf("aio_count = %d\n", aio_count);
 	ret = pselect(n, &rfds, &wfds, NULL, ts, &ss_default);
 	if (ret < 0) {
             if (errno == EINTR) {
