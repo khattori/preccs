@@ -25,14 +25,14 @@ int prc_FileOpenR(int ich, char *fname) {
     int fd;
 
     if (stat(fname, &st) < 0) {
+        perr(PWRN_SYSTEM, "stat", strerror(errno), __FILE__, __LINE__);
         return -1;
-        // perr(PERR_SYSTEM, "stat", strerror(errno), __FILE__, __LINE__);
     }
     if (!S_ISREG(st.st_mode)) {
         return -1;
     }
     if ((fd = open(fname, O_RDONLY)) < 0) {
-        // perr(PERR_SYSTEM, "open", strerror(errno), __FILE__, __LINE__);
+        perr(PWRN_SYSTEM, "open", strerror(errno), __FILE__, __LINE__);
 	return -1;
     }
     // printf("file opened: %d\n", fd);

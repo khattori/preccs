@@ -81,15 +81,47 @@ void io_complete(ioent_t *io) {
 
     aio_count--;
     if ((ret = aio_error(&io->ctlblk)) != 0) {
+        if (ret == ECONNRESET) {
+            switch (io->iotype) {
+	    case IOT_INPUT:
+		io_read_complete(io, 0);
+	    	if (io->data) {
+	  	    ((ioent_t *)io->data)->data = NULL;
+	    	} else {
+		    close(io->handle);
+	    	}
+		break;
+	    case IOT_OUTPUT:
+                io_write_complete(io, 0);
+	    	if (io->data) {
+	 	    ((ioent_t *)io->data)->data = NULL;
+	    	} else {
+		    close(io->handle);
+	    	}
+		break;
+    	    default:
+		perr(PERR_INTERNAL, __FILE__, __LINE__);
+	    }
+	    ioent_delete(io);
+	    return;
+        }
 	perr(PERR_SYSTEM, "aio_error", strerror(ret), __FILE__, __LINE__);
 	return;
     }
     len = aio_return(&io->ctlblk);
+    if (len < 0) {
+	perr(PERR_SYSTEM, "aio_return", strerror(errno), __FILE__, __LINE__);
+	return;
+    }
     switch (io->iotype) {
     case IOT_INPUT:
 	io_read_complete(io, len);
 	if (len == 0) {
-	    close(io->handle);
+	    if (io->data) {
+		((ioent_t *)io->data)->data = NULL;
+	    } else {
+		close(io->handle);
+	    }
 	    ioent_delete(io);
 	    return;
 	}
@@ -177,7 +209,11 @@ void io_output(ioent_t *io, event_t *evt, int exec) {
 
         if (len == 0) {
             io_write_complete(io, 0);
-            close(io->handle);
+	    if (io->data) {
+		((ioent_t *)io->data)->data = NULL;
+	    } else {
+		close(io->handle);
+	    }
 	    ioent_delete(io);
             return;
         }
