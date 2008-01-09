@@ -37,39 +37,38 @@ type TEXT =  { /"^\r\n"* }
 type SntpSndPkt = SntpPacket{mode={"0B"h}}
 type SntpRcvPkt = SntpPacket{mode={"CC"h|"0C"h}}
 
-type SocketPair = {in:<string>;out:<string>}
+type Socket = {in:<string>;out:<string>}
 
 proc Main() =
-    var ret:<SocketPair>;
+    var ret:<Socket>;
     stdout!"Host> ";
     stdin?host;
-    ( host @ h:{ name: TEXT; x: ("\r"|"\n")* } ->
-              SockUdpCreate(ret,h.name,123);
-              ret?sp;
+    { host @ h:{ name: TEXT; x: ("\r"|"\n")* } ->
+              var sp = SockUdpCreate(h.name,123);
               SntpProcInit(sp)
-           | _ -> skip )
+           | _ -> skip }
 
-proc SntpProcInit(sp:SocketPair) =
+proc SntpProcInit(sp:Socket) =
     stdout!"Enter> ";
     stdin?cmnd;
-    ( cmnd @ msg : ("q"|"Q");octet* -> stop
+    { cmnd @ msg : ("q"|"Q");octet* -> stop
            | _ -> var pkt:SntpSndPkt;
                   sp.out!pkt;
-                  SntpProcWait(sp) )
+                  SntpProcWait(sp) }
 
-proc SntpProcWait(sp:SocketPair) =
-    timer!10  -> stdout!"Timeout\n"
-  | stdin?msg -> stdout!"Bye\n"
-  | sp.in?msg -> ( msg @ pkt:SntpRcvPkt ->
+proc SntpProcWait(sp:Socket) =
+    timer!(10,0) -> stdout!"Timeout\n"
+  | stdin?msg    -> stdout!"Bye\n"
+  | sp.in?msg    -> { msg @ pkt:SntpRcvPkt ->
                               C{ print_ntp_time(STRPTR($pkt.trsts.second$)); C}
-                       | _ -> stdout!"Error packet recvd\n" );
-                 SntpProcInit(sp)
+                          | _ -> stdout!"Error packet recvd\n" };
+                    SntpProcInit(sp)
   
-proc SockUdpCreate(ret:<SocketPair>,host:string,port:int) =
+proc SockUdpCreate(host:string,port:int):Socket =
     var sin:<string>;
     var sout:<string>;
     C{
 	char *hname = (char *)__string__(STRLEN($host$),STRPTR($host$));
-	prc_SockUdpClient($sin$, $sout$, STRPTR(hname), TOCINT($port$));
+	prc_SockUdpClient($sin$, $sout$, STRPTR((int)hname), TOCINT($port$));
     C};
-    ret!{in=sin;out=sout}
+    return {in=sin;out=sout}
