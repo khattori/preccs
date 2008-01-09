@@ -25,6 +25,9 @@ let rec make_list a = function
     0 -> []
   | n when n < 0 -> assert false
   | n -> a::make_list a (n-1)
+let rec make_chan p = function
+    []    -> p
+  | s::rs -> P.New(s,make_chan p rs)
 
 let trans_const = function
     A.ConUnit _    -> P.Unit
@@ -156,8 +159,8 @@ and trans_proc env nxt = function
   | A.ProcRun(_,s,es) -> P.Par(P.Call(P.Var s,L.map (fun e -> trans_expr env e) es),nxt)
   | A.ProcReturn(_,e) -> P.Par(P.Retn(trans_expr env e),nxt)
   | A.ProcVar(_,s,A.DeclExpr e)  -> P.Let(s,trans_expr env e,nxt)
-  | A.ProcVar(_,s,A.DeclType(_,ty)) when T.is_chan !ty -> P.New(s,nxt)
-  | A.ProcVar(_,s,A.DeclType(_,ty)) -> P.Let(s,trans_type !ty,nxt)
+  | A.ProcVar(_,s,A.DeclType(_,ty)) ->
+		let cs,es = trans_type !ty in make_chan (P.Let(s,es,nxt)) cs
   | A.ProcAssign(_,e1,e2) -> P.Asgn(trans_expr env e1, trans_expr env e2,nxt)
   | A.ProcCblock(_,cs,es) -> P.Cblk(cs,L.map (trans_expr env) es,nxt)
 
@@ -215,15 +218,20 @@ and trans_rgxpat ty v patns =
  * 
  *)
 and trans_type = function
-    T.UNIT   -> P.Const(P.Unit)
-  | T.BOOL   -> P.Const(P.Bool false)
-  | T.INT    -> P.Const(P.Int 0)
-  | T.STRING -> P.Const(P.String "")
-  | T.ARRAY(t,n) -> P.Record (make_list (trans_type t) n)
-  | T.RECORD ts  -> P.Record (L.map (fun (_,t) -> trans_type t) ts)
-  | T.TUPLE ts   -> P.Record (L.map trans_type ts)
-  | T.VARIANT ((s,t)::_) -> P.Record ([P.Const(P.Int(Symbol.id s));trans_type t])
-  | T.REGEX r    -> con_regex r
+    T.UNIT   -> [],P.Const(P.Unit)
+  | T.BOOL   -> [],P.Const(P.Bool false)
+  | T.INT    -> [],P.Const(P.Int 0)
+  | T.STRING -> [],P.Const(P.String "")
+  | T.ARRAY(t,n) -> let cs,es = L.split (make_list (trans_type t) n) in
+			L.flatten cs,P.Record es
+  | T.RECORD ts  -> let cs,es = L.split (L.map (fun (_,t) -> trans_type t) ts) in
+			L.flatten cs,P.Record es
+  | T.TUPLE ts   -> let cs,es = L.split (L.map trans_type ts) in
+			L.flatten cs,P.Record es
+  | T.VARIANT ((s,t)::_) -> let cs,es = trans_type t in
+			cs,P.Record ([P.Const(P.Int(Symbol.id s));es])
+  | T.REGEX r    -> [],con_regex r
+  | T.CHAN _ -> let v_chan = genid "chan" in [v_chan],P.Var v_chan
   | _ -> assert false
 
 (*
@@ -240,8 +248,8 @@ let trans env defs =
     fun def proc -> (
       match def with
           A.DefVar(_,s,A.DeclExpr ex) -> P.Let(s,trans_expr env ex,proc)
-        | A.DefVar(_,s,A.DeclType(_,ty)) when T.is_chan !ty -> P.New(s,proc)
-        | A.DefVar(_,s,A.DeclType(_,ty)) -> P.Let(s,trans_type !ty,proc)
+        | A.DefVar(_,s,A.DeclType(_,ty)) ->
+		let cs,es = trans_type !ty in make_chan (P.Let(s,es,proc)) cs
         | A.DefType types -> proc
         | A.DefProc procs ->
             P.Fix(L.map (
