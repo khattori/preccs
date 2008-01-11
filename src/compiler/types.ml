@@ -182,6 +182,7 @@ and rsubtype r1 r2 =
       RARR(r1',n),RARR(r2',m) when n==m -> rsubtype r1' r2'
     | RITR(r1',s1,None),RITR(r2',s2,None) when Symbol.equal s1 s2 -> rsubtype r1' r2'
     | RITR(r1',s1,Some f1),RITR(r2',s2,Some f2) when Symbol.equal s1 s2 && Symbol.equal f1 f2 -> rsubtype r1' r2'
+    | _,RITR _ -> true
     | RRCD(rs1),RRCD(rs2) when List.length rs1 = List.length rs2 ->
         List.fold_left2
           (fun b (s1,r1') (s2,r2') -> b&&(Symbol.equal s1 s2)&&(rsubtype r1' r2'))

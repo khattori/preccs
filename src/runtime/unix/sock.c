@@ -38,18 +38,39 @@ void prc_SockFinish(void) {
 }
 
 /*
+ * ソケットをセットしチャネルを返す
+ */
+void prc_SockSetUnconnChan(int ich, int och, int so) {
+    ioent_t *iie, *oie;
+
+    iie = ioent_create((chan_t *)ich, so, IOT_INPUT, so_recvfrom, BUFSIZ);
+    oie = ioent_create((chan_t *)och, so, IOT_OUTPUT, so_sendto, BUFSIZ);
+    iie->data = oie;
+    oie->data = iie;
+}
+/*
+ * ソケットをセットしチャネルを返す
+ */
+void prc_SockSetConnChan(int ich, int och, int so) {
+    ioent_t *iie, *oie;
+
+    iie = ioent_create((chan_t *)ich, so, IOT_INPUT, so_input, BUFSIZ);
+    oie = ioent_create((chan_t *)och, so, IOT_OUTPUT, so_output, BUFSIZ);
+    iie->data = oie;
+    oie->data = iie;
+}
+
+/*
  * Udpサーバソケットのハンドルを返す
  */
 int prc_SockUdpServer(int ich, int och, int port) {
     struct sockaddr_in addr;
-    ioent_t *iie, *oie;
     int sock;
 
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         perr(PERR_SYSTEM, "socket", strerror(errno), __FILE__, __LINE__);
         return -1;
     }
-
     addr.sin_port = htons(port);
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
@@ -58,10 +79,7 @@ int prc_SockUdpServer(int ich, int och, int port) {
 	close(sock);
         return -1;
     }
-    iie = ioent_create((chan_t *)ich, sock, IOT_INPUT, so_recvfrom, BUFSIZ);
-    oie = ioent_create((chan_t *)och, sock, IOT_OUTPUT, so_sendto, BUFSIZ);
-    iie->data = oie;
-    oie->data = iie;
+    prc_SockSetUnconnChan(ich, och, sock);
 
     return 0;
 }
@@ -72,7 +90,6 @@ int prc_SockUdpServer(int ich, int och, int port) {
 int prc_SockUdpClient(int ich, int och, char *host, int port) {
     struct hostent *hent;
     struct sockaddr_in addr;
-    ioent_t *iie, *oie;
     int sock;
 
     if ((hent = gethostbyname(host)) == NULL) {
@@ -92,10 +109,7 @@ int prc_SockUdpClient(int ich, int och, char *host, int port) {
 	close(sock);
         return -1;
     }
-    iie = ioent_create((chan_t *)ich, sock, IOT_INPUT, so_input, BUFSIZ);
-    oie = ioent_create((chan_t *)och, sock, IOT_OUTPUT, so_output, BUFSIZ);
-    iie->data = oie;
-    oie->data = iie;
+    prc_SockSetConnChan(ich, och, sock);
 
     return 0;
 }
@@ -106,7 +120,6 @@ int prc_SockUdpClient(int ich, int och, char *host, int port) {
 int prc_SockUdpOpen(int ich, int och, char *host, int cport, int bport) {
     struct hostent *hent;
     struct sockaddr_in addr;
-    ioent_t *iie, *oie;
     int sock;
 
     if ((hent = gethostbyname(host)) == NULL) {
@@ -135,10 +148,7 @@ int prc_SockUdpOpen(int ich, int och, char *host, int cport, int bport) {
 	close(sock);
         return -1;
     }
-    iie = ioent_create((chan_t *)ich, sock, IOT_INPUT, so_input, BUFSIZ);
-    oie = ioent_create((chan_t *)och, sock, IOT_OUTPUT, so_output, BUFSIZ);
-    iie->data = oie;
-    oie->data = iie;
+    prc_SockSetConnChan(ich, och, sock);
 
     return 0;
 }
@@ -149,7 +159,6 @@ int prc_SockUdpOpen(int ich, int och, char *host, int cport, int bport) {
 int prc_SockTcpClient(int ich, int och, char *host, int port) {
     struct hostent *hent;
     struct sockaddr_in addr;
-    ioent_t *iie, *oie;
     int sock;
 
     if ((hent = gethostbyname(host)) == NULL) {
@@ -169,10 +178,7 @@ int prc_SockTcpClient(int ich, int och, char *host, int port) {
 	close(sock);
         return -1;
     }
-    iie = ioent_create((chan_t *)ich, sock, IOT_INPUT, so_input, BUFSIZ);
-    oie = ioent_create((chan_t *)och, sock, IOT_OUTPUT, so_output, BUFSIZ);
-    iie->data = oie;
-    oie->data = iie;
+    prc_SockSetConnChan(ich, och, sock);
 
     return 0;
 }
@@ -226,7 +232,6 @@ void prc_SockClose(int h) {
 static void accept_exec(ioent_t *io) {
     proc_t *prc;
     event_t *evt;
-    ioent_t *iie, *oie;
     int so;
 
     if ((so = accept(io->handle, NULL, NULL)) < 0) {
@@ -250,10 +255,7 @@ static void accept_exec(ioent_t *io) {
     }
     __prc__regs[0] = (int)__chan__();
     __prc__regs[3] = (int)__chan__();
-    iie = ioent_create((chan_t *)__prc__regs[0], so, IOT_INPUT, so_input, BUFSIZ);
-    oie = ioent_create((chan_t *)__prc__regs[3], so, IOT_OUTPUT, so_output, BUFSIZ);
-    iie->data = oie;
-    oie->data = iie;
+    prc_SockSetConnChan(__prc__regs[0], __prc__regs[3], so);
     __prc__regs[2] = __record__(2);
     ((int*)__prc__regs[2])[0] = __prc__regs[0];
     ((int*)__prc__regs[2])[1] = __prc__regs[3];
@@ -292,7 +294,6 @@ static void so_input(ioent_t *io, event_t *evt, int exec) {
 static void so_output(ioent_t *io, event_t *evt, int exec) {
     if (evt->trans == 0) {
         int len = STRLEN(evt->val);
-
         if (len == 0) {
             io_write_complete(io, 0);
 	    if (io->data) {

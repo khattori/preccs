@@ -36,13 +36,15 @@ proc CreateWorkers(n:int,gate:Gate,kind:string,job:string) =
       | _ -> Worker(n,gate,kind,job);
              CreateWorkers(n-1,gate,kind,job)
 proc Worker(id:int,gate:Gate,kind:string,job:string) =
-  var x = RandomSleep(1000);
+  RandomSleep(1000)!();
   gate.in!();
   gate.out?x;
   C{ printf("%s: %d %s\n", STRPTR($kind$), TOCINT($id$), STRPTR($job$)); C};
   Worker(id, gate, kind, job)
-
-proc RandomSleep(n:int):unit = 
+proc RandomSleep(n:int):<unit> = 
+   var fire:<unit>;
+   return fire;
    var rand:int;
    C{  int r = rand(); $rand$ = r % TOCINT($n$); C};
-   timer!(1,rand); return ()
+   timer!(1,rand);
+   fire?x

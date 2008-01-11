@@ -40,7 +40,6 @@ type SntpRcvPkt = SntpPacket{mode={"CC"h|"0C"h}}
 type Socket = {in:<string>;out:<string>}
 
 proc Main() =
-    var ret:<Socket>;
     stdout!"Host> ";
     stdin?host;
     { host @ h:{ name: TEXT; x: ("\r"|"\n")* } ->

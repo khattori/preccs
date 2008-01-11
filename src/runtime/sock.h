@@ -11,6 +11,9 @@
 
 void prc_SockStart(void);
 void prc_SockFinish(void);
+
+void prc_SockSetConnChan(int ich, int och, int so);
+void prc_SockSetUnconnChan(int ich, int och, int so);
 int prc_SockTcpServer(int ch, int port);
 int prc_SockTcpClient(int ich, int och, char *host, int port);
 int prc_SockUdpServer(int ich, int och, int port);

@@ -81,12 +81,11 @@ let rec reducComm = function
       when Symbol.equal c1 c2
         -> Let(x,e,reducComm p)
   | Par(p1,p2) -> Par(reducComm p1,reducComm p2)
-  | Case(e,cps) ->
-      let cs,ps = L.split cps in Case(e,L.combine cs (L.map reducComm ps))
+  | Case(e,cps) -> let cs,ps = L.split cps in Case(e,L.combine cs (L.map reducComm ps))
   | Cblk(cs,es,p) -> Cblk(cs,es,reducComm p)
   | Catch(p1,p2) -> Catch(reducComm p1,reducComm p2) 
   | Fix(bs,p) -> Fix(L.map (fun (v,vs,p) -> v,vs,reducComm p) bs,reducComm p)
-  | _ as p -> p
+  | p -> p
 
 and reducCommG = function
     Send(e1,e2,p) -> Send(e1,e2,reducComm p)
@@ -101,9 +100,7 @@ let rec unused v = function
   | Let(_,e,p) -> unused v p && unusedE v e
   | Asgn(e1,e2,p) -> unusedE v e1 && unusedE v e2 && unused v p
   | Par(p1,p2) -> unused v p1 && unused v p2
-  | Case(e,cps) ->
-      let _,ps = L.split cps in
-	unusedE v e && L.for_all (unused v) ps
+  | Case(e,cps) -> let _,ps = L.split cps in unusedE v e && L.for_all (unused v) ps
   | Call(e,es) -> unusedE v e && L.for_all (unusedE v) es
   | Cblk(cs,es,p) -> unused v p && L.for_all (unusedE v) es
   | Fix(bs,p) ->
@@ -153,13 +150,11 @@ let rec removeUnused = function
   | Let(v,e,p) when unused v p && isNoSideEffect e -> removeUnused p
   | Let(v,e,p) -> Let(v,e,removeUnused p)
   | Par(p1,p2) -> Par(removeUnused p1,removeUnused p2)
-  | Case(e,cps) ->
-      let cs,ps = L.split cps in Case(e,L.combine cs (L.map removeUnused ps))
+  | Case(e,cps) -> let cs,ps = L.split cps in Case(e,L.combine cs (L.map removeUnused ps))
   | Cblk(cs,es,p) -> Cblk(cs,es,removeUnused p)
   | Catch(p1,p2) -> Catch(removeUnused p1,removeUnused p2)
-  | Fix(bs,p) ->
-      Fix(L.map (fun (v,vs,p) -> v,vs,removeUnused p) bs,removeUnused p)
-  | _ as p -> p
+  | Fix(bs,p) -> Fix(L.map (fun (v,vs,p) -> v,vs,removeUnused p) bs,removeUnused p)
+  | p -> p
 
 and removeUnusedG = function
     Send(e1,e2,p) -> Send(e1,e2,removeUnused p)
@@ -185,11 +180,10 @@ let rec reducPar = function
         if p1' == Stop then p2'
         else if p2' == Stop then p1'
         else Par(p1',p2')
-  | Case(e,cps) ->
-      let cs,ps = L.split cps in Case(e,L.combine cs (L.map reducPar ps))
+  | Case(e,cps) -> let cs,ps = L.split cps in Case(e,L.combine cs (L.map reducPar ps))
   | Cblk(cs,es,p) -> Cblk(cs,es,reducPar p)
   | Fix(bs,p)     -> Fix(L.map (fun (v,vs,p) -> v,vs,reducPar p) bs,reducPar p)
-  | _ as p -> p
+  | p -> p
 and reducParG = function
     Send(e1,e2,p) -> Send(e1,e2,reducPar p)
   | Recv(e,v,p)   -> Recv(e,v,reducPar p)

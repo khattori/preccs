@@ -184,8 +184,8 @@ void write_exec(ioent_t *io, event_t *evt) {
 
     aio_count++;
     len = STRLEN(evt->val) - io->offset;
-    // fprintf(stderr,"write_exec: len=%d, aio_count=%d\n", len, aio_count);
-    // fflush(stderr);
+//    fprintf(stderr,"write_exec: len=%d, aio_count=%d\n", len, aio_count);
+//    fflush(stderr);
     if (len > io->bufsz) {
 	len = io->bufsz;
     }
@@ -328,6 +328,7 @@ int io_exec(void) {
 	        goto interrupted;
 	    }
 	    perr(PERR_SYSTEM, "pselect", strerror(errno), __FILE__, __LINE__);
+	    return (int)__stop__;
 	} else if (ret == 0) {
 	    /* タイムアウト時 */
 	    evt = timer_take();
@@ -353,7 +354,7 @@ int io_exec(void) {
 		}
 	    }
 	}
-    	return (int)__disp__;
+        return (int)__disp__;
     }
 
 interrupted:
