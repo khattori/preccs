@@ -72,15 +72,6 @@ int create_sock(void) {
 	perror("bind");
 	exit(1);
     }
-    /* ソケットのアドレスの構造体にサーバのIPアドレスとポート番号を設定 */
-    sockname.sin_family      = AF_INET;
-    sockname.sin_addr.s_addr = INADDR_BROADCAST;
-    sockname.sin_port        = htons(DHCP_SERVER_PORT);	/* 送信ポート番号 */
-    memset(sockname.sin_zero, (int)0, sizeof(sockname.sin_zero));
-    if (connect(sock, (struct sockaddr *)&sockname, sizeof(sockname)) < 0) {
-	perror("connect");
-	exit(1);
-    }
 
     return sock;
 }
