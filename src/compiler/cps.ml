@@ -20,8 +20,7 @@ and cexp =
 
 (* プリミティブ演算子 *)
 and prim =
-    Disp          (* ディスパッチ: ()->() *)
-  | Run		  (* プロセス起動 *)
+    Run		  (* プロセス起動 *)
   | Match         (* パターンマッチ: (DFA ID, String val)->lvar list*)
   | Set           (* 値セット: (lvar, value) *)
   | Asgn          (* 値更新 *)
@@ -49,7 +48,6 @@ and bind = lvar * lvar list * cexp'
 
 and lvar = Symbol.t
 
-(* let disp:cexp' = Prim(Disp,[],[],[]),ref [] *)
 let disp:cexp' = App(Label(S.symbol "disp"),[]),ref []
 
 (** CPS式→文字列：デバッグ表示用 *)
@@ -76,8 +74,7 @@ let rec showCexp (cexp,fv) =
 
         
 and showPrim = function
-    Disp   -> "Disp"
-  | Run    -> "Run"
+    Run    -> "Run"
   | Match  -> "Match"
   | Set    -> "Set"
   | Asgn   -> "Asgn"

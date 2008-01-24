@@ -105,9 +105,11 @@ let type_of_const = function
  *)
 let rec check_type env =
   (* 派生型定義用の変数参照 *)
+(*
   let rec deriv_var t = function
       A.VarSimple(i,s) -> get_field i t s
     | v -> errorAt (A.info_of_var v) ERR_ILLEGAL_DERIV in
+*)
   let deriv_ap v =
     let rec trav ap = function
         A.VarSimple(_,s) -> s::ap
@@ -133,8 +135,8 @@ let rec check_type env =
           List.fold_left
             (fun ty (v,t) ->
                let t' = check_type env t in
-               let t'' = deriv_var ty v in
-                 assert_type i t' t'';
+(*               let t'' = deriv_var ty v in
+                 assert_type i t' t''; *)
                  T.deriv ty (deriv_ap v) t')
             (lookup_type i env s) ds
 

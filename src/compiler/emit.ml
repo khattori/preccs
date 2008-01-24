@@ -199,8 +199,7 @@ and emitApp rmap (op,ops) =
 
 (* (p,ops,rs,cs) *)
 and emitPrim rm = function
-    C.Disp,[],[],[] -> print_string "return (int)__disp__;\n"
-  | C.New,[],[r],[c,fv] ->
+    C.New,[],[r],[c,fv] ->
       let rm'  = Rmap.release rm !fv in
       let rm'' = Rmap.assign rm' r in
         Printf.printf "%s=(int)__chan__();\n" (val2str rm'' (C.Var r));
