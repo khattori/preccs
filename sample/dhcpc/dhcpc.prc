@@ -119,7 +119,6 @@ var DHCP_BROADCAST_ADDR = { iaddr = "FFFFFFFF"h; port = DHCP_SERVER_PORT }
 proc Main() = 
     var so = SockUdpCreate();  
     DhcpInit(so)
-
 // 初期状態
 proc DhcpInit(so:UdpSocket) =
     so.out!{ msg  = CreateDhcpDiscover();
@@ -128,25 +127,26 @@ proc DhcpInit(so:UdpSocket) =
 // 選択中
 proc DhcpSelecting(so:UdpSocket) =
     so.in?msgaddr -> {
-        msgaddr.msg @ m:DhcpOfferMsg -> SetOptions(m.option.opts.x1);
-		   	                SetOptions(m.option.opts.x2);
+        msgaddr.msg @ m:DhcpOfferMsg -> SetOptions(m.option);
 					var smsg = CreateDhcpRequest(m.yiaddr,m.option.opts.bsid.data);
                                         so.out!{ msg  = smsg;
 						 addr = DHCP_BROADCAST_ADDR };
                                         DhcpRequesting(so,smsg)
                     | _ -> stdout!"[Selecting] Illegal message recvd.\n";
                            DhcpInit(so) }
-  | timer!(10,0) -> stdout!"[Selecting] timeout.\n"; DhcpInit(so)
+  | timer!(10,0) -> stdout!"[Selecting] timeout.\n";
+                    DhcpInit(so)
 // 応答待ち
 proc DhcpRequesting(so:UdpSocket,smsg:string) = 
     so.in?msgaddr -> {
-	msgaddr.msg @ DhcpAckMsg   -> DhcpBound(so,smsg)
-		    | DhcpNakMsg   -> stdout!"[Requesting] Nak recvd.\n";
-				      DhcpInit(so)
-		    | DhcpOfferMsg -> DhcpRequesting(so,smsg)
+	msgaddr.msg @ m:DhcpAckMsg   -> DhcpBound(so,smsg)
+		    | m:DhcpNakMsg   -> stdout!"[Requesting] Nak recvd.\n";
+			 	        DhcpInit(so)
+		    | m:DhcpOfferMsg -> DhcpRequesting(so,smsg)
 		    | _ -> stdout!"[Requesting] Illegal message recvd.\n";
 			   DhcpInit(so) }
-  | timer!(10,0) -> stdout!"[Requesting] timeout.\n"; DhcpInit(so)
+  | timer!(10,0) -> stdout!"[Requesting] timeout.\n";
+                    DhcpInit(so)
 // リース
 proc DhcpBound(so:UdpSocket,smsg:string) =
     C{ set_ifconf(); C};
@@ -176,18 +176,19 @@ proc DhcpRebinding(so:UdpSocket,smsg:string) =
 			   DhcpInit(so) }
   | timer!(10,0) -> stdout!"[Rebinding] timeout.\n"; DhcpInit(so)
 
-proc SetOptions(opts:{BootpOption*}) =
+proc SetOptions(o:DhcpOfferOpt) = SetOpt(o.opts.x1); SetOpt(o.opts.x2)
+proc SetOpt(opts:{BootpOption*}) =
     opts @ x:{hd:BoptSubnet;tl:BootpOption*} ->
 		C{ memcpy(g_subnet, STRPTR($x.hd.data$), 4); C};
-		SetOptions(x.tl)
+		SetOpt(x.tl)
          | x:{hd:BoptRouter;tl:BootpOption*} ->
 		C{ memcpy(g_gwaddr, STRPTR($x.hd.data$), 4); C};
-		SetOptions(x.tl)
+		SetOpt(x.tl)
          | x:{hd:BoptDnsServer;tl:BootpOption*} ->
 		C{ memcpy(g_dnssrv, STRPTR($x.hd.data$), 4); C};
-		SetOptions(x.tl)
+		SetOpt(x.tl)
          | x:{hd:BootpOption;tl:BootpOption*} ->
-		SetOptions(x.tl)
+		SetOpt(x.tl)
          | _ -> skip
 
 // DHCP REQUESTメッセージ生成
