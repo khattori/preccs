@@ -1,9 +1,9 @@
 (**
-   Preccsコンパイラ字句解析器
-
-   @author Hattori Kenta
-   @version $Id: lexer.mll,v 1.5 2006/07/27 00:07:17 hattori Exp $
-*)
+ * Preccsコンパイラ字句解析器
+ *
+ *   @author Hattori Kenta
+ *   @version $Id: lexer.mll,v 1.5 2006/07/27 00:07:17 hattori Exp $
+ *)
 {
 open Error
 
@@ -11,63 +11,65 @@ open Error
 let rsvwords = Hashtbl.create 256
 let _ =
   List.iter
-    (fun (str, f) -> Hashtbl.add rsvwords str f)
+    (fun (str, t) -> Hashtbl.add rsvwords str (fun i -> t i))
     [ (* キーワード *)
-(* IDとして処理される
-      ( "octet",  fun i -> Parser.OCTET i   );
-      ( "int",    fun i -> Parser.INT i     );
-      ( "bool",   fun i -> Parser.BOOL i    );
-      ( "unit",   fun i -> Parser.UNIT i    );
-      ( "string", fun i -> Parser.STRING i  );
-*)
-      ( "true",   fun i -> Parser.TRUE i    );
-      ( "false",  fun i -> Parser.FALSE i   );
-      ( "var",    fun i -> Parser.VAR i     );
-      ( "proc",   fun i -> Parser.PROC i    );
-      ( "type",   fun i -> Parser.TYPE i    );
-      ( "run",    fun i -> Parser.RUN i     );
-      ( "skip",   fun i -> Parser.SKIP i    );
-      ( "stop",   fun i -> Parser.STOP i    );
-      ( "return", fun i -> Parser.RETURN i  );
-(*      ( "null",   fun i -> Parser.NULL i    ); *)
-      ( "import", fun i -> Parser.IMPORT i  );
+      ( "var",       Parser.VAR       );
+      ( "proc",      Parser.PROC      );
+      ( "type",      Parser.TYPE      );
+      ( "exception", Parser.EXCEPTION );
+      ( "return",    Parser.RETURN    );
+      ( "match",     Parser.MATCH     );
+      ( "throw",     Parser.THROW     );
+      ( "to",        Parser.TO        );
+      ( "catch",     Parser.CATCH     );
+      ( "finally",   Parser.FINALLY   );
+      ( "scope",     Parser.SCOPE     );
+      ( "success",   Parser.SUCCESS   );
+      ( "failure",   Parser.FALURE    );
+      ( "if",        Parser.IF        );
+      ( "else",      Parser.ELSE      );
+      ( "for",       Parser.FOR       );
+      ( "while",     Parser.WHILE     );
+      ( "do",        Parser.DO        );
+      ( "when",      Parser.WHEN      );
+
       (* 特殊記号 *)
-      ( "@",      fun i -> Parser.AT i      );
-      ( "#",      fun i -> Parser.SHARP i   );
-      ( "!",      fun i -> Parser.EXCLM i   );
-      ( "?",      fun i -> Parser.QUEST i   );
-      ( "%",      fun i -> Parser.PERCENT i );
-      ( "*",      fun i -> Parser.STAR i    );
-      ( "+",      fun i -> Parser.PLUS i    );
-      ( "-",      fun i -> Parser.DASH i    );
-      ( "^",      fun i -> Parser.CARET i   );
-      ( "/",      fun i -> Parser.SLASH i   );
-      ( "|",      fun i -> Parser.VBAR i    );
-      ( ";",      fun i -> Parser.SEMI i    );
-      ( ",",      fun i -> Parser.COMMA i   );
-      ( ":",      fun i -> Parser.COLON i   );
-      ( ".",      fun i -> Parser.DOT i     );
-      ( "_",      fun i -> Parser.USCORE i  );
-      ( "=",      fun i -> Parser.EQ i      );
-      ( "[",      fun i -> Parser.LSQUARE i );
-      ( "]",      fun i -> Parser.RSQUARE i );
-      ( "<",      fun i -> Parser.LT i      );
-      ( ">",      fun i -> Parser.GT i      );
-      ( "{",      fun i -> Parser.LCURLY i  );
-      ( "}",      fun i -> Parser.RCURLY i  );
-      ( "(",      fun i -> Parser.LPAREN i  );
-      ( ")",      fun i -> Parser.RPAREN i  );
+      ( "@",      Parser.AT     );
+      ( "#",      Parser.SHARP  );
+      ( "!",      Parser.EXCLM  );
+      ( "?",      Parser.QUEST  );
+      ( "%",      Parser.PERCENT);
+      ( "*",      Parser.STAR   );
+      ( "+",      Parser.PLUS   );
+      ( "-",      Parser.DASH   );
+      ( "^",      Parser.CARET  );
+      ( "/",      Parser.SLASH  );
+      ( "|",      Parser.VBAR   );
+      ( ";",      Parser.SEMI   );
+      ( ",",      Parser.COMMA  );
+      ( ":",      Parser.COLON  );
+      ( ".",      Parser.DOT    );
+      ( "_",      Parser.USCORE );
+      ( "=",      Parser.EQ     );
+      ( "[",      Parser.LSQUARE);
+      ( "]",      Parser.RSQUARE);
+      ( "<",      Parser.LT     );
+      ( ">",      Parser.GT     );
+      ( "{",      Parser.LCURLY );
+      ( "}",      Parser.RCURLY );
+      ( "(",      Parser.LPAREN );
+      ( ")",      Parser.RPAREN );
       (* 複合記号 *)
-      ( "&&",     fun i -> Parser.ANDAND i  );
-      ( "||",     fun i -> Parser.OROR i    );
-      ( ":=",     fun i -> Parser.COLONEQ i );
-      ( "==",     fun i -> Parser.EQEQ i    );
-      ( "!=",     fun i -> Parser.NEQ i     );
-      ( ">=",     fun i -> Parser.GEQ i     );
-      ( "<=",     fun i -> Parser.LEQ i     );
-      ( "!=",     fun i -> Parser.NEQ i     );
-      ( "->",     fun i -> Parser.ARROW i   );
-      ( "<|",     fun i -> Parser.AS i      );
+      ( "&&",     Parser.ANDAND );
+      ( "||",     Parser.OROR   );
+      ( ":=",     Parser.COLONEQ);
+      ( "==",     Parser.EQEQ   );
+      ( "!=",     Parser.NEQ    );
+      ( ">=",     Parser.GEQ    );
+      ( "<=",     Parser.LEQ    );
+      ( "!=",     Parser.NEQ    );
+      ( "->",     Parser.ARROW  );
+      ( "<|",     Parser.AS     );
     ]
 let createToken i str =
   try (Hashtbl.find rsvwords str) i

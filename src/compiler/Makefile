@@ -8,87 +8,42 @@
 # ---
 # $Id: Makefile,v 1.5 2006/06/06 04:39:15 hattori Exp $
 #
+RESULT = prcc
+SOURCES = \
+	exception.ml	\
+	symbol.ml	\
+	label.ml	\
+	cset.ml	\
+	pos.ml	\
+	regex.ml	\
+	prop.ml	\
+	cond.ml	\
+	nfa.ml	\
+	subset.ml	\
+	types.ml	\
+	error.ml	\
+	env.ml	\
+	syntax.ml	\
+	check.ml	\
+	tcond.ml	\
+	dstate.ml	\
+	dtrans.ml	\
+	dtable.ml	\
+	dfa.ml	\
+	pi.ml		\
+	match.ml	\
+	ptrans.ml	\
+	cps.ml	\
+	closure.ml	\
+	rmap.ml	\
+	emit.ml	\
+	trans.ml	\
+	semant.ml	\
+	version.ml	\
+	parser.mli	\
+	parser.mly	\
+	lexer.mll \
+	main.ml
 
-SHELL	= /bin/sh
-UNAME	= $(shell uname)
-
-ifneq (,$(findstring Linux,$(UNAME)))
-TARGET = prcc
-else
-TARGET = prcc.exe
-endif
-
-OBJS =	exception.cmo	\
-	symbol.cmo	\
-	error.cmo	\
-	label.cmo	\
-	prop.cmo	\
-	cset.cmo	\
-	pos.cmo	\
-	cond.cmo	\
-	regex.cmo	\
-	nfa.cmo	\
-	subset.cmo	\
-	types.cmo	\
-	env.cmo	\
-	lexer.cmo	\
-	parser.cmo	\
-	syntax.cmo	\
-	check.cmo	\
-	tcond.cmo	\
-	dstate.cmo	\
-	dtrans.cmo	\
-	dtable.cmo	\
-	dfa.cmo	\
-	pi.cmo		\
-	match.cmo	\
-	ptrans.cmo	\
-	cps.cmo	\
-	closure.cmo	\
-	rmap.cmo	\
-	emit.cmo	\
-	trans.cmo	\
-	semant.cmo	\
-	version.cmo	\
-	main.cmo
-
-DEPEND += lexer.ml parser.ml
-INCLUDE=
-
-all: $(DEPEND) $(OBJS) $(TARGET)
-
-# Build an executable typechecker
-$(TARGET):	$(OBJS)
-	@echo Linking $@
-	ocamlc -g -o $@ $(COMMONOBJS) $(OBJS)
-
-# Compile an ML module interface
-%.cmi : %.mli
-	ocamlc -g -c $<
-
-# Compile an ML module implementation
-%.cmo : %.ml
-	ocamlc -g -c $<
-
-# Generate ML files from a parser definition file
-parser.ml parser.mli: parser.mly
-	@rm -f parser.ml parser.mli
-	ocamlyacc -v parser.mly
-	@chmod -w parser.ml parser.mli
-
-# Generate ML files from a lexer definition file
-%.ml %.mli: %.mll
-	@rm -f $@
-	ocamllex $<
-	@chmod -w $@
-
-# Clean up the directory
-clean::
-	rm -rf lexer.ml parser.ml parser.mli *.o *.cmo *.cmi parser.output \
-		$(TARGET) *~
-
-# Rebuild intermodule dependencies
-depend:: $(DEPEND)
-	ocamldep $(INCLUDE) *.mli *.ml > .depend
-
-include .depend
+OCAMLMAKEFILE = OCamlMakefile
+include $(OCAMLMAKEFILE)

@@ -32,11 +32,21 @@ let base_env =
 (*      ("utimer", VarEntry(T.CHAN T.INT)); *)
       ("cond",   VarEntry(T.CHAN T.BOOL));
       ("null",   VarEntry(T.CHAN T.UNIT));
+
       (* 予約済み型名 *)
-      ("int",    TypeEntry(T.INT));
-      ("bool",   TypeEntry(T.BOOL));
+(*      ("void",   TypeEntry(T.VOID)); *)
       ("unit",   TypeEntry(T.UNIT));
+      ("bool",   TypeEntry(T.BOOL));
+(*      ("byte",   TypeEntry(T.BYTE)); *)
+(*      ("ubyte",  TypeEntry(T.UBYTE)); *)
+(*      ("short",  TypeEntry(T.SHORT)); *)
+(*      ("ushort", TypeEntry(T.USHORT)); *)
+      ("int",    TypeEntry(T.INT));
+(*      ("uint",   TypeEntry(T.UINT)); *)
+(*      ("long",   TypeEntry(T.LONG)); *)
+(*      ("ulong",  TypeEntry(T.ULONG)); *)
+(*      ("float",  TypeEntry(T.FLOAT)); *)
+(*      ("double", TypeEntry(T.DOUBLE)); *)
       ("string", TypeEntry(T.STRING));
-      ("octet",  TypeEntry(T.REGEX(T.REXP Regex.oct)));
     ]
 
